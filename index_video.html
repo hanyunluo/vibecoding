@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7fafc">
+  <meta name="theme-color" content="#f6efdf">
   <meta name="description" content="羅媽豬肉角製作介紹：從新鮮溫體豬肉的烹煮、手工切片與醃漬，到下鍋炒香，呈現豬肉角的製作過程。">
   <meta property="og:type" content="website">
   <meta property="og:title" content="吃得安心，羅媽豬肉角｜製作介紹">
@@ -12,52 +12,86 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root{color-scheme:light;--ink:#102b3c;--muted:#637989;--blue:#075eaa;--green:#0b9768;--line:#dce8ee;--paper:#fff}
+    :root{color-scheme:light;--ink:#302016;--muted:#624c3b;--blue:#81301f;--green:#586b34;--line:#cbb28b;--paper:#fffaf0;--red:#973923;--gold:#a97832}
     *{box-sizing:border-box}
     html{min-width:320px;scroll-behavior:smooth}
-    body{margin:0;min-height:100vh;color:var(--ink);font-family:"DM Sans","Noto Sans TC",sans-serif;background:radial-gradient(ellipse at 15% 5%,#e2f2f2 0,transparent 34%),radial-gradient(ellipse at 90% 40%,#e4eef8 0,transparent 36%),#f7fafc;-webkit-font-smoothing:antialiased}
+    body{margin:0;min-height:100vh;color:var(--ink);font-family:"Noto Serif TC",serif;background-color:#f6efdf;background-image:radial-gradient(#8d694014 .7px,transparent .7px),linear-gradient(90deg,#fff8e84d,#f1e4cb55);background-size:7px 7px,100% 100%;-webkit-font-smoothing:antialiased}
     a{color:inherit;text-decoration:none}
     a:focus-visible{outline:3px solid #31a579;outline-offset:4px}
     .shell{width:min(1120px,calc(100% - 48px));margin:0 auto}
-    .topbar{height:82px;display:flex;align-items:center;justify-content:space-between}
-    .brand{font-size:17px;letter-spacing:-.045em;font-weight:800}
-    .brand span{color:var(--green)}
-    .top-link{font-size:13px;font-weight:700;color:var(--blue);border:1px solid #c9deea;background:#ffffffa6;border-radius:999px;padding:11px 17px;transition:background .2s,transform .2s}
+    .topbar{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #c9af896e}
+    .brand{font-size:19px;letter-spacing:.04em;font-weight:900}
+    .brand span{display:inline-grid;place-items:center;width:24px;height:24px;margin:0 3px;border-radius:50%;background:var(--red);color:#fff1d8;font-family:"Ma Shan Zheng",serif;font-size:15px}
+    .top-link{font-size:16px;font-weight:700;color:#fff4de;border:1px solid #763728;background:#913e2d;border-radius:5px;padding:13px 19px;box-shadow:2px 3px 0 #6d2c2070;transition:background .2s,transform .2s}
     .top-link:hover{background:#fff;transform:translateY(-2px)}
     main{padding:48px 0 74px}
-    .intro{text-align:center;max-width:760px;margin:0 auto 34px}
-    .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:.17em;text-transform:uppercase}
-    .eyebrow:before,.eyebrow:after{content:"";height:1px;width:25px;background:#75bda4}
-    h1{font-size:clamp(36px,6vw,66px);line-height:1.14;letter-spacing:-.065em;margin:16px 0 9px;font-weight:800}
+    .intro{text-align:center;max-width:760px;margin:0 auto 34px;padding:30px 20px 26px;position:relative}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--green);font-size:14px;font-weight:800;letter-spacing:.12em}
+    .eyebrow:before,.eyebrow:after{content:"";height:1px;width:25px;background:#a68a5d}
+    h1{font-size:clamp(36px,6vw,66px);line-height:1.2;letter-spacing:.02em;margin:16px 0 9px;font-weight:900;text-shadow:1px 2px 0 #fff5de}
     h1 .name{white-space:nowrap}
-    h1 .dot{color:var(--green)}
-    .english-name{font-size:13px;letter-spacing:.18em;color:#6c8190;font-weight:700}
-    .lead{max-width:600px;margin:18px auto 0;color:var(--muted);font-size:15px;line-height:1.9}
-    .video-card{position:relative;padding:12px;border:1px solid #dce8ee;border-radius:22px;background:#ffffffb8;box-shadow:0 26px 70px #183c5712,0 3px 12px #183c5708;backdrop-filter:blur(12px)}
-    .video-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:14px;background:#0b1720}
+    h1 .dot{color:var(--red)}
+    .english-name{font-size:14px;letter-spacing:.15em;color:#674e37;font-weight:700}
+    .lead{max-width:680px;margin:20px auto 0;color:var(--muted);font-size:19px;line-height:2}
+    .intro:after{content:"古早好味・手作慢炒";position:absolute;right:4%;top:25px;display:grid;place-items:center;width:72px;height:72px;border:2px solid #a8422d;border-radius:50%;color:#a8422d;font-family:"Ma Shan Zheng",serif;font-size:17px;line-height:1.2;transform:rotate(10deg);opacity:.88}
+    .video-card{position:relative;padding:12px;border:1px solid #bca37d;border-radius:4px;background:#fff9eae8;box-shadow:0 15px 35px #56382221,0 0 0 5px #efe1c5,0 0 0 6px #bca37d;}
+    .video-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:2px;background:#0b1720}
     .video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
     .video-caption{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 6px 5px}
-    .caption-title{font-size:13px;font-weight:700}
-    .caption-note{color:var(--muted);font-size:12px}
-    .play-hint{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--blue);white-space:nowrap}
+    .caption-title{font-size:16px;font-weight:800;color:#593526}
+    .caption-note{color:var(--muted);font-size:14px}
+    .play-hint{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:700;color:var(--red);white-space:nowrap}
     .play-hint svg{width:15px;height:15px}
     .details{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:30px}
-    .detail{padding:23px 25px;border:1px solid var(--line);border-radius:16px;background:#ffffffad}
-    .detail-label{margin:0 0 9px;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
-    .detail h2{margin:0 0 8px;font-size:17px;letter-spacing:-.035em}
-    .detail p{margin:0;color:var(--muted);font-size:13px;line-height:1.85}
+    .detail{padding:23px 25px;border:1px solid var(--line);border-radius:4px;background:#fff9e9c9;box-shadow:3px 4px 0 #b9986840}
+    .detail-label{margin:0 0 10px;color:var(--green);font-size:14px;font-weight:800;letter-spacing:.08em}
+    .detail h2{margin:0 0 10px;font-size:21px;letter-spacing:-.02em}
+    .detail p{margin:0;color:var(--muted);font-size:17px;line-height:2}
     .contact{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:30px;color:#738796;font-size:12px}
     .contact a{color:var(--blue);font-weight:700;border-bottom:1px solid #9abbd4;padding-bottom:2px}
-    footer{padding:20px 0 28px;color:#8a9aa5;font-size:11px;text-align:center}
-    @media(max-width:640px){.shell{width:calc(100% - 34px)}.topbar{height:68px}.brand{font-size:15px}.top-link{font-size:11px;padding:9px 13px}main{padding:48px 0 55px}.intro{margin-bottom:25px}.lead{font-size:14px}.video-card{padding:7px;border-radius:16px}.video-frame{border-radius:10px}.video-caption{align-items:flex-start;padding:12px 5px 5px}.caption-title{font-size:12px}.caption-note{font-size:10px;margin-top:4px}.play-hint{font-size:10px}.details{grid-template-columns:1fr;gap:11px;margin-top:19px}.detail{padding:19px 20px}.contact{flex-wrap:wrap;text-align:center;line-height:1.8}}
+    .contact-section{margin-top:76px;padding:36px;border:1px solid #bca37d;border-radius:4px;background:#fff9e9db;box-shadow:5px 6px 0 #ad8b5b40}
+    .contact-heading{text-align:center;margin:0 auto 30px;max-width:620px}
+    .contact-heading h2{font-size:clamp(27px,4vw,38px);letter-spacing:-.055em;margin:12px 0 8px}
+    .contact-heading p{font-size:17px;line-height:1.9;color:var(--muted);margin:0}
+    .contact-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:35px;align-items:start}
+    .contact-info{padding:7px 5px}
+    .contact-info h3{font-size:21px;margin:0 0 20px}
+    .info-list{display:grid;gap:17px;margin:0;padding:0;list-style:none}
+    .info-list li{display:grid;grid-template-columns:36px 1fr;gap:11px;align-items:start;color:var(--muted);font-size:16px;line-height:1.8;overflow-wrap:anywhere}
+    .info-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;color:#fff4de;background:var(--green);font-size:17px}
+    .info-list strong{display:block;margin-bottom:3px;color:var(--ink);font-size:15px}
+    .info-list a:hover{color:var(--blue);text-decoration:underline}
+    .contact-form{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .field{display:grid;gap:7px}
+    .field.full{grid-column:1/-1}
+    .field label,.fieldset legend{font-size:16px;font-weight:700;color:#38251b}
+    .field input,.field textarea,.field select{width:100%;border:1px solid #b79d77;border-radius:3px;background:#fffdf7;padding:13px 14px;color:var(--ink);font:inherit;font-size:16px;transition:border-color .2s,box-shadow .2s}
+    .field input,.field select{height:52px}
+    .field textarea{min-height:150px;resize:vertical;line-height:1.8}
+    .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#9e5945;box-shadow:0 0 0 3px #a8422d18}
+    .fieldset{border:0;padding:0;margin:0;min-width:0}
+    .fieldset legend{margin-bottom:10px}
+    .check-options{display:flex;flex-wrap:wrap;gap:8px}
+    .check-option{display:inline-flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #b79d77;border-radius:3px;background:#fffdf7;color:#493729;font-size:15px;cursor:pointer}
+    .check-option:has(input:checked){border-color:#8b9870;background:#f1f1df;color:#43502c}
+    .check-option input{accent-color:var(--green);margin:0;width:18px;height:18px}
+    .submit-row{grid-column:1/-1;display:flex;align-items:center;gap:14px;margin-top:2px}
+    .submit-button{border:1px solid #713326;border-radius:3px;padding:15px 24px;background:var(--red);color:#fff5e2;font:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:2px 3px 0 #6d2c2070;transition:transform .2s,background .2s}
+    .submit-button:hover{background:#863321;transform:translateY(-1px)}
+    .form-note{font-size:13px;line-height:1.8;color:#624c3b}
+    .transcript-note{color:#624c3b;font-size:13px;text-align:center;margin:14px 0 0}
+    footer{padding:25px 0 32px;color:#624c3b;font-size:14px;text-align:center;letter-spacing:.08em}
+    @media(max-width:700px){.contact-section{margin-top:52px;padding:25px 20px}.contact-layout{grid-template-columns:1fr;gap:25px}.contact-info{padding:0}.contact-form{grid-template-columns:1fr}.field.full,.submit-row{grid-column:auto}.submit-row{align-items:flex-start;flex-direction:column}.submit-button{width:100%}}
+    @media(max-width:640px){.shell{width:calc(100% - 34px)}.topbar{height:72px}.brand{font-size:16px}.top-link{font-size:14px;padding:11px 14px}main{padding:40px 0 55px}.intro{margin-bottom:25px;padding:20px 8px}.intro:after{display:none}.intro .name{white-space:normal}.eyebrow{font-size:13px}.english-name{font-size:12px}.lead{font-size:17px}.video-card{padding:7px;border-radius:4px}.video-frame{border-radius:2px}.video-caption{align-items:flex-start;padding:12px 5px 5px}.caption-title{font-size:15px}.caption-note{font-size:13px;margin-top:4px}.play-hint{font-size:13px}.details{grid-template-columns:1fr;gap:13px;margin-top:20px}.detail{padding:20px}.detail h2{font-size:20px}.detail p{font-size:16px}.contact{flex-wrap:wrap;text-align:center;line-height:1.8}.contact-section{padding:23px 17px}.contact-heading p{font-size:16px}.info-list li{font-size:15px}.info-list strong{font-size:15px}.field label,.fieldset legend{font-size:15px}.field input,.field textarea,.field select{font-size:16px}.check-option{font-size:14px}.form-note{font-size:12px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important}}
   </style>
 </head>
 <body>
   <header class="topbar shell">
     <a class="brand" href="#top" aria-label="回到頁面頂端">羅媽<span>.</span> 豬肉角</a>
-    <a class="top-link" href="#transcript">閱讀製作介紹 <span aria-hidden="true">↓</span></a>
+    <a class="top-link" href="#contact">聯絡我們 <span aria-hidden="true">↓</span></a>
   </header>
   <main class="shell" id="top">
     <section class="intro" aria-labelledby="page-title">
@@ -67,7 +101,7 @@
       <p class="lead">從新鮮溫體豬肉開始，細心烹煮、手工切片，再以簡單調味與慢火翻炒，保留豬肉原本的風味。</p>
     </section>
 
-    <section class="video-card" aria-label="個人介紹影片">
+    <section class="video-card" aria-label="羅媽豬肉角製作介紹影片">
       <div class="video-frame">
         <iframe
           src="https://www.youtube-nocookie.com/embed/ICX7fHnjn5s?rel=0&modestbranding=1"
@@ -88,7 +122,50 @@
       <article class="detail"><p class="detail-label">調味與翻炒</p><h2>簡單調味，保留肉香</h2><p>切片以天然鹽和少許味精提味，再用鹽稍作醃漬約半小時。接著下鍋翻炒，帶走水分與多餘油脂，讓豬肉原味呈現，完成羅媽豬肉角。</p></article>
     </section>
     <p class="transcript-note">文字依影片說明整理，供閱讀參考；實際製作內容請以影片呈現為準。</p>
+
+    <section class="contact-section" id="contact" aria-labelledby="contact-title">
+      <div class="contact-heading">
+        <div class="eyebrow">ORDER &amp; CONTACT</div>
+        <h2 id="contact-title">與我們取得聯繫</h2>
+        <p>想訂購羅媽豬肉角？請填寫口味與包數，也歡迎留下問題或其他需求。</p>
+      </div>
+      <div class="contact-layout">
+        <aside class="contact-info" aria-label="聯絡資訊">
+          <h3>聯絡資訊</h3>
+          <ul class="info-list">
+            <li><span class="info-icon" aria-hidden="true">✉</span><div><strong>聯絡信箱</strong><a href="mailto:hanyunluo@gmail.com">hanyunluo@gmail.com</a></div></li>
+            <li><span class="info-icon" aria-hidden="true">☎</span><div><strong>電話</strong><a href="tel:0955129139">0955-129-139</a></div></li>
+            <li><span class="info-icon" aria-hidden="true">⌖</span><div><strong>地址</strong><a href="https://maps.google.com/?q=%E5%8F%B0%E5%8D%97%E5%B8%82%E5%AE%89%E5%8D%97%E5%8D%80%E5%AE%89%E5%92%8C%E8%B7%AF%E5%9B%9B%E6%AE%B545%E8%99%9F" target="_blank" rel="noopener noreferrer">台南市安南區安和路四段45號</a></div></li>
+          </ul>
+        </aside>
+        <form class="contact-form" id="contactForm">
+          <div class="field"><label for="contactName">您的姓名／稱呼 <span aria-hidden="true">*</span></label><input id="contactName" name="name" autocomplete="name" required placeholder="請輸入姓名或稱呼"></div>
+          <div class="field"><label for="contactEmail">聯絡電子信箱 <span aria-hidden="true">*</span></label><input id="contactEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div>
+          <div class="field"><label for="contactFlavor">訂購口味 <span aria-hidden="true">*</span></label><input id="contactFlavor" name="flavor" required placeholder="請填寫想訂購的口味"></div>
+          <div class="field"><label for="contactQuantity">訂購包數 <span aria-hidden="true">*</span></label><input id="contactQuantity" name="quantity" type="number" min="1" step="1" required placeholder="請輸入包數"></div>
+          <div class="field full"><label for="contactBrief">需求簡介／其他說明</label><textarea id="contactBrief" name="brief" placeholder="例如：收件需求、想詢問的事項或其他備註"></textarea></div>
+          <div class="field full"><label for="contactTime">適合聯絡的時間 <span aria-hidden="true">*</span></label><select id="contactTime" name="time" required><option value="" disabled selected>請選擇方便聯絡的時段</option><option>平日上午（09:00–12:00）</option><option>平日下午（13:00–17:00）</option><option>平日晚上（18:00–21:00）</option><option>週末（請於需求簡介註明日期）</option><option>不限時段，請先以電子郵件聯絡</option></select></div>
+          <div class="submit-row"><button class="submit-button" type="submit">以電子郵件送出需求 <span aria-hidden="true">↗</span></button><span class="form-note">送出後會開啟你的電子郵件程式，確認內容後即可寄出。</span></div>
+        </form>
+      </div>
+    </section>
   </main>
   <footer class="shell">羅媽豬肉角｜影片文字介紹</footer>
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = new FormData(form);
+      const body = [
+        '姓名／稱呼：' + data.get('name'),
+        '聯絡電子信箱：' + data.get('email'),
+        '訂購口味：' + data.get('flavor'),
+        '訂購包數：' + data.get('quantity') + ' 包',
+        '需求簡介／其他說明：' + (data.get('brief') || '（未填寫）'),
+        '適合聯絡的時間：' + data.get('time')
+      ].join('\n');
+      window.location.href = 'mailto:hanyunluo@gmail.com?subject=' + encodeURIComponent('網站聯絡需求') + '&body=' + encodeURIComponent(body);
+    });
+  </script>
 </body>
 </html>
