@@ -29,6 +29,24 @@ body{background:var(--itri-surface);color:var(--itri-text-primary)}::selection{b
 .work-gallery{background:linear-gradient(180deg,#f8faff,#fff)}.work-gallery .section-intro{margin-bottom:38px}.work-gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.work-gallery-card{overflow:hidden;padding:0}.work-gallery-card img{display:block;width:100%;height:230px;object-fit:cover;transition:transform .45s ease}.work-gallery-card:hover img{transform:scale(1.04)}.work-gallery-caption{padding:20px 22px 22px}.work-gallery-caption h3{font-size:17px;margin:0 0 7px}.work-gallery-caption p{font-size:12px;line-height:1.8;color:#69798b;margin:0}.about-photo img{width:100%;height:100%;object-fit:cover;border-radius:20px;display:block}.about-photo{overflow:hidden}
 @media(max-width:800px){.work-gallery-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.work-gallery-grid{grid-template-columns:1fr}.work-gallery-card img{height:250px}}
 </style>
+<style>
+/* Tighter vertical rhythm and clearer transitions between sections */
+.hero{min-height:min(850px,92svh);padding:112px 0 64px}
+.section{padding:82px 0}
+.section-intro{margin-bottom:34px}
+.about-layout{gap:44px}
+.mission{margin-top:48px;padding:40px 24px}
+.timeline{margin-top:22px}
+.timeline-item{padding-bottom:18px}
+.work-gallery{padding:70px 0;background:linear-gradient(180deg,#f1f7fb 0%,#f8fafc 100%)}#workGallery{display:none!important}
+.work-gallery .section-intro{margin-bottom:28px}
+.work-gallery-grid{gap:16px}
+.work-gallery-card img{height:220px}
+.contact{padding:78px 0}
+.footer{padding:32px 0}
+@media(max-width:800px){.hero{min-height:auto;padding:112px 0 50px}.section{padding:64px 0}.section-intro{margin-bottom:28px}.mission{margin-top:38px}.work-gallery{padding:58px 0}.contact{padding:58px 0}}
+@media(max-width:560px){.hero{padding:100px 0 38px}.section{padding:52px 0}.work-gallery{padding:48px 0}.work-gallery-grid{gap:14px}.work-gallery-card img{height:220px}.contact{padding:48px 0}.mission{padding:32px 18px}}
+</style>
 </head>
 <body>
 <header class="topbar" id="topbar"><nav class="nav-inner container" aria-label="主要導覽"><a href="#home" class="brand" aria-label="Howard Chung 回到首頁">HOWARD<span class="brand-dot">.</span>CHUNG</a><button class="nav-toggle" id="navToggle" aria-label="開啟導覽選單" aria-controls="navLinks" aria-expanded="false"><i data-lucide="menu" width="21"></i></button><div class="nav-links" id="navLinks"><a href="#home" class="active">首頁</a><a href="#about">關於我</a><a href="#expertise">專業領域</a><a href="#solutions">AI 解決方案</a><a href="#portfolio">專案案例</a><a href="#insights">AI 觀點</a><a href="#contact" class="nav-cta">合作諮詢 ↗</a></div></nav></header>
