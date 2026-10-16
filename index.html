@@ -25,6 +25,10 @@
 body{background:var(--itri-surface);color:var(--itri-text-primary)}::selection{background:var(--itri-blue-50);color:var(--itri-blue-900)}.hero:before{background:radial-gradient(ellipse 55% 53% at 82% 43%,#E6F1FA 0%,transparent 74%),radial-gradient(ellipse 31% 40% at 22% 13%,#F8FAFC,transparent 86%),linear-gradient(var(--itri-surface),var(--itri-surface))}.hero-grid{background-image:linear-gradient(#005BAC12 1px,transparent 1px),linear-gradient(90deg,#005BAC12 1px,transparent 1px)}.gradient-text{background-image:linear-gradient(110deg,var(--itri-primary),var(--itri-secondary) 78%)}.btn-primary{background:linear-gradient(105deg,var(--itri-primary),var(--itri-blue-800));box-shadow:0 12px 26px #005BAC30}.btn-primary:hover{box-shadow:0 15px 32px #00994440}.btn-secondary{color:var(--itri-blue-900);border-color:#B9D6ED;background:var(--itri-surface)}.card-icon,.metric-icon{background:linear-gradient(135deg,var(--itri-blue-50),var(--itri-green-50));color:var(--itri-primary)}.solutions,.insights{background:var(--itri-canvas)}.products{background:linear-gradient(180deg,var(--itri-surface),var(--itri-canvas))}.card{border-color:var(--itri-border)}.card:hover{border-color:#8BBBE2;box-shadow:0 23px 50px #005BAC18}.tag,.micro-flow span{background:var(--itri-blue-50);border-color:#C9E0F3;color:var(--itri-blue-800)}.contact-panel{border-color:#B9D6ED;background:radial-gradient(ellipse 38% 70% at 10% 30%,#E6F1FA,transparent 95%),radial-gradient(ellipse 38% 65% at 95% 70%,#E8F8F0,transparent 85%),linear-gradient(155deg,var(--itri-surface),var(--itri-canvas))}.contact-social{border-color:#C9E0F3;background:#FFFFFFD9;color:var(--itri-blue-800)}.contact-social:hover{color:var(--itri-primary);box-shadow:0 10px 24px #005BAC20}.footer{border-color:var(--itri-border);background:var(--itri-surface)}
 </style>
 <style>.portrait{padding:34px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:16px}.portrait img{display:block;width:auto;height:auto;max-width:78%;max-height:78%;object-fit:contain;border-radius:18px;box-shadow:0 14px 30px #315a9620}.portrait:after{z-index:1;inset:22px}.portrait-text{position:relative!important;z-index:2;text-shadow:0 1px 8px #fff;background:#ffffffd9;padding:8px 16px;border-radius:10px;flex:none}</style>
+<style>
+.work-gallery{background:linear-gradient(180deg,#f8faff,#fff)}.work-gallery .section-intro{margin-bottom:38px}.work-gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.work-gallery-card{overflow:hidden;padding:0}.work-gallery-card img{display:block;width:100%;height:230px;object-fit:cover;transition:transform .45s ease}.work-gallery-card:hover img{transform:scale(1.04)}.work-gallery-caption{padding:20px 22px 22px}.work-gallery-caption h3{font-size:17px;margin:0 0 7px}.work-gallery-caption p{font-size:12px;line-height:1.8;color:#69798b;margin:0}.about-photo img{width:100%;height:100%;object-fit:cover;border-radius:20px;display:block}.about-photo{overflow:hidden}
+@media(max-width:800px){.work-gallery-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.work-gallery-grid{grid-template-columns:1fr}.work-gallery-card img{height:250px}}
+</style>
 </head>
 <body>
 <header class="topbar" id="topbar"><nav class="nav-inner container" aria-label="主要導覽"><a href="#home" class="brand" aria-label="Howard Chung 回到首頁">HOWARD<span class="brand-dot">.</span>CHUNG</a><button class="nav-toggle" id="navToggle" aria-label="開啟導覽選單" aria-controls="navLinks" aria-expanded="false"><i data-lucide="menu" width="21"></i></button><div class="nav-links" id="navLinks"><a href="#home" class="active">首頁</a><a href="#about">關於我</a><a href="#expertise">專業領域</a><a href="#solutions">AI 解決方案</a><a href="#portfolio">專案案例</a><a href="#insights">AI 觀點</a><a href="#contact" class="nav-cta">合作諮詢 ↗</a></div></nav></header>
@@ -114,5 +118,59 @@ document.querySelectorAll('.eyebrow').forEach(el=>{if(el.textContent.trim()==='A
 document.querySelectorAll('.hero-description,.about-body>p').forEach(el=>el.textContent=el.textContent.replaceAll('鍾皓軒 Howard Chung','羅涵筠 LO, HAN YUN'));
 const portrait=document.getElementById('portraitPlaceholder');
 if(portrait){portrait.innerHTML='<img src="assets/lo-han-yun.jpg" alt="羅涵筠 LO, HAN YUN 個人照片"><div class="portrait-text"><strong>LO, HAN YUN</strong>PERSONAL PORTRAIT</div>';portrait.setAttribute('aria-label','羅涵筠 LO, HAN YUN 個人照片');}
+</script>
+<script>
+const aboutPortrait=document.querySelector('#portraitPlaceholder,.portrait');
+if(aboutPortrait){aboutPortrait.classList.add('about-photo');aboutPortrait.innerHTML='<img src="assets/work/lo-han-yun.jpg" alt="羅涵筠 LO, HAN YUN 個人照片">';aboutPortrait.setAttribute('aria-label','羅涵筠 LO, HAN YUN 個人照片');}
+const portfolio=document.querySelector('#portfolio');
+if(portfolio&&!document.getElementById('workGallery')){const section=document.createElement('section');section.className='section work-gallery';section.id='workGallery';section.innerHTML='<div class="container"><div class="section-intro reveal"><div class="eyebrow">WORK IN ACTION</div><h2 class="section-heading">內訓與專案<span class="gradient-text">現場紀錄。</span></h2><p>從企業內訓、產業交流到專案展示，記錄 AI 與資料科學落地現場的真實片段。</p></div><div class="work-gallery-grid"><article class="card work-gallery-card reveal"><img src="assets/work/itri-training.png" alt="工研院企業內訓現場"><div class="work-gallery-caption"><h3>工研院企業內訓</h3><p>AI 與資料應用實務培訓</p></div></article><article class="card work-gallery-card reveal"><img src="assets/work/iii-training.png" alt="資策會企業內訓現場"><div class="work-gallery-caption"><h3>資策會企業內訓</h3><p>生成式 AI 與工作流程應用</p></div></article><article class="card work-gallery-card reveal"><img src="assets/work/aviation-training.png" alt="航空業企業內訓現場"><div class="work-gallery-caption"><h3>航空業內訓</h3><p>跨部門 AI 導入與應用交流</p></div></article><article class="card work-gallery-card reveal"><img src="assets/work/telecom-training.png" alt="電信業企業內訓現場"><div class="work-gallery-caption"><h3>電信業內訓</h3><p>資料分析與 AI 實戰工作坊</p></div></article><article class="card work-gallery-card reveal"><img src="assets/work/ic-design-expo.jpg" alt="IC 設計產業專案展示"><div class="work-gallery-caption"><h3>IC 設計產業專案</h3><p>產業展演與技術成果展示</p></div></article><article class="card work-gallery-card reveal"><img src="assets/work/nstc-expo.jpg" alt="國科會專案展示現場"><div class="work-gallery-caption"><h3>國科會專案展示</h3><p>研究成果與 AI 應用展演</p></div></article></div></div>';portfolio.parentNode.insertBefore(section,portfolio);if(window.lucide)window.lucide.createIcons();}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const target=document.querySelector('#portfolio');
+ if(!target||document.getElementById('photoShowcase'))return;
+ const s=document.createElement('section');s.id='photoShowcase';s.className='section work-gallery';
+ s.innerHTML='<div class="container"><div class="section-intro"><div class="eyebrow">WORK IN ACTION</div><h2 class="section-heading">內訓與專案<span class="gradient-text">現場紀錄。</span></h2></div><div class="work-gallery-grid"></div></div>';
+ const grid=s.querySelector('.work-gallery-grid');
+ [['itri-training.png','工研院企業內訓'],['iii-training.png','資策會企業內訓'],['aviation-training.png','航空業內訓'],['telecom-training.png','電信業內訓'],['ic-design-expo.jpg','IC 設計產業專案'],['nstc-expo.jpg','國科會專案展示']].forEach(function(item){const card=document.createElement('article');card.className='card work-gallery-card';card.innerHTML='<img src="assets/work/'+item[0]+'" alt="'+item[1]+'"><div class="work-gallery-caption"><h3>'+item[1]+'</h3><p>AI 與資料科學實務場景</p></div>';grid.appendChild(card);});
+ target.parentNode.insertBefore(s,target);
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var portfolio = document.getElementById('portfolio');
+  if (!portfolio || document.getElementById('photoShowcase')) return;
+  var gallery = document.createElement('section');
+  gallery.id = 'photoShowcase';
+  gallery.className = 'section work-gallery';
+  gallery.innerHTML = '<div class="container"><div class="section-intro"><div class="eyebrow">WORK IN ACTION</div><h2 class="section-heading">&#20839;&#35347;&#33287;&#23560;&#26696;<span class="gradient-text">&#29694;&#22580;&#32000;&#37636;&#12290;</span></h2><p>&#20225;&#26989;&#20839;&#35347;&#12289;&#29986;&#26989;&#20132;&#27969;&#33287;&#23560;&#26696;&#23637;&#31034;</p></div><div class="work-gallery-grid"></div></div>';
+  var items = [
+    ['itri-training.png', '&#24037;&#30740;&#38498;&#20225;&#26989;&#20839;&#35347;'],
+    ['iii-training.png', '&#36039;&#31574;&#26371;&#20225;&#26989;&#20839;&#35347;'],
+    ['aviation-training.png', '&#33322;&#31354;&#26989;&#20839;&#35347;'],
+    ['telecom-training.png', '&#38651;&#20449;&#26989;&#20839;&#35347;'],
+    ['ic-design-expo.jpg', 'IC &#35373;&#35336;&#29986;&#26989;&#23560;&#26696;'],
+    ['nstc-expo.jpg', '&#22283;&#31185;&#26371;&#23560;&#26696;&#23637;&#31034;']
+  ];
+  var grid = gallery.querySelector('.work-gallery-grid');
+  items.forEach(function (item) {
+    var card = document.createElement('article');
+    card.className = 'card work-gallery-card';
+    var image = document.createElement('img');
+    image.src = './assets/work/' + item[0];
+    image.loading = 'lazy';
+    var caption = document.createElement('div');
+    caption.className = 'work-gallery-caption';
+    var title = document.createElement('h3');
+    title.innerHTML = item[1];
+    image.alt = title.textContent;
+    var description = document.createElement('p');
+    description.innerHTML = '&#36039;&#26009;&#31185;&#23416;&#33287; AI &#23526;&#21209;&#22580;&#26223;';
+    caption.append(title, description);
+    card.append(image, caption);
+    grid.appendChild(card);
+  });
+  portfolio.parentNode.insertBefore(gallery, portfolio);
+});
 </script>
 </body></html>
