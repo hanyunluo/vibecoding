@@ -81,6 +81,14 @@
     .submit-button{border:1px solid #713326;border-radius:3px;padding:15px 24px;background:var(--red);color:#fff5e2;font:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:2px 3px 0 #6d2c2070;transition:transform .2s,background .2s}
     .submit-button:hover{background:#863321;transform:translateY(-1px)}
     .form-note{font-size:13px;line-height:1.8;color:#624c3b}
+    .form-status{grid-column:1/-1;min-height:1.5em;margin:0;color:#586b34;font-size:14px;font-weight:700}
+    .success-overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#24170f99;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+    .success-overlay.show{opacity:1;visibility:visible}
+    .success-dialog{width:min(440px,100%);padding:32px 25px;text-align:center;border:2px solid #b58b50;border-radius:5px;background:#fff8e8;box-shadow:0 18px 60px #140d0980}
+    .success-mark{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 15px;border:2px solid #71804b;border-radius:50%;color:#586b34;font-size:30px}
+    .success-dialog h2{margin:0 0 9px;font-size:25px;color:#38251b}
+    .success-dialog p{margin:0 0 22px;color:#624c3b;font-size:17px;line-height:1.8}
+    .success-close{min-width:120px;border:1px solid #713326;border-radius:3px;padding:12px 20px;background:var(--red);color:#fff5e2;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
     .transcript-note{color:#624c3b;font-size:13px;text-align:center;margin:14px 0 0}
     footer{padding:25px 0 32px;color:#624c3b;font-size:14px;text-align:center;letter-spacing:.08em}
     @media(max-width:700px){.contact-section{margin-top:52px;padding:25px 20px}.contact-layout{grid-template-columns:1fr;gap:25px}.contact-info{padding:0}.contact-form{grid-template-columns:1fr}.field.full,.submit-row{grid-column:auto}.submit-row{align-items:flex-start;flex-direction:column}.submit-button{width:100%}}
@@ -138,34 +146,75 @@
             <li><span class="info-icon" aria-hidden="true">⌖</span><div><strong>地址</strong><a href="https://maps.google.com/?q=%E5%8F%B0%E5%8D%97%E5%B8%82%E5%AE%89%E5%8D%97%E5%8D%80%E5%AE%89%E5%92%8C%E8%B7%AF%E5%9B%9B%E6%AE%B545%E8%99%9F" target="_blank" rel="noopener noreferrer">台南市安南區安和路四段45號</a></div></li>
           </ul>
         </aside>
-        <form class="contact-form" id="contactForm">
-          <div class="field"><label for="contactName">您的姓名／稱呼 <span aria-hidden="true">*</span></label><input id="contactName" name="name" autocomplete="name" required placeholder="請輸入姓名或稱呼"></div>
-          <div class="field"><label for="contactEmail">聯絡電子信箱 <span aria-hidden="true">*</span></label><input id="contactEmail" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div>
-          <div class="field"><label for="contactFlavor">訂購口味 <span aria-hidden="true">*</span></label><input id="contactFlavor" name="flavor" required placeholder="請填寫想訂購的口味"></div>
-          <div class="field"><label for="contactQuantity">訂購包數 <span aria-hidden="true">*</span></label><input id="contactQuantity" name="quantity" type="number" min="1" step="1" required placeholder="請輸入包數"></div>
-          <div class="field full"><label for="contactBrief">需求簡介／其他說明</label><textarea id="contactBrief" name="brief" placeholder="例如：收件需求、想詢問的事項或其他備註"></textarea></div>
-          <div class="field full"><label for="contactTime">適合聯絡的時間 <span aria-hidden="true">*</span></label><select id="contactTime" name="time" required><option value="" disabled selected>請選擇方便聯絡的時段</option><option>平日上午（09:00–12:00）</option><option>平日下午（13:00–17:00）</option><option>平日晚上（18:00–21:00）</option><option>週末（請於需求簡介註明日期）</option><option>不限時段，請先以電子郵件聯絡</option></select></div>
-          <div class="submit-row"><button class="submit-button" type="submit">以電子郵件送出需求 <span aria-hidden="true">↗</span></button><span class="form-note">送出後會開啟你的電子郵件程式，確認內容後即可寄出。</span></div>
+        <form class="contact-form" id="contactForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfeD72z1Xjp6KIFNYwXMGHV0ENF7A6jOM6qXufleEKkWx_1oA/formResponse" method="POST" target="googleFormFrame">
+          <div class="field"><label for="contactName">您的姓名／稱呼 <span aria-hidden="true">*</span></label><input id="contactName" name="entry.588998168" autocomplete="name" required placeholder="請輸入姓名或稱呼"></div>
+          <div class="field"><label for="contactEmail">聯絡電子信箱 <span aria-hidden="true">*</span></label><input id="contactEmail" name="entry.476214014" type="email" autocomplete="email" required placeholder="name@example.com"></div>
+          <div class="field"><label for="contactFlavor">訂購口味 <span aria-hidden="true">*</span></label><input id="contactFlavor" name="entry.1610329698" required placeholder="請填寫想訂購的口味"></div>
+          <div class="field"><label for="contactQuantity">訂購包數 <span aria-hidden="true">*</span></label><input id="contactQuantity" name="entry.1646642689" type="number" min="1" step="1" required placeholder="請輸入包數"></div>
+          <div class="field full"><label for="contactBrief">需求簡介／其他說明 <span aria-hidden="true">*</span></label><textarea id="contactBrief" name="entry.1665886312" required placeholder="例如：收件需求、想詢問的事項或其他備註"></textarea></div>
+          <div class="field full"><label for="contactTime">適合聯絡的時間 <span aria-hidden="true">*</span></label><select id="contactTime" name="entry.1091995575" required><option value="" disabled selected>請選擇方便聯絡的時段</option><option>平日上午（09:00–12:00）</option><option>平日下午（13:00–17:00）</option><option>平日晚上（18:00–21:00）</option><option>週末（請於需求簡介註明日期）</option><option>不限時段，請先以電子郵件聯絡</option></select></div>
+          <div class="submit-row"><button class="submit-button" type="submit">送出訂購需求 <span aria-hidden="true">↗</span></button><span class="form-note">表單將安全送至 Google 表單，送出後會留在此頁。</span></div>
+          <p class="form-status" id="formStatus" aria-live="polite"></p>
         </form>
       </div>
     </section>
   </main>
   <footer class="shell">羅媽豬肉角｜影片文字介紹</footer>
+  <iframe name="googleFormFrame" title="表單送出狀態" hidden></iframe>
+  <div class="success-overlay" id="successOverlay" role="presentation">
+    <section class="success-dialog" role="dialog" aria-modal="true" aria-labelledby="successTitle" aria-describedby="successMessage" tabindex="-1">
+      <div class="success-mark" aria-hidden="true">✓</div>
+      <h2 id="successTitle">需求已送出</h2>
+      <p id="successMessage">需求已送出，我們將盡快與您聯絡！</p>
+      <button class="success-close" id="successClose" type="button">好，知道了</button>
+    </section>
+  </div>
   <script>
-    document.getElementById('contactForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const data = new FormData(form);
-      const body = [
-        '姓名／稱呼：' + data.get('name'),
-        '聯絡電子信箱：' + data.get('email'),
-        '訂購口味：' + data.get('flavor'),
-        '訂購包數：' + data.get('quantity') + ' 包',
-        '需求簡介／其他說明：' + (data.get('brief') || '（未填寫）'),
-        '適合聯絡的時間：' + data.get('time')
-      ].join('\n');
-      window.location.href = 'mailto:hanyunluo@gmail.com?subject=' + encodeURIComponent('網站聯絡需求') + '&body=' + encodeURIComponent(body);
-    });
+    (function () {
+      const form = document.getElementById('contactForm');
+      const frame = document.querySelector('iframe[name="googleFormFrame"]');
+      const overlay = document.getElementById('successOverlay');
+      const dialog = overlay.querySelector('[role="dialog"]');
+      const closeButton = document.getElementById('successClose');
+      const status = document.getElementById('formStatus');
+      let awaitingResponse = false;
+      let responseTimer;
+
+      form.addEventListener('submit', function () {
+        awaitingResponse = true;
+        status.textContent = '正在送出，請稍候⋯';
+        form.querySelector('button[type="submit"]').disabled = true;
+        responseTimer = window.setTimeout(function () {
+          if (!awaitingResponse) return;
+          awaitingResponse = false;
+          status.textContent = '目前尚未收到表單回覆，請稍後再試，或直接來電聯絡我們。';
+          form.querySelector('button[type="submit"]').disabled = false;
+        }, 20000);
+      });
+
+      frame.addEventListener('load', function () {
+        if (!awaitingResponse) return;
+        awaitingResponse = false;
+        window.clearTimeout(responseTimer);
+        status.textContent = '';
+        form.reset();
+        form.querySelector('button[type="submit"]').disabled = false;
+        overlay.classList.add('show');
+        closeButton.focus();
+      });
+
+      function closeDialog() {
+        overlay.classList.remove('show');
+        form.querySelector('#contactName').focus();
+      }
+      closeButton.addEventListener('click', closeDialog);
+      overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) closeDialog();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && overlay.classList.contains('show')) closeDialog();
+      });
+    }());
   </script>
 </body>
 </html>
