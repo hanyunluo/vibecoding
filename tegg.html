@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>統一台灣高息優選基金 (UNI049) 智能監控與試算儀表板</title>
+  
+  <!-- 本地檔案引入 ECharts -->
+  <script src="echarts.min.js"></script>
+
+  <!-- 原生 CSS：包含卡片、試算器表單、附註與浮動提示 -->
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    /* 頂部 Header */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #334155;
+      gap: 16px;
+    }
+    .header-title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .header-title { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+    }
+    .badge-blue { background-color: #172554; color: #60a5fa; border-color: #1e40af; }
+    .badge-green { background-color: #052e16; color: #4ade80; border-color: #166534; }
+    .header-sub { font-size: 0.875rem; color: #94a3b8; margin-top: 4px; }
+    
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #020617;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      font-size: 0.875rem;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* 通用卡片容器 */
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* 本金試算器區塊 (Calculator Section) */
+    .calc-card {
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #3b82f6;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px -2px rgba(59, 130, 246, 0.15);
+    }
+    .calc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 10px;
+    }
+    .calc-title { font-size: 1.1rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 8px; }
+    .calc-form {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .calc-form { grid-template-columns: 1fr; gap: 16px; }
+    }
+    .calc-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .calc-input-wrapper {
+      display: flex;
+      gap: 8px;
+    }
+    .calc-input {
+      flex: 1;
+      background-color: #020617;
+      border: 1px solid #475569;
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .calc-input:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+    .calc-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .calc-btn:hover { background-color: #1d4ed8; }
+    .calc-btn:active { transform: scale(0.98); }
+
+    /* 試算結果呈現看板 */
+    .calc-results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .calc-results-grid { grid-template-columns: 1fr; }
+    }
+    .calc-res-item {
+      background-color: #020617;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .calc-res-label { font-size: 0.72rem; color: #94a3b8; font-weight: 500; }
+    .calc-res-val { font-size: 1.35rem; font-weight: 700; color: #38bdf8; margin-top: 2px; }
+    .calc-res-sub { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+    /* 網格系統 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* KPI 卡片內部排版 */
+    .kpi-header { display: flex; justify-content: space-between; align-items: center; }
+    .kpi-title { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
+    .kpi-value { font-size: 1.75rem; font-weight: 700; margin-top: 6px; color: #ffffff; }
+    .kpi-sub { font-size: 0.75rem; margin-top: 4px; color: #94a3b8; }
+    .color-green { color: #34d399; }
+    .color-blue { color: #38bdf8; }
+    .color-purple { color: #818cf8; }
+
+    /* 附註說明標籤 (Note Box) */
+    .note-box {
+      margin-top: 14px;
+      padding: 8px 12px;
+      background-color: #0f172a;
+      border-left: 3px solid #38bdf8;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+    .note-box strong { color: #cbd5e1; }
+    .note-box-amber { border-left-color: #f59e0b; }
+    .note-box-green { border-left-color: #10b981; }
+
+    /* HTML Tooltip (懸停提示圖標) */
+    .tooltip-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #334155;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: help;
+      position: relative;
+    }
+    .tooltip-icon:hover { background-color: #38bdf8; color: #0f172a; }
+    .tooltip-icon .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      width: 220px;
+      background-color: #020617;
+      color: #f1f5f9;
+      text-align: left;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 8px 10px;
+      position: absolute;
+      z-index: 100;
+      top: 125%;
+      right: 0;
+      font-size: 0.72rem;
+      line-height: 1.4;
+      font-weight: normal;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      pointer-events: none;
+    }
+    .tooltip-icon:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* 圖表容器規格 */
+    .chart-box-lg { width: 100%; height: 320px; }
+    .chart-box-md { width: 100%; height: 280px; }
+    .chart-box-gauge { width: 100%; height: 210px; }
+
+    .chart-header { margin-bottom: 12px; }
+    .chart-header h2 { font-size: 1rem; font-weight: 600; color: #ffffff; }
+    .chart-header p { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+
+    /* 警示與事件紀錄 */
+    .guide-box {
+      background-color: #020617;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      margin-top: 10px;
+    }
+    .log-list { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; }
+    .log-item { padding: 10px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: transform 0.15s ease; }
+    .log-item:hover { transform: translateX(3px); }
+    .log-item-green { background-color: rgba(6, 78, 59, 0.35); border: 1px solid rgba(5, 150, 105, 0.4); }
+    .log-item-amber { background-color: rgba(120, 53, 15, 0.35); border: 1px solid rgba(217, 119, 6, 0.4); }
+    .log-item-default { background-color: #020617; border: 1px solid #1e293b; color: #94a3b8; }
+    .log-header { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部資訊列 -->
+  <header>
+    <div>
+      <div class="header-title-row">
+        <h1 class="header-title">統一台灣高息優選基金 (月配型)</h1>
+        <span class="badge badge-blue">UNI049</span>
+        <span class="badge badge-green">主動代操團隊 / 經理人: 陳釧瑤</span>
+      </div>
+      <p class="header-sub">基準指數：臺灣加權股價指數 | 系統模式：智能監控、現金流試算與視覺化教學版</p>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <span>監控引擎運行中 (正常)</span>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- 新增：本金輸入與每月現金流預測試算區塊       -->
+  <!-- ========================================== -->
+  <section class="calc-card">
+    <div class="calc-header">
+      <div class="calc-title">
+        <span>🧮 投資本金現金流試算與月配息預測引擎</span>
+        <div class="tooltip-icon">ⓘ
+          <span class="tooltip-text">輸入欲投資金額，系統將依最新基金淨值 ($27.85) 與近期每單位配發金額 ($0.195)，動態試算每月現金流與年化息收。</span>
+        </div>
+      </div>
+      <div style="font-size: 0.75rem; color: #94a3b8;">
+        基準設定：目前淨值 <strong style="color: #fff;">$27.85</strong> | 當期配息 <strong style="color: #fff;">$0.195/單位</strong>
+      </div>
+    </div>
+
+    <div class="calc-form">
+      <!-- 輸入區 -->
+      <div class="calc-input-group">
+        <label for="input-capital" style="font-size: 0.8rem; font-weight: 600; color: #cbd5e1;">
+          請輸入預計投入本金 (新台幣 NTD)：
+        </label>
+        <div class="calc-input-wrapper">
+          <input type="number" id="input-capital" class="calc-input" value="1000000" step="50000" min="10000" placeholder="例: 1000000">
+          <button type="button" id="btn-calculate" class="calc-btn">立即試算</button>
+        </div>
+        <div style="font-size: 0.72rem; color: #64748b;">
+          💡 快速按鈕：
+          <button type="button" onclick="setQuickCapital(300000)" style="background:none; border:none; color:#38bdf8; cursor:pointer; text-decoration:underline;">30萬</button> |
+          <button type="button" onclick="setQuickCapital(500000)" style="background:none; border:none; color:#38bdf8; cursor:pointer; text-decoration:underline;">50萬</button> |
+          <button type="button" onclick="setQuickCapital(1000000)" style="background:none; border:none; color:#38bdf8; cursor:pointer; text-decoration:underline;">100萬</button> |
+          <button type="button" onclick="setQuickCapital(3000000)" style="background:none; border:none; color:#38bdf8; cursor:pointer; text-decoration:underline;">300萬</button>
+        </div>
+      </div>
+
+      <!-- 輸出結果指標卡片 -->
+      <div class="calc-results-grid">
+        <div class="calc-res-item">
+          <div class="calc-res-label">預估每月進帳配息 (月現金流)</div>
+          <div class="calc-res-val" id="res-monthly-income">NT$ 7,002</div>
+          <div class="calc-res-sub" id="res-units-info">換算持有份額：35,906.64 單位</div>
+        </div>
+
+        <div class="calc-res-item">
+          <div class="calc-res-label">預估全年累計息收 (年現金流)</div>
+          <div class="calc-res-val" id="res-yearly-income" style="color: #34d399;">NT$ 84,024</div>
+          <div class="calc-res-sub">滾動年化配息率約 8.40%</div>
+        </div>
+
+        <div class="calc-res-item">
+          <div class="calc-res-label">每月配息成分來源預估拆解</div>
+          <div class="calc-res-val" id="res-source-capital" style="font-size: 1.15rem; color: #fbbf24; margin-top: 4px;">本金約 NT$ 1,400 (20%)</div>
+          <div class="calc-res-sub" id="res-source-gains">股利與價差利得：約 NT$ 5,602 (80%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 試算附註與健保門檻分析 -->
+    <div id="calc-alert-note" class="note-box" style="margin-top: 14px; background-color: #020617;">
+      <strong>現金流分析提示：</strong>
+      <span id="tax-tip">單月股利所得預估未達 20,000 元，免扣繳 2.11% 二代健保補充保費。配息將於每月 14-16 日左右自動入帳。</span>
+    </div>
+  </section>
+
+  <!-- KPI 摘要指標框 -->
+  <div class="kpi-grid">
+    <!-- KPI 1 -->
+    <div class="card">
+      <div class="kpi-header">
+        <div class="kpi-title">最新原始淨值 (NAV)</div>
+        <div class="tooltip-icon">ⓘ
+          <span class="tooltip-text">扣除每月配息與經理費後的實際每單位現值。若經理人持續順利填息，原始淨值會穩步上升。</span>
+        </div>
+      </div>
+      <div class="kpi-value">$27.85</div>
+      <div class="kpi-sub color-green">▲ +0.32 (+1.16%)</div>
+      <div class="note-box">
+        <strong>附註說明：</strong> 每日營業日收盤後投信結算公告，已自動扣除每日經理保管費。
+      </div>
+    </div>
+
+    <!-- KPI 2 -->
+    <div class="card">
+      <div class="kpi-header">
+        <div class="kpi-title">滾動年化配息率</div>
+        <div class="tooltip-icon">ⓘ
+          <span class="tooltip-text">計算公式：(單月每單位配息金額 ÷ 當期除息日前一日淨值) × 12 個月。不代表未來固定收益保證。</span>
+        </div>
+      </div>
+      <div class="kpi-value color-blue">8.42%</div>
+      <div class="kpi-sub">近一期每單位配發：$0.195 元</div>
+      <div class="note-box">
+        <strong>附註說明：</strong> 衡量每月產生的被動現金流速度，高配息需搭配填息能力方為實質獲利。
+      </div>
+    </div>
+
+    <!-- KPI 3 -->
+    <div class="card">
+      <div class="kpi-header">
+        <div class="kpi-title">季線乖離率 (BIAS 60)</div>
+        <div class="tooltip-icon">ⓘ
+          <span class="tooltip-text">淨值偏離 60 日均線的幅度。大於 +18% 意味過熱，小於 -8% 意味嚴重超跌，常態通道為 -8% 至 +15%。</span>
+        </div>
+      </div>
+      <div class="kpi-value color-purple">+3.15%</div>
+      <div class="kpi-sub">常態持有通道中 (-8% ~ +15%)</div>
+      <div class="note-box note-box-green">
+        <strong>附註說明：</strong> 核心低點進場模型指標，目前距離季線平均水準健康，無過熱失真。
+      </div>
+    </div>
+
+    <!-- KPI 4 -->
+    <div class="card">
+      <div class="kpi-header">
+        <div class="kpi-title">配息本金侵蝕警訊</div>
+        <div class="tooltip-icon">ⓘ
+          <span class="tooltip-text">監控連續 3 期本金佔比是否超過 45%。超過則判定為「動用本金維持高息」，警示投資人本金正在縮水。</span>
+        </div>
+      </div>
+      <div class="kpi-value color-green">安全 (無警報)</div>
+      <div class="kpi-sub">近 3 期本金佔比均 &lt; 30%</div>
+      <div class="note-box note-box-amber">
+        <strong>附註說明：</strong> 配息主要由台股成分股股利與波段價差獲利支應，資本底層結構扎實。
+      </div>
+    </div>
+  </div>
+
+  <!-- 上半部：主走勢圖 + 進出場儀表盤 -->
+  <div class="main-grid">
+    <div class="card">
+      <div class="chart-header">
+        <h2>淨值走勢 vs. 還原總報酬曲線</h2>
+        <p>雙軸對比：原始除息階梯 vs 含息滾動成長與 60MA 均線（滑鼠懸停看詳細數值與差額）</p>
+      </div>
+      <div id="chart-performance" class="chart-box-lg"></div>
+      <div class="note-box">
+        <strong>圖型附註說明：</strong> 
+        藍線為「還原淨值（含息再投資）」，代表若領到利息持續滾入的實質資產累積；紫線為「原始淨值」，每次除息會出現向下除息階梯；黃虛線為「60MA 季線」，是判斷波段強弱與乖離率的基準軸心。
+      </div>
+    </div>
+
+    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div class="chart-header">
+          <h2>進出場時機指標儀表</h2>
+          <p>基於 60MA 乖離率與超買超賣通道動態判定</p>
+        </div>
+        <div id="chart-gauge" class="chart-box-gauge"></div>
+      </div>
+      <div>
+        <div class="guide-box">
+          <strong style="color: #60a5fa;">指引解讀：</strong> 目前指針位於「藍色常態持有區間」，建議維持常態定期定額扣款，不追高亦不需急於停損。
+        </div>
+        <div class="note-box note-box-green">
+          <strong>儀表附註說明：</strong> 
+          綠色區 (&lt; -8%)：嚴重超跌，觸發大額單筆加碼訊號；紅色區 (&gt; +18%)：高檔過熱，提示切勿大額單筆追高，宜忍耐觀望。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下半部：配息成分拆解 + 警示事件紀錄 -->
+  <div class="main-grid">
+    <div class="card">
+      <div class="chart-header">
+        <h2>配息組成成分深度拆解 (近 12 期)</h2>
+        <p>監控股利所得、資本利得與本金侵蝕閾值（滑鼠懸停長條圖檢視 54C、76 與本金佔比）</p>
+      </div>
+      <div id="chart-dividend" class="chart-box-md"></div>
+      <div class="note-box">
+        <strong>圖型附註說明：</strong> 
+        藍色「54C 股利所得」（需計入個人二代健保補充保費與綜所稅申報）；綠色「76 資本利得」（免證所稅價差獲利）；黃色「本金與收益平準金」（投資人自己原始本金的返還，不課稅）。紅色虛線為 45% 警戒標竿。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chart-header">
+        <h2>系統警示事件歷程 (Alert Log)</h2>
+        <p>即時捕捉異常本金分配與超買超賣節點（可懸停查看觸發細節）</p>
+      </div>
+      <div class="log-list">
+        <div class="log-item log-item-green" title="觸發依據：8/5 當日台股大幅回檔，NAV 季線乖離達到 -8.7%，RSI 跌至 28，符合『高性價比建倉區』規則。">
+          <div class="log-header" style="color: #34d399;">
+            <span>[買進訊號] 逢低加碼點確認 ⓘ</span>
+            <span>2026-08-05</span>
+          </div>
+          <div>60MA 乖離率觸及 -8.7%，符合低點大額佈局條件，後續淨值順利回升填息。</div>
+        </div>
+        <div class="log-item log-item-amber" title="觸發依據：5 月份因台股進入震盪期，投信動用 42.1% 收益平準金維持年化 8% 承諾，接近 45% 警戒線。">
+          <div class="log-header" style="color: #fbbf24;">
+            <span>[本金提醒] 配息本金佔比升高 ⓘ</span>
+            <span>2026-05-02</span>
+          </div>
+          <div>該月除息本金佔比達 42.1%，系統列入重點觀察名單，所幸 6 月股息旺季隨即回降。</div>
+        </div>
+        <div class="log-item log-item-default" title="例行排程：每月第一個營業日完成持有人造冊，並計算當期每單位分配金。">
+          <div class="log-header">
+            <span>[例行作業] 基準日名冊結算完成 ⓘ</span>
+            <span>2026-10-01</span>
+          </div>
+          <div>當月每單位配發 0.195 元，預計於 10/14 發放至指定投資人扣款帳戶。</div>
+        </div>
+      </div>
+      <div class="note-box">
+        <strong>日誌附註說明：</strong> 
+        將後端演算法的判斷軌跡透明化，供量化系統研發者回溯策略觸發的精準度與勝率。
+      </div>
+    </div>
+  </div>
+
+  <!-- 本地 ECharts 繪圖渲染與試算邏輯腳本 -->
+  <script>
+    // ==========================================
+    // 試算器邏輯 (Calculator Logic)
+    // ==========================================
+    const CURRENT_NAV = 27.85;           // 當前最新淨值
+    const CURRENT_DIVIDEND = 0.195;      // 最新每單位配息金額
+    const AVG_CAPITAL_RETURN_RATIO = 0.20; // 預估本金佔比約 20%
+    const AVG_DIVIDEND_54C_RATIO = 0.45;   // 預估 54C 股利所得佔比約 45%
+
+    function calculateCashFlow() {
+      const inputVal = parseFloat(document.getElementById('input-capital').value);
+      if (isNaN(inputVal) || inputVal <= 0) {
+        alert('請輸入大於 0 的有效本金金額！');
+        return;
+      }
+
+      // 1. 購買單位數 = 本金 / 淨值
+      const units = inputVal / CURRENT_NAV;
+      // 2. 每月配息 = 單位數 * 每單位配發金額
+      const monthlyIncome = units * CURRENT_DIVIDEND;
+      // 3. 全年配息 = 每月配息 * 12
+      const yearlyIncome = monthlyIncome * 12;
+
+      // 4. 來源細拆
+      const monthlyCapitalReturn = monthlyIncome * AVG_CAPITAL_RETURN_RATIO;
+      const monthlyProfit = monthlyIncome * (1 - AVG_CAPITAL_RETURN_RATIO);
+      const monthly54c = monthlyIncome * AVG_DIVIDEND_54C_RATIO;
+
+      // 更新畫面數值
+      document.getElementById('res-monthly-income').innerText = 'NT$ ' + Math.round(monthlyIncome).toLocaleString();
+      document.getElementById('res-units-info').innerText = `換算持有份額：${units.toFixed(2)} 單位`;
+      document.getElementById('res-yearly-income').innerText = 'NT$ ' + Math.round(yearlyIncome).toLocaleString();
+      
+      document.getElementById('res-source-capital').innerText = `本金約 NT$ ${Math.round(monthlyCapitalReturn).toLocaleString()} (20%)`;
+      document.getElementById('res-source-gains').innerText = `股利與價差利得：約 NT$ ${Math.round(monthlyProfit).toLocaleString()} (80%)`;
+
+      // 稅務與二代健保補充保費提示
+      const taxTipDom = document.getElementById('tax-tip');
+      if (monthly54c >= 20000) {
+        taxTipDom.innerHTML = `<span style="color: #ef4444; font-weight: bold;">⚠️ 提醒：</span> 單月 54C 股利所得約 NT$ ${Math.round(monthly54c).toLocaleString()}，已達單筆 2 萬元門檻，將由投信自動扣繳 2.11% 二代健保補充保費（約 NT$ ${Math.round(monthly54c * 0.0211).toLocaleString()}）。`;
+      } else {
+        taxTipDom.innerHTML = `單月 54C 股利所得約 NT$ ${Math.round(monthly54c).toLocaleString()}（未達 20,000 元），免扣繳二代健保補充保費。配息預計每月 14-16 日左右入帳。`;
+      }
+    }
+
+    function setQuickCapital(amount) {
+      document.getElementById('input-capital').value = amount;
+      calculateCashFlow();
+    }
+
+    // 監聽按鈕點擊與鍵盤 Enter 事件
+    document.getElementById('btn-calculate').addEventListener('click', calculateCashFlow);
+    document.getElementById('input-capital').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') calculateCashFlow();
+    });
+
+    // ==========================================
+    // 圖表渲染 (ECharts Charts)
+    // ==========================================
+    window.addEventListener('load', function () {
+      if (typeof echarts === 'undefined') {
+        alert('找不到本地 echarts.min.js！請確認該檔案與 dashboard.html 放在同一個資料夾。');
+        return;
+      }
+
+      // 初始化第一次試算
+      calculateCashFlow();
+
+      // 1. 走勢圖：含息 vs 原始 vs 60MA 均線
+      const perfDom = document.getElementById('chart-performance');
+      const perfChart = echarts.init(perfDom);
+      const dates = ['5/1', '5/15', '6/1', '6/15', '7/1', '7/15', '8/1', '8/15', '9/1', '9/15', '10/1'];
+      const navData = [25.4, 25.8, 26.2, 25.9, 26.8, 27.2, 26.5, 27.1, 27.6, 27.4, 27.85];
+      const adjNavData = [25.4, 26.0, 26.6, 26.5, 27.6, 28.2, 27.7, 28.5, 29.2, 29.2, 29.8];
+      const ma60Data = [25.1, 25.3, 25.5, 25.7, 26.0, 26.3, 26.5, 26.7, 26.9, 27.0, 27.1];
+
+      perfChart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: '#0f172a',
+          borderColor: '#475569',
+          borderWidth: 1,
+          padding: 12,
+          textStyle: { color: '#f8fafc', fontSize: 12 },
+          formatter: function (params) {
+            let date = params[0].name;
+            let adj = params[0].value;
+            let nav = params[1].value;
+            let ma = params[2].value;
+            let diff = (adj - nav).toFixed(2);
+            let bias = (((nav - ma) / ma) * 100).toFixed(2);
+
+            let tip = `<div style="font-weight: bold; margin-bottom: 6px; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 4px;">📅 日期：${date}</div>`;
+            tip += `<div>📈 還原淨值 (含息)：<strong>$${adj}</strong></div>`;
+            tip += `<div>📉 原始除息淨值：<strong>$${nav}</strong></div>`;
+            tip += `<div>💰 累計領取配息差額：<span style="color: #34d399; font-weight: bold;">+$${diff}</span></div>`;
+            tip += `<div>📐 60MA 季線：$${ma}</div>`;
+            tip += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #334155; font-size: 11px; color: #cbd5e1;">`
+            tip += `🎯 當日乖離率：<strong>${bias > 0 ? '+' : ''}${bias}%</strong> (`;
+            if (bias < -8) tip += `<span style="color: #34d399;">超跌加碼區</span>)`;
+            else if (bias > 18) tip += `<span style="color: #ef4444;">過熱觀望區</span>)`;
+            else tip += `<span style="color: #38bdf8;">常態持有區</span>)`;
+            tip += `</div>`;
+            return tip;
+          }
+        },
+        legend: { data: ['還原淨值 (含息)', '原始淨值', '60MA 均線'], textStyle: { color: '#94a3b8' }, top: 0 },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'category', data: dates, axisLine: { lineStyle: { color: '#475569' } }, axisLabel: { color: '#94a3b8' } },
+        yAxis: { type: 'value', min: 24, max: 31, axisLine: { lineStyle: { color: '#475569' } }, splitLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8' } },
+        series: [
+          { name: '還原淨值 (含息)', type: 'line', data: adjNavData, smooth: true, itemStyle: { color: '#38bdf8' }, lineStyle: { width: 3 } },
+          { name: '原始淨值', type: 'line', data: navData, step: 'end', itemStyle: { color: '#a855f7' }, lineStyle: { width: 2 } },
+          { name: '60MA 均線', type: 'line', data: ma60Data, lineStyle: { type: 'dashed', color: '#fbbf24' } }
+        ]
+      });
+
+      // 2. 儀表盤：60MA 乖離時機指標
+      const gaugeDom = document.getElementById('chart-gauge');
+      const gaugeChart = echarts.init(gaugeDom);
+      gaugeChart.setOption({
+        tooltip: {
+          show: true,
+          backgroundColor: '#0f172a',
+          borderColor: '#475569',
+          borderWidth: 1,
+          padding: 10,
+          textStyle: { color: '#f8fafc', fontSize: 12 },
+          formatter: function () {
+            return `
+              <div style="font-weight: bold; color: #38bdf8; margin-bottom: 4px;">🎯 乖離率時機模型量化區間</div>
+              <div>🟢 <strong>綠區 (&lt; -8%)</strong>：超跌區，適合大額單筆加碼</div>
+              <div>🔵 <strong>藍區 (-8% ~ +15%)</strong>：常態區，維持定期定額</div>
+              <div>🔴 <strong>紅區 (&gt; +18%)</strong>：過熱區，暫停單筆追加、忍耐觀望</div>
+              <div style="margin-top: 4px; font-size: 11px; color: #94a3b8;">目前數值：+3.15% (安全常態區)</div>
+            `;
+          }
+        },
+        series: [{
+          type: 'gauge',
+          startAngle: 180, endAngle: 0,
+          min: -20, max: 30,
+          pointer: { itemStyle: { color: '#f8fafc' }, width: 4 },
+          axisLine: {
+            lineStyle: {
+              width: 14,
+              color: [
+                [0.24, '#10b981'],
+                [0.70, '#38bdf8'],
+                [1, '#ef4444']
+              ]
+            }
+          },
+          splitLine: { length: 8, lineStyle: { color: '#fff', width: 1 } },
+          axisTick: { show: false },
+          axisLabel: { color: '#94a3b8', fontSize: 10 },
+          title: { offsetCenter: [0, '25%'], fontSize: 12, color: '#94a3b8' },
+          detail: { fontSize: 20, offsetCenter: [0, '-15%'], valueAnimation: true, formatter: '+3.15%', color: '#f8fafc' },
+          data: [{ value: 3.15, name: '當前 60MA 乖離狀態' }]
+        }]
+      });
+
+      // 3. 配息成分拆解 100% 堆疊長條圖
+      const divDom = document.getElementById('chart-dividend');
+      const divChart = echarts.init(divDom);
+      const months = ['25/11', '25/12', '26/01', '26/02', '26/03', '26/04', '26/05', '26/06', '26/07', '26/08', '26/09', '26/10'];
+      
+      divChart.setOption({
+        tooltip: { 
+          trigger: 'axis', 
+          axisPointer: { type: 'shadow' },
+          backgroundColor: '#0f172a',
+          borderColor: '#475569',
+          borderWidth: 1,
+          padding: 12,
+          textStyle: { color: '#f8fafc', fontSize: 12 },
+          formatter: function(params) {
+            let month = params[0].name;
+            let divIncome = params[0].value;
+            let capGains = params[1].value;
+            let capitalReturn = params[2].value;
+
+            let tip = `<div style="font-weight: bold; margin-bottom: 6px; color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 4px;">📊 ${month} 月配息來源結構拆解</div>`;
+            tip += `<div>🟦 <strong>54C 股利所得</strong>：${divIncome}% <span style="font-size: 10px; color:#94a3b8;">(成分股真除息)</span></div>`;
+            tip += `<div>🟩 <strong>76 資本利得</strong>：${capGains}% <span style="font-size: 10px; color:#94a3b8;">(經理人做價差)</span></div>`;
+            tip += `<div>🟨 <strong>本金/平準金</strong>：<strong style="color: ${capitalReturn >= 40 ? '#f87171' : '#facc15'};">${capitalReturn}%</strong></div>`;
+            
+            tip += `<div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #334155; font-size: 11px;">`;
+            if (capitalReturn >= 45) {
+              tip += `<span style="color: #ef4444; font-weight: bold;">⚠️ 警告：本金佔比突破 45% 警戒紅線！</span>`;
+            } else if (capitalReturn >= 40) {
+              tip += `<span style="color: #f59e0b;">⚡ 提醒：本金佔比偏高，接近警報水位。</span>`;
+            } else {
+              tip += `<span style="color: #34d399;">✅ 狀態：配息結構健康，主要由實質獲利支應。</span>`;
+            }
+            tip += `</div>`;
+            return tip;
+          }
+        },
+        legend: { data: ['股利所得 (54C)', '資本利得 (76)', '本金/平準金 (侵蝕風險)'], textStyle: { color: '#94a3b8' }, top: 0 },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#475569' } }, axisLabel: { color: '#94a3b8' } },
+        yAxis: { type: 'value', min: 0, max: 100, splitLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8', formatter: '{value}%' } },
+        series: [
+          { name: '股利所得 (54C)', type: 'bar', stack: 'total', itemStyle: { color: '#3b82f6' }, data: [40, 35, 30, 25, 20, 25, 20, 45, 55, 60, 50, 45] },
+          { name: '資本利得 (76)', type: 'bar', stack: 'total', itemStyle: { color: '#10b981' }, data: [45, 45, 50, 50, 45, 33, 40, 35, 30, 25, 30, 35] },
+          { 
+            name: '本金/平準金 (侵蝕風險)', type: 'bar', stack: 'total', itemStyle: { color: '#f59e0b' }, 
+            data: [15, 20, 20, 25, 35, 42, 40, 20, 15, 15, 20, 20],
+            markLine: {
+              symbol: ['none', 'none'],
+              silent: true,
+              data: [
+                {
+                  yAxis: 45,
+                  lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                  label: { formatter: '45% 侵蝕警戒線', color: '#ef4444', position: 'insideEndTop', fontSize: 11 }
+                }
+              ]
+            }
+          }
+        ]
+      });
+
+      // 視窗變更自動 resize
+      window.addEventListener('resize', function () {
+        perfChart.resize();
+        gaugeChart.resize();
+        divChart.resize();
+      });
+    });
+  </script>
+</body>
+</html>
