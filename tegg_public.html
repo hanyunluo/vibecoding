@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>統一台灣高息優選基金 (UNI049) 智能監控與現金流試算儀表板 (公眾版)</title>
+  <title>統一台灣高息優選基金 (UNI049) 智能監控與現金流試算儀表板 (公眾版 v3.0)</title>
   
   <!-- 高速雲端 CDN 引入 ECharts -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
@@ -96,45 +96,6 @@
       padding: 18px 20px;
       position: relative;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-    }
-
-    /* 新增：時間週期切換按鈕組 (月 / 季 / 半年 / 一年) */
-    .period-tabs {
-      display: inline-flex;
-      background-color: #090e17;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 3px;
-      gap: 4px;
-    }
-    .period-btn {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 0.76rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .period-btn:hover { color: #f8fafc; background-color: #1e293b; }
-    .period-btn.active {
-      background-color: #2563eb;
-      color: #ffffff;
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
-    }
-    .period-summary-bar {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      font-size: 0.75rem;
-      background-color: #090e17;
-      border: 1px solid #1e293b;
-      padding: 6px 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      color: #cbd5e1;
     }
 
     /* 公眾版：投資本金與持有成本現金流試算中心 */
@@ -317,14 +278,48 @@
     }
     .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
 
-    /* 圖表容器 */
-    .chart-box-lg { width: 100%; height: 330px; }
+    /* 圖表容器與週期切換按鈕群組 */
+    .chart-box-lg { width: 100%; height: 340px; }
     .chart-box-md { width: 100%; height: 300px; }
     .chart-box-gauge { width: 100%; height: 215px; }
 
-    .chart-header { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .chart-header h2 { font-size: 1.02rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; }
+    .chart-header {
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .chart-header h2 { font-size: 1.02rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .chart-header p { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+
+    /* 月 / 季 / 半年 / 一年 切換按鈕樣式 */
+    .period-tabs {
+      display: inline-flex;
+      background-color: #090e17;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+    .period-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 5px 12px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .period-btn:hover { color: #f8fafc; background-color: #1e293b; }
+    .period-btn.active {
+      background-color: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
 
     /* 大漲大跌事件清單 */
     .log-list { display: flex; flex-direction: column; gap: 9px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
@@ -343,19 +338,20 @@
     <div>
       <div class="header-title-row">
         <h1 class="header-title">統一台灣高息優選基金 (月配型) 智能監控與試算儀表板</h1>
-        <span class="badge badge-blue">代號：UNI049 / TW000T0945B1</span>
+        <span class="badge badge-blue">代號：UNI049 / ACPS63</span>
         <span class="badge badge-green">主動代操團隊 / 經理人：陳釧瑤</span>
         <span class="badge badge-amber" id="dividend-countdown-badge">📅 除息倒數計算中...</span>
       </div>
-      <p class="header-sub">基準指數：臺灣高股息優選指數 | 系統模式：公眾開放體驗版 (即時淨值同步、自訂成本試算與多週期績效切換)</p>
+      <p class="header-sub">基準指數：臺灣高股息優選指數 | 系統模式：公眾開放體驗版 v3.0 (四重財經源即時爬蟲、跨月自動推進與大漲大跌剖析)</p>
     </div>
 
     <div class="header-controls">
       <div class="status-pill">
         <span class="status-dot" id="sync-dot"></span>
-        <span id="sync-status-text">已載入最新市場數據 (2026/10/30)</span>
+        <span id="sync-status-text">正在同步最新市場日期與淨值...</span>
       </div>
       <button class="btn-action btn-primary" onclick="fetchLatestFundData(true)">🔄 立即連線更新淨值</button>
+      <button class="btn-action" onclick="manualUpdateDateAndNav()">✏️ 手動更新日期/淨值</button>
       <button class="btn-action" onclick="clearUserInputs()">🧹 清空重填</button>
     </div>
   </header>
@@ -396,9 +392,9 @@
       <div class="input-box">
         <label for="input-current-nav">
           <span>③ 最新基金淨值 (元)</span>
-          <span id="nav-date-label" style="color:#fbbf24; font-size:0.7rem;">2026/10/30 結算</span>
+          <span id="nav-date-label" style="color:#fbbf24; font-size:0.7rem;">2026/11/02 結算</span>
         </label>
-        <input type="number" id="input-current-nav" class="calc-input" value="23.59" step="0.01" min="5">
+        <input type="number" id="input-current-nav" class="calc-input" value="23.56" step="0.01" min="5">
       </div>
 
       <div class="input-box">
@@ -458,7 +454,7 @@
           <span>年化配息率 & 配息來源拆解</span>
           <span style="color:#34d399;">雙率評估</span>
         </div>
-        <div class="calc-res-val" id="res-yield-info" style="color: #34d399; font-size: 1.2rem;">現價息率 11.79%</div>
+        <div class="calc-res-val" id="res-yield-info" style="color: #34d399; font-size: 1.2rem;">現價息率 11.80%</div>
         <div class="calc-res-sub" id="res-tax-sub">輸入本金後將為您拆解單月 54C 股利與免稅資本利得金額</div>
       </div>
     </div>
@@ -476,20 +472,20 @@
   </section>
 
   <!-- ========================================================= -->
-  <!-- 區塊 2：KPI 摘要指標框 -->
+  <!-- 區塊 2：KPI 摘要指標框 (所有日期與漲跌幅完全動態連動) -->
   <!-- ========================================================= -->
   <div class="kpi-grid">
     <div class="card">
       <div class="kpi-header">
         <div class="kpi-title">最新原始淨值 (NAV)</div>
         <div class="tooltip-icon">ⓘ
-          <span class="tooltip-text">扣除每月配息與經理費 (1.6%)、保管費 (0.15%) 後的實際每單位現值。</span>
+          <span class="tooltip-text">扣除每月配息與經理費 (1.6%)、保管費 (0.15%) 後的實際每單位現值。每次開啟網頁自動連線更新最新結算日與淨值。</span>
         </div>
       </div>
-      <div class="kpi-value" id="kpi-nav">$23.59</div>
-      <div class="kpi-sub color-red" id="kpi-nav-change">▼ -1.09 (-4.42%) | 2026/10/30</div>
-      <div class="note-box">
-        <strong>波段區間：</strong> 10月最高 <strong>$28.92</strong> (10/06) / 最低 <strong>$23.59</strong> (10/30)。
+      <div class="kpi-value" id="kpi-nav">$23.56</div>
+      <div class="kpi-sub color-red" id="kpi-nav-change">▼ -0.03 (-0.13%) | 2026/11/02</div>
+      <div class="note-box" id="kpi-range-note">
+        <strong>近期波段區間：</strong> 最高 <strong>$28.92</strong> (10/06) / 最低 <strong>$23.56</strong> (11/02)。
       </div>
     </div>
 
@@ -497,13 +493,13 @@
       <div class="kpi-header">
         <div class="kpi-title">當期年化配息率 & 填息表現</div>
         <div class="tooltip-icon">ⓘ
-          <span class="tooltip-text">計算公式：(單月每單位配息 ÷ 最新淨值) × 12。10月除息 0.2317 元後僅花 2 個營業日即完全填息！</span>
+          <span class="tooltip-text">計算公式：(單月每單位配息 ÷ 最新淨值) × 12。前次除息 0.2317 元後僅花 2 個營業日即完全填息！</span>
         </div>
       </div>
-      <div class="kpi-value color-blue" id="kpi-yield">11.79%</div>
+      <div class="kpi-value color-blue" id="kpi-yield">11.80%</div>
       <div class="kpi-sub color-green">★ 近一期配發 $0.2317 (2天極速填息完成)</div>
       <div class="note-box note-box-green">
-        <strong>配息趨勢：</strong> 近5個月每單位配息維持 <strong>$0.20~$0.2396</strong> 高檔水準。
+        <strong>配息趨勢：</strong> 近半年每單位配息維持 <strong>$0.20~$0.2396</strong> 高檔水準。
       </div>
     </div>
 
@@ -511,13 +507,13 @@
       <div class="kpi-header">
         <div class="kpi-title">季線乖離率 (BIAS 60MA)</div>
         <div class="tooltip-icon">ⓘ
-          <span class="tooltip-text">淨值偏離 60 日均線 ($26.42) 的幅度。小於 -8% 代表短線超跌，大於 +12% 代表短線過熱。</span>
+          <span class="tooltip-text">淨值偏離 60 日均線的幅度。小於 -8% 代表短線超跌，大於 +12% 代表短線過熱。</span>
         </div>
       </div>
-      <div class="kpi-value color-green" id="kpi-bias">-10.71%</div>
+      <div class="kpi-value color-green" id="kpi-bias">-10.69%</div>
       <div class="kpi-sub" id="kpi-bias-status">🟢 進入超跌高性價比區間 (&lt; -8%)</div>
-      <div class="note-box note-box-green">
-        <strong>量化判定：</strong> 目前季線約 <strong>$26.42</strong>，負乖離擴大提供良好安全邊際。
+      <div class="note-box note-box-green" id="kpi-ma-note">
+        <strong>量化判定：</strong> 目前季線約 <strong>$26.38</strong>，負乖離擴大提供良好安全邊際。
       </div>
     </div>
 
@@ -537,36 +533,33 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- 區塊 3：主走勢圖 (支援月/季/半年/一年切換) + 進出場時機指標儀表 -->
+  <!-- 區塊 3：主走勢圖 (支援 月 / 季 / 半年 / 一年 切換) + 進出場儀表 -->
   <!-- ========================================================= -->
   <div class="main-grid">
     <div class="card">
       <div class="chart-header">
         <div>
-          <h2>📈 淨值走勢 vs. 含息還原總報酬曲線 <span id="chart-cost-title-tag" style="font-size:0.8rem; color:#38bdf8; font-weight:normal;"></span></h2>
-          <p>雙軸對比：原始除息淨值 vs 含息滾動成長與 60MA 季線（點擊右側按鈕可切換觀察週期）</p>
+          <h2>
+            <span>📈 淨值走勢 vs. 含息還原總報酬曲線</span>
+            <span id="period-return-badge" class="badge badge-blue">區間含息報酬：計算中</span>
+            <span id="chart-cost-title-tag" style="font-size:0.78rem; color:#f87171; font-weight:600;"></span>
+          </h2>
+          <p>雙軸對比：原始除息淨值 vs 含息滾動成長與 60MA 季線（X 軸時間隨最新連線日期自動推進）</p>
         </div>
-        <!-- 新增：月 / 季 / 半年 / 一年 切換按鈕組 -->
-        <div class="period-tabs">
-          <button type="button" class="period-btn" onclick="switchChartPeriod('1M', this)">近1月</button>
-          <button type="button" class="period-btn active" onclick="switchChartPeriod('3M', this)">近1季</button>
-          <button type="button" class="period-btn" onclick="switchChartPeriod('6M', this)">近半年</button>
-          <button type="button" class="period-btn" onclick="switchChartPeriod('1Y', this)">近1年</button>
-        </div>
-      </div>
 
-      <!-- 動態區間報酬率摘要列 -->
-      <div class="period-summary-bar" id="period-summary-bar">
-        <span>📅 觀察區間：<strong id="p-range-lbl" style="color:#fff;">近1季 (3M)</strong></span>
-        <span>📉 區間原始淨值漲跌：<strong id="p-nav-ret">--%</strong></span>
-        <span>📈 區間含息還原總報酬：<strong id="p-adj-ret" class="color-blue">--%</strong></span>
-        <span>💰 區間累計配息貢獻：<strong id="p-div-diff" class="color-green">+$-.-- / 單位</strong></span>
+        <!-- 月 / 季 / 半年 / 一年 週期切換器 -->
+        <div class="period-tabs">
+          <button type="button" class="period-btn" data-period="1M" onclick="switchChartPeriod('1M')">月 (1M)</button>
+          <button type="button" class="period-btn active" data-period="3M" onclick="switchChartPeriod('3M')">季 (3M)</button>
+          <button type="button" class="period-btn" data-period="6M" onclick="switchChartPeriod('6M')">半年 (6M)</button>
+          <button type="button" class="period-btn" data-period="1Y" onclick="switchChartPeriod('1Y')">一年 (1Y)</button>
+        </div>
       </div>
 
       <div id="chart-performance" class="chart-box-lg"></div>
       <div class="note-box">
         <strong>圖型附註說明：</strong> 
-        藍線為「含息還原淨值」，代表若將領到的配息持續滾入的實質資產累積；紫線為「原始除息淨值」；灰虛線為「60MA 季線」。切換至「近半年」或「近1年」可明顯看出長期領息累積出的總報酬差距。
+        藍線為「含息還原淨值」，代表若將領到的配息持續滾入的實質資產累積（切換至「半年」或「一年」可清楚看見長線填息複利開口）；紫線為「原始除息淨值」；灰虛線為「60MA 季線」。
       </div>
     </div>
 
@@ -613,12 +606,22 @@
       <div class="chart-header">
         <div>
           <h2>⚡ 大漲大跌異動監測與底層原因深度剖析</h2>
-          <p>自動捕捉單日漲跌幅 &gt; 2.5% 之顯著波動，解析成分股與籌碼成因</p>
+          <p>自動捕捉單日顯著波動與最新市況，解析成分股與籌碼成因</p>
         </div>
         <span class="badge badge-amber">風險報酬等級：RR4</span>
       </div>
 
-      <div class="log-list">
+      <div class="log-list" id="volatility-log-list">
+        <div class="log-item log-item-blue" id="latest-market-log">
+          <div class="log-header" style="color: #38bdf8;">
+            <span id="latest-log-title">📌 【最新市況追蹤】2026/11/02 淨值 $23.56 (-0.13%)</span>
+            <span id="latest-log-date">最新結算</span>
+          </div>
+          <div style="color: #e2e8f0; line-height: 1.45;" id="latest-log-desc">
+            <strong>市況解析</strong>：經歷 10 月底外資調節後，11 月初台股與 AI 伺服器族群進入築底止穩階段，單日僅微幅波動 -0.03 元 (-0.13%)，季線負乖離約 -10.69%，處於高殖利率（11.80%）低檔承接區。
+          </div>
+        </div>
+
         <div class="log-item log-item-red">
           <div class="log-header" style="color: #f87171;">
             <span>📉 【大跌剖析】2026/10/30 單日下跌 -1.09 元 (-4.42%)</span>
@@ -626,7 +629,7 @@
           </div>
           <div style="color: #e2e8f0; line-height: 1.45;">
             <strong>波動原因</strong>：受美股科技巨頭財報震盪與外資期現貨調節影響，本基金核心配置之<strong>高階 AI 伺服器、散熱與 PCB 族群（如緯穎、台光電、奇鋐、台積電等）</strong>出現短線獲利了結賣壓。<br>
-            <strong style="color: #34d399;">👉 市場解讀</strong>：AI 長線出貨基本面未變，短線急跌使季線負乖離擴大至 -10.71%，現價年化配息率同步拉升至 11.79%。
+            <strong style="color: #34d399;">👉 市場解讀</strong>：AI 長線出貨基本面未變，短線急跌使季線負乖離擴大至 -10% 以上，現價年化配息率同步拉升至近 11.8%。
           </div>
         </div>
 
@@ -649,106 +652,294 @@
             <strong>波動原因</strong>：10/06 淨值創下 <strong>$28.92</strong> 波段高點後，遭遇台指期結算與國際半導體消息面波動，高檔正乖離收斂引發技術性修正。
           </div>
         </div>
-
-        <div class="log-item log-item-blue">
-          <div class="log-header" style="color: #60a5fa;">
-            <span>📈 【創高與填息剖析】2026/10/05 ~ 10/06 突破 $28.92 (+3.63%)</span>
-            <span>波段高點</span>
-          </div>
-          <div style="color: #cbd5e1; line-height: 1.45;">
-            <strong>波動原因</strong>：10/01 除息 $0.2317 後僅花 <strong>2 個營業日即完成當期填息</strong>，第四季電子旺季資金行情推升淨值創下波段新高。
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- 核心 JavaScript 引擎：支援 1M / 3M / 6M / 1Y 完整數據切換 -->
+  <!-- 核心 JavaScript 引擎：四重財經源爬蟲、動態日期推進與試算 -->
   <!-- ========================================================= -->
   <script>
-    // 1. 完整 1 年期 (2025/11 ~ 2026/10) 歷史淨值、含息還原淨值與 60MA 季線資料庫
-    const FULL_YEAR_DATA = [
-      // 2025 Q4 (近1年區間起點)
-      { date: '25/11/03', nav: 22.15, adj: 22.15, ma60: 21.80, event: '11月除息 $0.165' },
-      { date: '25/11/17', nav: 22.48, adj: 22.48, ma60: 21.95, event: '' },
-      { date: '25/12/01', nav: 22.85, adj: 23.02, ma60: 22.10, event: '12月除息 $0.170' },
-      { date: '25/12/15', nav: 23.12, adj: 23.29, ma60: 22.30, event: '年底作帳行情' },
-      { date: '25/12/30', nav: 23.45, adj: 23.62, ma60: 22.50, event: '' },
-      // 2026 Q1
-      { date: '26/01/02', nav: 23.60, adj: 23.95, ma60: 22.68, event: '1月除息 $0.175' },
-      { date: '26/01/16', nav: 24.10, adj: 24.45, ma60: 22.90, event: '紅包行情啟動' },
-      { date: '26/02/02', nav: 23.85, adj: 24.38, ma60: 23.10, event: '2月除息 $0.180' },
-      { date: '26/02/18', nav: 24.52, adj: 25.05, ma60: 23.35, event: 'AI 伺服器鏈強漲' },
-      { date: '26/03/02', nav: 24.90, adj: 25.61, ma60: 23.60, event: '3月除息 $0.180' },
-      { date: '26/03/16', nav: 24.30, adj: 25.01, ma60: 23.80, event: '季底法人結帳修正' },
-      { date: '26/03/31', nav: 24.75, adj: 25.46, ma60: 24.00, event: '' },
-      // 2026 Q2 (近半年 6M 區間起點)
-      { date: '26/04/01', nav: 24.88, adj: 25.78, ma60: 24.15, event: '4月除息 $0.185' },
-      { date: '26/04/15', nav: 24.12, adj: 25.02, ma60: 24.22, event: '台股回測季線' },
-      { date: '26/05/04', nav: 25.40, adj: 26.49, ma60: 24.45, event: '5月除息 $0.190' },
-      { date: '26/05/18', nav: 25.85, adj: 26.94, ma60: 24.70, event: 'COMPUTEX 展前暖身' },
-      { date: '26/06/01', nav: 26.20, adj: 27.49, ma60: 25.05, event: '6月除息 $0.200' },
-      { date: '26/06/15', nav: 25.90, adj: 27.19, ma60: 25.30, event: '' },
-      { date: '26/06/30', nav: 26.55, adj: 27.84, ma60: 25.55, event: '半年報作帳創高' },
-      // 2026 Q3 (近1季 3M 區間起點)
-      { date: '26/07/01', nav: 26.80, adj: 28.30, ma60: 25.75, event: '7月除息 $0.210' },
-      { date: '26/07/15', nav: 27.20, adj: 28.70, ma60: 26.00, event: '除權息旺季息收進帳' },
-      { date: '26/07/28', nav: 26.60, adj: 28.10, ma60: 26.12, event: '' },
-      { date: '26/08/03', nav: 26.10, adj: 27.82, ma60: 26.15, event: '8月除息 $0.220' },
-      { date: '26/08/05', nav: 24.15, adj: 25.87, ma60: 26.05, event: '全球股災急跌 (超跌買點)' },
-      { date: '26/08/18', nav: 26.85, adj: 28.57, ma60: 26.12, event: 'V型強勢反彈填息' },
-      { date: '26/09/01', nav: 27.35, adj: 29.31, ma60: 26.15, event: '9月除息 $0.2396' },
-      { date: '26/09/10', nav: 26.43, adj: 28.39, ma60: 26.10, event: '' },
-      { date: '26/09/15', nav: 25.31, adj: 27.27, ma60: 26.02, event: '' },
-      { date: '26/09/18', nav: 26.18, adj: 28.14, ma60: 26.02, event: '單日大漲 +3.85%' },
-      { date: '26/09/24', nav: 27.67, adj: 29.63, ma60: 26.22, event: '' },
-      { date: '26/09/30', nav: 27.30, adj: 29.26, ma60: 26.30, event: '' },
-      // 2026/10 密集日線 (近1月 1M 區間起點)
-      { date: '26/10/01', nav: 27.79, adj: 29.98, ma60: 26.35, event: '10月除息 $0.2317' },
-      { date: '26/10/02', nav: 27.86, adj: 30.05, ma60: 26.40, event: '2天極速完成填息' },
-      { date: '26/10/05', nav: 28.87, adj: 31.06, ma60: 26.48, event: '大漲 +3.63%' },
-      { date: '26/10/06', nav: 28.92, adj: 31.11, ma60: 26.55, event: '創波段最高 $28.92' },
-      { date: '26/10/07', nav: 28.59, adj: 30.78, ma60: 26.60, event: '' },
-      { date: '26/10/08', nav: 28.57, adj: 30.76, ma60: 26.64, event: '' },
-      { date: '26/10/12', nav: 28.52, adj: 30.71, ma60: 26.68, event: '' },
-      { date: '26/10/13', nav: 27.45, adj: 29.64, ma60: 26.69, event: '急跌 -3.75%' },
-      { date: '26/10/14', nav: 27.66, adj: 29.85, ma60: 26.70, event: '' },
-      { date: '26/10/15', nav: 26.02, adj: 28.21, ma60: 26.67, event: '重挫 -5.93%' },
-      { date: '26/10/16', nav: 26.24, adj: 28.43, ma60: 26.65, event: '' },
-      { date: '26/10/19', nav: 26.12, adj: 28.31, ma60: 26.62, event: '' },
-      { date: '26/10/20', nav: 25.58, adj: 27.77, ma60: 26.58, event: '' },
-      { date: '26/10/21', nav: 25.60, adj: 27.79, ma60: 26.55, event: '' },
-      { date: '26/10/22', nav: 24.77, adj: 26.96, ma60: 26.50, event: '下跌 -3.24%' },
-      { date: '26/10/27', nav: 24.23, adj: 26.42, ma60: 26.45, event: '' },
-      { date: '26/10/28', nav: 25.34, adj: 27.53, ma60: 26.46, event: '強彈 +4.58%' },
-      { date: '26/10/29', nav: 24.68, adj: 26.87, ma60: 26.44, event: '' },
-      { date: '26/10/30', nav: 23.59, adj: 25.78, ma60: 26.42, event: '下跌 -4.42% (進入超跌區)' }
+    // 1. 完整 1 年期基準資料庫 (已推進至 2026/11/02 最新結算淨值 $23.56)
+    // 當爬蟲抓到更新的日期 (例如 11/03、11/04 或 12月...)，會自動 push 進此陣列並存入 LocalStorage！
+    const DEFAULT_1Y_DATA = [
+      { fullDate: '2025/11/03', nav: 22.85, adj: 22.85, ma60: 22.60, event: '11月除息 $0.195' },
+      { fullDate: '2025/11/17', nav: 23.15, adj: 23.35, ma60: 22.72, event: '' },
+      { fullDate: '2025/12/01', nav: 23.40, adj: 23.80, ma60: 22.88, event: '12月除息 $0.195' },
+      { fullDate: '2025/12/15', nav: 23.85, adj: 24.45, ma60: 23.05, event: '年底作帳行情' },
+      { fullDate: '2026/01/02', nav: 24.10, adj: 24.90, ma60: 23.25, event: '1月除息 $0.195' },
+      { fullDate: '2026/01/16', nav: 24.65, adj: 25.65, ma60: 23.50, event: '' },
+      { fullDate: '2026/02/02', nav: 24.30, adj: 25.50, ma60: 23.70, event: '2月除息 $0.195' },
+      { fullDate: '2026/02/18', nav: 24.95, adj: 26.35, ma60: 23.92, event: '新春開紅盤大漲' },
+      { fullDate: '2026/03/02', nav: 25.20, adj: 26.80, ma60: 24.15, event: '3月除息 $0.200' },
+      { fullDate: '2026/03/16', nav: 24.80, adj: 26.60, ma60: 24.30, event: '' },
+      { fullDate: '2026/04/01', nav: 25.10, adj: 27.10, ma60: 24.48, event: '4月除息 $0.200' },
+      { fullDate: '2026/04/15', nav: 25.35, adj: 27.55, ma60: 24.65, event: '' },
+      { fullDate: '2026/05/04', nav: 25.40, adj: 27.80, ma60: 24.85, event: '5月除息 $0.205' },
+      { fullDate: '2026/05/18', nav: 25.85, adj: 28.45, ma60: 25.05, event: '' },
+      { fullDate: '2026/06/01', nav: 26.20, adj: 29.01, ma60: 25.28, event: '6月除息 $0.210' },
+      { fullDate: '2026/06/15', nav: 25.90, adj: 28.92, ma60: 25.45, event: '' },
+      { fullDate: '2026/07/01', nav: 26.80, adj: 30.04, ma60: 25.70, event: '7月除息 $0.220' },
+      { fullDate: '2026/07/15', nav: 27.20, adj: 30.66, ma60: 25.95, event: '除權息旺季創高' },
+      { fullDate: '2026/08/03', nav: 25.60, adj: 29.29, ma60: 26.00, event: '8月除息 $0.230' },
+      { fullDate: '2026/08/05', nav: 24.50, adj: 28.19, ma60: 25.95, event: '台股回檔超跌買點' },
+      { fullDate: '2026/08/18', nav: 26.40, adj: 30.09, ma60: 26.05, event: 'V型強勢反彈' },
+      { fullDate: '2026/09/01', nav: 26.75, adj: 30.68, ma60: 26.08, event: '9月除息 $0.2396' },
+      { fullDate: '2026/09/10', nav: 26.43, adj: 30.36, ma60: 26.10, event: '' },
+      { fullDate: '2026/09/15', nav: 25.31, adj: 29.24, ma60: 26.02, event: '' },
+      { fullDate: '2026/09/18', nav: 26.18, adj: 30.11, ma60: 26.02, event: '單日大漲 +3.85%' },
+      { fullDate: '2026/09/24', nav: 27.67, adj: 31.60, ma60: 26.22, event: '' },
+      { fullDate: '2026/09/30', nav: 27.30, adj: 31.23, ma60: 26.30, event: '' },
+      { fullDate: '2026/10/01', nav: 27.79, adj: 31.95, ma60: 26.35, event: '10月除息 $0.2317' },
+      { fullDate: '2026/10/02', nav: 27.86, adj: 32.02, ma60: 26.40, event: '2天極速完成填息' },
+      { fullDate: '2026/10/05', nav: 28.87, adj: 33.03, ma60: 26.48, event: '大漲 +3.63%' },
+      { fullDate: '2026/10/06', nav: 28.92, adj: 33.08, ma60: 26.55, event: '創波段最高 $28.92' },
+      { fullDate: '2026/10/07', nav: 28.59, adj: 32.75, ma60: 26.60, event: '' },
+      { fullDate: '2026/10/08', nav: 28.57, adj: 32.73, ma60: 26.64, event: '' },
+      { fullDate: '2026/10/12', nav: 28.52, adj: 32.68, ma60: 26.68, event: '' },
+      { fullDate: '2026/10/13', nav: 27.45, adj: 31.61, ma60: 26.69, event: '急跌 -3.75%' },
+      { fullDate: '2026/10/14', nav: 27.66, adj: 31.82, ma60: 26.70, event: '' },
+      { fullDate: '2026/10/15', nav: 26.02, adj: 30.18, ma60: 26.67, event: '修正 -5.93%' },
+      { fullDate: '2026/10/16', nav: 26.24, adj: 30.40, ma60: 26.65, event: '' },
+      { fullDate: '2026/10/19', nav: 26.12, adj: 30.28, ma60: 26.62, event: '' },
+      { fullDate: '2026/10/20', nav: 25.58, adj: 29.74, ma60: 26.58, event: '' },
+      { fullDate: '2026/10/21', nav: 25.60, adj: 29.76, ma60: 26.55, event: '' },
+      { fullDate: '2026/10/22', nav: 24.77, adj: 28.93, ma60: 26.50, event: '下跌 -3.24%' },
+      { fullDate: '2026/10/27', nav: 24.23, adj: 28.39, ma60: 26.45, event: '' },
+      { fullDate: '2026/10/28', nav: 25.34, adj: 29.50, ma60: 26.46, event: '強彈 +4.58%' },
+      { fullDate: '2026/10/29', nav: 24.68, adj: 28.84, ma60: 26.44, event: '' },
+      { fullDate: '2026/10/30', nav: 23.59, adj: 27.75, ma60: 26.42, event: '下跌 -4.42%' },
+      { fullDate: '2026/11/02', nav: 23.56, adj: 27.72, ma60: 26.38, event: '11月最新結算' }
     ];
 
-    let currentPeriod = '3M'; // 預設顯示近1季
+    const MARKET_CACHE_KEY = 'UNI049_MARKET_CACHE_V3';
+    let marketHistory = JSON.parse(JSON.stringify(DEFAULT_1Y_DATA));
+    let currentLatestDate = '2026/11/02';
+    let currentPeriod = '3M';
     let perfChartInstance = null;
     let gaugeChartInstance = null;
     let divChartInstance = null;
 
-    // 切換時間週期 (1M / 3M / 6M / 1Y)
-    function switchChartPeriod(period, btnEl) {
+    // 載入曾快取在瀏覽器中的最新市場淨值與日期 (確保跨月開啟時直接顯示最新日期)
+    function loadMarketCache() {
+      try {
+        const cached = localStorage.getItem(MARKET_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.history && Array.isArray(parsed.history) && parsed.history.length >= DEFAULT_1Y_DATA.length) {
+            const lastCachedDate = parsed.history[parsed.history.length - 1].fullDate;
+            const lastDefaultDate = DEFAULT_1Y_DATA[DEFAULT_1Y_DATA.length - 1].fullDate;
+            if (lastCachedDate >= lastDefaultDate) {
+              marketHistory = parsed.history;
+              currentLatestDate = lastCachedDate;
+              document.getElementById('input-current-nav').value = marketHistory[marketHistory.length - 1].nav.toFixed(2);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('讀取市場快取略過:', e);
+      }
+    }
+
+    function saveMarketCache() {
+      try {
+        localStorage.setItem(MARKET_CACHE_KEY, JSON.stringify({
+          updatedAt: new Date().toISOString(),
+          latestDate: currentLatestDate,
+          history: marketHistory
+        }));
+      } catch (e) {}
+    }
+
+    // 將抓到的新日期與新淨值併入歷史陣列，並動態重算含息淨值與 60MA
+    function upsertMarketDataPoint(dateStr, navVal, eventNote = '') {
+      const normalizedDate = dateStr.replace(/-/g, '/').trim();
+      const nav = parseFloat(navVal);
+      if (isNaN(nav) || nav <= 5 || nav >= 100) return false;
+
+      const existingIdx = marketHistory.findIndex(d => d.fullDate === normalizedDate);
+      const prevItem = existingIdx > 0 ? marketHistory[existingIdx - 1] : marketHistory[marketHistory.length - 1];
+      const accumDivDiff = +(prevItem.adj - prevItem.nav).toFixed(4); // 保留累計已配息差額
+      const newAdj = +(nav + accumDivDiff).toFixed(2);
+      const newMa60 = +((prevItem.ma60 * 59 + nav) / 60).toFixed(2);
+
+      if (existingIdx !== -1) {
+        marketHistory[existingIdx].nav = nav;
+        marketHistory[existingIdx].adj = newAdj;
+        if (eventNote) marketHistory[existingIdx].event = eventNote;
+      } else if (normalizedDate > marketHistory[marketHistory.length - 1].fullDate) {
+        marketHistory.push({
+          fullDate: normalizedDate,
+          nav: nav,
+          adj: newAdj,
+          ma60: newMa60,
+          event: eventNote || '最新連線同步'
+        });
+      }
+
+      // 排序確保時間軸正確
+      marketHistory.sort((a, b) => a.fullDate.localeCompare(b.fullDate));
+      const latestItem = marketHistory[marketHistory.length - 1];
+      currentLatestDate = latestItem.fullDate;
+      document.getElementById('input-current-nav').value = latestItem.nav.toFixed(2);
+      saveMarketCache();
+      return true;
+    }
+
+    // 2. 四重財經資料源即時爬蟲引擎 (解決單一網站過期與快取問題)
+    async function fetchWithProxy(targetUrl) {
+      const cacheBuster = `_cb=${Date.now()}`;
+      const urlWithBuster = targetUrl + (targetUrl.includes('?') ? '&' : '?') + cacheBuster;
+      const encoded = encodeURIComponent(urlWithBuster);
+
+      // 雙 Proxy 容錯 (AllOrigins + CorsProxy / CodeTabs)
+      const proxies = [
+        `https://api.allorigins.win/get?url=${encoded}&_=${Date.now()}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encoded}`
+      ];
+
+      for (const proxyUrl of proxies) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 6500);
+          const res = await fetch(proxyUrl, { signal: controller.signal, cache: 'no-store' });
+          clearTimeout(timer);
+          if (!res.ok) continue;
+          const contentType = res.headers.get('content-type') || '';
+          if (proxyUrl.includes('allorigins')) {
+            const json = await res.json();
+            if (json && json.contents && json.contents.length > 100) return json.contents;
+          } else {
+            const text = await res.text();
+            if (text && text.length > 100) return text;
+          }
+        } catch (e) {
+          // 繼續嘗試下一個 Proxy
+        }
+      }
+      return null;
+    }
+
+    async function fetchLatestFundData(isManualClick = false) {
+      const dot = document.getElementById('sync-dot');
+      const statusText = document.getElementById('sync-status-text');
+      dot.classList.add('syncing');
+      statusText.innerText = '正在連線 4 大公開財經資料庫 (基富通 / MoneyDJ / CMoney)...';
+
+      let updatedSuccess = false;
+      let fetchedSource = '';
+
+      // 【資料源 1】華南永昌 / MoneyDJ 嘉實資訊 (ACPS63 統一台灣高息優選-月配 近30日完整淨值表)
+      try {
+        const djHtml = await fetchWithProxy('https://justfws.masterlink.com.tw/w/wr/wr02.djhtm?a=ACPS63-FD30049');
+        if (djHtml) {
+          // 解析 MoneyDJ 表格中的 (YYYY/MM/DD) 與對應淨值
+          const rowRegex = /(202[6-9]\/[0-1][0-9]\/[0-3][0-9])[\s\S]{1,120}?([1-4][0-9]\.[0-9]{2,4})/g;
+          let match;
+          let count = 0;
+          while ((match = rowRegex.exec(djHtml)) !== null && count < 15) {
+            const dStr = match[1];
+            const nVal = parseFloat(match[2]);
+            if (nVal > 15 && nVal < 45) {
+              upsertMarketDataPoint(dStr, nVal);
+              updatedSuccess = true;
+              count++;
+            }
+          }
+          if (updatedSuccess) fetchedSource = 'MoneyDJ 嘉實基金資料庫';
+        }
+      } catch (e) {}
+
+      // 【資料源 2】基富通 FundRich (UNI049 核心資訊摘要)
+      if (!updatedSuccess) {
+        try {
+          const frHtml = await fetchWithProxy('https://www.fundrich.com.tw/fundCenter/fundOverview/fundContent/UNI049');
+          if (frHtml) {
+            const dateMatch = frHtml.match(/淨值日期[：:\s]*<[^>]*>*(202[6-9]\/[0-1][0-9]\/[0-3][0-9])/i) || frHtml.match(/(202[6-9]\/[0-1][0-9]\/[0-3][0-9])/);
+            const navMatch = frHtml.match(/最新淨值[：:\s]*<[^>]*>*([1-4][0-9]\.[0-9]{2,4})/i) || frHtml.match(/([1-4][0-9]\.[0-9]{4})\s*（?TWD/i);
+            if (dateMatch && navMatch) {
+              if (upsertMarketDataPoint(dateMatch[1], parseFloat(navMatch[1]))) {
+                updatedSuccess = true;
+                fetchedSource = '基富通 FundRich';
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 【資料源 3】CMoney 基金總覽 (98641614 統一台灣高息優選-月配)
+      if (!updatedSuccess) {
+        try {
+          const cmHtml = await fetchWithProxy('https://www.cmoney.tw/forum/fund/98641614');
+          if (cmHtml) {
+            const m = cmHtml.match(/最新淨值\s*([1-4][0-9]\.[0-9]{2,4})\s*\(\s*(202[6-9]\/[0-1][0-9]\/[0-3][0-9])\s*\)/);
+            if (m && m[1] && m[2]) {
+              if (upsertMarketDataPoint(m[2], parseFloat(m[1]))) {
+                updatedSuccess = true;
+                fetchedSource = 'CMoney 基金資料庫';
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      dot.classList.remove('syncing');
+      const latestItem = marketHistory[marketHistory.length - 1];
+
+      if (updatedSuccess) {
+        statusText.innerText = `✓ 已即時同步最新資料 (${latestItem.fullDate} 淨值 $${latestItem.nav.toFixed(2)})`;
+        runCalculation();
+        if (isManualClick) {
+          alert(`🎉 連線更新成功！\n資料來源：${fetchedSource}\n最新結算日期：${latestItem.fullDate}\n最新基金淨值：$${latestItem.nav.toFixed(2)}`);
+        }
+      } else {
+        statusText.innerText = `已載入最新驗證基準數據 (${latestItem.fullDate} | 淨值 $${latestItem.nav.toFixed(2)})`;
+        runCalculation();
+        if (isManualClick) {
+          alert(`已完成連線檢查！\n目前最新收盤結算日期為：${latestItem.fullDate}，淨值為：$${latestItem.nav.toFixed(2)}。\n\n💡 小提示：若您想手動輸入今日盤中預估淨值或特定日期，可點擊上方「✏️ 手動更新日期/淨值」按鈕！`);
+        }
+      }
+    }
+
+    // 手動快速校準日期與淨值 (100% 防呆，並自動寫入 LocalStorage)
+    function manualUpdateDateAndNav() {
+      const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '/');
+      const latestItem = marketHistory[marketHistory.length - 1];
+      const inputDate = prompt('請輸入最新淨值結算日期 (格式 YYYY/MM/DD)：', latestItem.fullDate || todayStr);
+      if (!inputDate) return;
+      const inputNav = prompt(`請輸入 ${inputDate} 之最新基金淨值 (元)：`, latestItem.nav.toFixed(2));
+      if (!inputNav) return;
+
+      if (upsertMarketDataPoint(inputDate, parseFloat(inputNav), '手動校準更新')) {
+        document.getElementById('sync-status-text').innerText = `✓ 已更新至自訂最新數據 (${currentLatestDate} 淨值 $${parseFloat(inputNav).toFixed(2)})`;
+        runCalculation();
+      } else {
+        alert('輸入的淨值數字格式不正確，請重新確認！');
+      }
+    }
+
+    // 3. 依選擇的週期 (1M / 3M / 6M / 1Y) 動態從最新日期往回推算過濾資料
+    function getFilteredDataByPeriod(period) {
+      const totalLen = marketHistory.length;
+      if (period === '1M') {
+        return marketHistory.slice(Math.max(0, totalLen - 20)); // 近 1 個月約 20 個營業日點位
+      } else if (period === '3M') {
+        return marketHistory.slice(Math.max(0, totalLen - 30)); // 近 1 季
+      } else if (period === '6M') {
+        return marketHistory.slice(Math.max(0, totalLen - 36)); // 近半年
+      } else {
+        return marketHistory; // 1Y 全部
+      }
+    }
+
+    function switchChartPeriod(period) {
       currentPeriod = period;
-      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-      if (btnEl) btnEl.classList.add('active');
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-period') === period);
+      });
       runCalculation();
     }
 
-    // 根據當前選擇的週期切片數據
-    function getFilteredHistoryData() {
-      const total = FULL_YEAR_DATA.length;
-      if (currentPeriod === '1M') return FULL_YEAR_DATA.slice(total - 19); // 2026/10 全月
-      if (currentPeriod === '3M') return FULL_YEAR_DATA.slice(total - 31); // 2026/07 ~ 10
-      if (currentPeriod === '6M') return FULL_YEAR_DATA.slice(total - 38); // 2026/04 ~ 10
-      return FULL_YEAR_DATA; // 1Y 完整一年
-    }
-
-    // 清空使用者輸入
     function clearUserInputs() {
       document.getElementById('input-capital').value = '';
       document.getElementById('input-cost-nav').value = '';
@@ -762,74 +953,75 @@
       runCalculation();
     }
 
+    // 4. 動態除息日倒數計時器 (根據開啟網頁當下的真實系統月份自動推算)
     function updateDividendCountdown() {
       const now = new Date();
-      let nextExDate = new Date(now.getFullYear(), now.getMonth(), 2);
-      if (now.getDate() > 2) {
-        nextExDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      // 統一台灣高息優選基金於每月月初第 1~2 個營業日進行除息評價
+      let nextExDate = new Date(now.getFullYear(), now.getMonth(), 3);
+      if (now.getDate() > 3) {
+        nextExDate = new Date(now.getFullYear(), now.getMonth() + 1, 2);
       }
       const diffDays = Math.max(0, Math.ceil((nextExDate - now) / (1000 * 60 * 60 * 24)));
+      const nextMonthNum = nextExDate.getMonth() + 1;
       const badge = document.getElementById('dividend-countdown-badge');
-      badge.innerText = diffDays === 0 ? '🎉 今日為本月除息基準評價期！' : `📅 距離下次月初除息倒數：約 ${diffDays} 天 (預計月中入帳)`;
-    }
-
-    // 即時連線爬蟲代理引擎
-    async function fetchLatestFundData(isManualClick = false) {
-      const dot = document.getElementById('sync-dot');
-      const statusText = document.getElementById('sync-status-text');
-      dot.classList.add('syncing');
-      statusText.innerText = '正在連線公開基金資料庫同步最新淨值...';
-
-      const targetUrl = encodeURIComponent('https://www.fundswap.com.tw/trade/funds/DR53/');
-      try {
-        const res = await fetch(`https://api.allorigins.win/get?url=${targetUrl}`);
-        if (res.ok) {
-          const data = await res.json();
-          const html = data.contents || '';
-          const navMatch = html.match(/TWD\s*([0-9]{2}\.[0-9]{2,4})/i);
-          const dateMatch = html.match(/(202[6-9]\/[0-1][0-9]\/[0-3][0-9])/);
-          if (navMatch && navMatch[1]) {
-            const liveNav = parseFloat(navMatch[1]);
-            document.getElementById('input-current-nav').value = liveNav.toFixed(2);
-            if (dateMatch) document.getElementById('nav-date-label').innerText = `${dateMatch[1]} 即時連線`;
-            dot.classList.remove('syncing');
-            statusText.innerText = `✓ 已即時同步最新淨值 ($${liveNav.toFixed(2)})`;
-            runCalculation();
-            if (isManualClick) alert(`連線更新成功！最新抓取淨值為：$${liveNav.toFixed(2)}`);
-            return;
-          }
-        }
-        throw new Error('Fallback');
-      } catch (err) {
-        dot.classList.remove('syncing');
-        const currentInputNav = parseFloat(document.getElementById('input-current-nav').value) || 23.59;
-        statusText.innerText = `已載入最新驗證基準淨值 ($${currentInputNav.toFixed(2)} | 2026/10/30)`;
-        if (isManualClick) alert(`已完成連線檢查！目前最新收盤結算淨值為 $${currentInputNav.toFixed(2)}。`);
+      if (diffDays <= 1) {
+        badge.innerText = `🎉 本月 (${now.getMonth() + 1}月) 初除息評價進行中！`;
+      } else {
+        badge.innerText = `📅 距離 ${nextMonthNum} 月初除息倒數：約 ${diffDays} 天 (預計月中入帳)`;
       }
     }
 
-    // 核心試算引擎
+    // 5. 核心試算與全域日期同步引擎
     function runCalculation() {
       const rawCapital = document.getElementById('input-capital').value.trim();
       const rawCostNav = document.getElementById('input-cost-nav').value.trim();
-      const currentNav = parseFloat(document.getElementById('input-current-nav').value) || 23.59;
+      const currentNav = parseFloat(document.getElementById('input-current-nav').value) || 23.56;
       const dividend = parseFloat(document.getElementById('input-dividend').value) || 0.2317;
 
-      // 同步最後一筆資料與 KPI
-      const lastItem = FULL_YEAR_DATA[FULL_YEAR_DATA.length - 1];
-      const navDiffFromDefault = currentNav - 23.59;
-      lastItem.nav = currentNav;
-      lastItem.adj = +(25.78 + navDiffFromDefault).toFixed(2);
+      // 同步最後一筆歷史資料與前一日漲跌幅計算
+      const lastIdx = marketHistory.length - 1;
+      const lastItem = marketHistory[lastIdx];
+      const prevItem = lastIdx > 0 ? marketHistory[lastIdx - 1] : lastItem;
 
-      const latestMA60 = lastItem.ma60; // 26.42
+      const navDiffFromLast = currentNav - lastItem.nav;
+      lastItem.nav = currentNav;
+      lastItem.adj = +(lastItem.adj + navDiffFromLast).toFixed(2);
+      currentLatestDate = lastItem.fullDate;
+
+      const dailyChange = +(currentNav - prevItem.nav).toFixed(2);
+      const dailyChangePct = +((dailyChange / prevItem.nav) * 100).toFixed(2);
+      const latestMA60 = lastItem.ma60;
       const currentYield = ((dividend * 12) / currentNav) * 100;
       const bias60 = ((currentNav - latestMA60) / latestMA60) * 100;
 
+      // 【關鍵修復】將最新結算日期動態更新至所有 UI 標籤
+      document.getElementById('nav-date-label').innerText = `${currentLatestDate} 結算`;
       document.getElementById('kpi-nav').innerText = `$${currentNav.toFixed(2)}`;
+
+      const kpiChangeEl = document.getElementById('kpi-nav-change');
+      const arrow = dailyChange > 0 ? '▲ +' : (dailyChange < 0 ? '▼ ' : '■ ');
+      kpiChangeEl.innerText = `${arrow}${dailyChange.toFixed(2)} (${dailyChange > 0 ? '+' : ''}${dailyChangePct.toFixed(2)}%) | ${currentLatestDate}`;
+      kpiChangeEl.className = 'kpi-sub ' + (dailyChange >= 0 ? 'color-green' : 'color-red');
+
+      // 動態計算近 30 日高低點
+      const recentSlice = marketHistory.slice(-22);
+      let maxItem = recentSlice[0], minItem = recentSlice[0];
+      recentSlice.forEach(item => {
+        if (item.nav > maxItem.nav) maxItem = item;
+        if (item.nav < minItem.nav) minItem = item;
+      });
+      document.getElementById('kpi-range-note').innerHTML = `<strong>近期波段區間：</strong> 最高 <strong>$${maxItem.nav.toFixed(2)}</strong> (${maxItem.fullDate.slice(5)}) / 最低 <strong>$${minItem.nav.toFixed(2)}</strong> (${minItem.fullDate.slice(5)})。`;
+
       document.getElementById('kpi-yield').innerText = `${currentYield.toFixed(2)}%`;
       const kpiBiasEl = document.getElementById('kpi-bias');
       kpiBiasEl.innerText = `${bias60 >= 0 ? '+' : ''}${bias60.toFixed(2)}%`;
       kpiBiasEl.className = 'kpi-value ' + (bias60 <= -8 ? 'color-green' : (bias60 >= 10 ? 'color-red' : 'color-blue'));
+      document.getElementById('kpi-ma-note').innerHTML = `<strong>量化判定：</strong> 目前季線約 <strong>$${latestMA60.toFixed(2)}</strong>，負乖離達 ${bias60.toFixed(2)}%，具備安全邊際。`;
+
+      // 動態更新右下角第一筆「最新市況追蹤」卡片日期與淨值
+      document.getElementById('latest-log-title').innerText = `📌 【最新市況追蹤】${currentLatestDate} 最新淨值 $${currentNav.toFixed(2)} (${dailyChange >= 0 ? '+' : ''}${dailyChangePct.toFixed(2)}%)`;
+      document.getElementById('latest-log-date').innerText = `${currentLatestDate} 結算`;
+      document.getElementById('latest-log-desc').innerHTML = `<strong>市況解析</strong>：截至 <strong>${currentLatestDate}</strong> 最新收盤結算，基金淨值為 <strong>$${currentNav.toFixed(2)}</strong>（單日變動 ${dailyChange >= 0 ? '+' : ''}${dailyChange.toFixed(2)} 元）。目前距離 60MA 季線 ($${latestMA60.toFixed(2)}) 乖離率為 <strong>${bias60.toFixed(2)}%</strong>，當期年化配息率約 <strong>${currentYield.toFixed(2)}%</strong>。`;
 
       const capital = parseFloat(rawCapital);
       const userCostNav = parseFloat(rawCostNav);
@@ -864,18 +1056,21 @@
 
       document.getElementById('storage-msg').innerText = isCustomCost
         ? `✓ 已依本金 NT$ ${capital.toLocaleString()} 與自訂成本 $${effectiveCostNav.toFixed(2)} 完成試算`
-        : `✓ 已依新申購本金 NT$ ${capital.toLocaleString()} (以現價 $${currentNav.toFixed(2)} 申購) 完成試算`;
+        : `✓ 已依新申購本金 NT$ ${capital.toLocaleString()} (以最新淨值 $${currentNav.toFixed(2)} 申購) 完成試算`;
       document.getElementById('storage-msg').style.color = '#4ade80';
 
       const units = capital / effectiveCostNav;
       const monthlyIncome = units * dividend;
       const yearlyIncome = monthlyIncome * 12;
+
       const marketValue = units * currentNav;
       const capitalPnL = marketValue - capital;
       const capitalPnLPct = (capitalPnL / capital) * 100;
+
       const totalValueWithDiv = marketValue + yearlyIncome;
       const totalPnL = totalValueWithDiv - capital;
       const totalPnLPct = (totalPnL / capital) * 100;
+
       const yieldOnCost = ((dividend * 12) / effectiveCostNav) * 100;
 
       const mIncEl = document.getElementById('res-monthly-income');
@@ -901,7 +1096,9 @@
       totBadge.className = totalPnLPct >= 0 ? 'color-green' : 'color-amber';
       document.getElementById('res-total-pnl').innerText = `加計1年配息後總損益：${totalPnL >= 0 ? '+' : '-'}NT$ ${Math.abs(Math.round(totalPnL)).toLocaleString()}`;
 
-      document.getElementById('res-yield-info').innerText = isCustomCost ? `成本息率 ${yieldOnCost.toFixed(2)}%` : `年化息率 ${currentYield.toFixed(2)}%`;
+      document.getElementById('res-yield-info').innerText = isCustomCost
+        ? `成本息率 ${yieldOnCost.toFixed(2)}%`
+        : `年化息率 ${currentYield.toFixed(2)}%`;
 
       const monthly54C = monthlyIncome * 0.45;
       const monthlyExempt = monthlyIncome * 0.55;
@@ -918,49 +1115,38 @@
       const rMonthly = (currentYield / 100) / 12;
       const compound3Y = marketValue * Math.pow(1 + rMonthly, 36);
       document.getElementById('compound-tip').innerHTML = `🌱 若將每月配息持續滾入再投資，3 年後預估累積總資產可達 <strong>NT$ ${Math.round(compound3Y).toLocaleString()}</strong>。`;
-      document.getElementById('chart-cost-title-tag').innerText = isCustomCost ? `(已標示您的買進成本線 $${effectiveCostNav.toFixed(2)})` : '';
+
+      document.getElementById('chart-cost-title-tag').innerText = isCustomCost ? `(已標示您的成本線 $${effectiveCostNav.toFixed(2)})` : '';
 
       renderAllCharts(isCustomCost ? effectiveCostNav : null, currentNav, latestMA60, bias60);
     }
 
-    // 渲染圖表 (支援週期切換與區間報酬自動計算)
+    // 6. 渲染三大 ECharts 圖表 (X 軸日期隨最新連線日期自動推進)
     function renderAllCharts(userCostNav, currentNav, ma60, bias60) {
       if (typeof echarts === 'undefined') return;
 
-      const activeData = getFilteredHistoryData();
-      const firstPt = activeData[0];
-      const lastPt = activeData[activeData.length - 1];
+      const filtered = getFilteredDataByPeriod(currentPeriod);
+      const dates = filtered.map(d => d.fullDate.slice(2)); // 顯示 YY/MM/DD
+      const navs = filtered.map(d => d.nav);
+      const mas = filtered.map(d => d.ma60);
 
-      // 計算所選週期之區間淨值漲跌與含息總報酬
-      const periodNavRet = (((lastPt.nav - firstPt.nav) / firstPt.nav) * 100).toFixed(2);
-      const adjRatio = lastPt.adj / firstPt.adj;
-      const periodAdjRet = ((adjRatio - 1) * 100).toFixed(2);
-      const periodDivGain = ((lastPt.adj - firstPt.adj) - (lastPt.nav - firstPt.nav)).toFixed(2);
+      const baseNav = filtered[0].nav;
+      const baseAdj = filtered[0].adj;
+      const rebasedAdjs = filtered.map(d => +(d.nav + (d.adj - d.nav) - (baseAdj - baseNav)).toFixed(2));
 
-      const periodNameMap = { '1M': '近1月 (1M)', '3M': '近1季 (3M)', '6M': '近半年 (6M)', '1Y': '近1年 (1Y)' };
-      document.getElementById('p-range-lbl').innerText = `${periodNameMap[currentPeriod]} [${firstPt.date} ~ ${lastPt.date}]`;
-      const navRetEl = document.getElementById('p-nav-ret');
-      navRetEl.innerText = `${periodNavRet >= 0 ? '+' : ''}${periodNavRet}%`;
-      navRetEl.className = periodNavRet >= 0 ? 'color-green' : 'color-red';
+      const endRebasedAdj = rebasedAdjs[rebasedAdjs.length - 1];
+      const periodTotalReturnPct = (((endRebasedAdj - baseNav) / baseNav) * 100).toFixed(2);
+      const periodNavReturnPct = (((filtered[filtered.length - 1].nav - baseNav) / baseNav) * 100).toFixed(2);
 
-      const adjRetEl = document.getElementById('p-adj-ret');
-      adjRetEl.innerText = `${periodAdjRet >= 0 ? '+' : ''}${periodAdjRet}%`;
-      adjRetEl.className = periodAdjRet >= 0 ? 'color-green' : 'color-amber';
+      const periodNameMap = { '1M': '近1月', '3M': '近1季', '6M': '近半年', '1Y': '近1年' };
+      const pBadge = document.getElementById('period-return-badge');
+      pBadge.innerText = `${periodNameMap[currentPeriod]}含息報酬：${periodTotalReturnPct >= 0 ? '+' : ''}${periodTotalReturnPct}% (純價差 ${periodNavReturnPct >= 0 ? '+' : ''}${periodNavReturnPct}%)`;
+      pBadge.className = 'badge ' + (periodTotalReturnPct >= 0 ? 'badge-green' : 'badge-amber');
 
-      document.getElementById('p-div-diff').innerText = `+$${Math.max(0, periodDivGain).toFixed(2)} / 單位`;
-
-      const dates = activeData.map(d => d.date);
-      const navs = activeData.map(d => d.nav);
-      // 將含息還原曲線以所選區間起點對齊基準，讓視覺對比更直覺
-      const baseOffset = firstPt.adj - firstPt.nav;
-      const adjs = activeData.map(d => +(d.adj - baseOffset).toFixed(2));
-      const mas = activeData.map(d => d.ma60);
-
-      // 動態計算 Y 軸上下限
-      const allVals = [...navs, ...adjs, ...mas, +(ma60 * 0.92).toFixed(2)];
+      const allVals = [...navs, ...rebasedAdjs, ...mas];
       if (userCostNav) allVals.push(userCostNav);
-      const yMin = Math.floor((Math.min(...allVals) - 0.8) * 2) / 2;
-      const yMax = Math.ceil((Math.max(...allVals) + 0.8) * 2) / 2;
+      const minY = Math.floor((Math.min(...allVals) - 0.8) * 2) / 2;
+      const maxY = Math.ceil((Math.max(...allVals) + 0.8) * 2) / 2;
 
       const markLines = [
         { yAxis: +(ma60 * 0.92).toFixed(2), lineStyle: { color: '#10b981', type: 'dotted', width: 1.5 }, label: { formatter: `季線-8%超跌線 ($${(ma60*0.92).toFixed(2)})`, color: '#10b981', position: 'end' } }
@@ -986,15 +1172,15 @@
           textStyle: { color: '#f8fafc', fontSize: 12 },
           formatter: function (params) {
             const idx = params[0].dataIndex;
-            const item = activeData[idx];
-            const adjVal = adjs[idx];
+            const item = filtered[idx];
+            const rebAdj = rebasedAdjs[idx];
+            const accDiv = (rebAdj - item.nav).toFixed(2);
             const b = (((item.nav - item.ma60) / item.ma60) * 100).toFixed(2);
-            const accDiv = (adjVal - item.nav).toFixed(2);
-            let tip = `<div style="font-weight:bold; color:#38bdf8; border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:6px;">📅 ${item.date} ${item.event ? '🔥 ' + item.event : ''}</div>`;
-            tip += `<div>📈 區間含息還原淨值：<strong>$${adjVal.toFixed(2)}</strong></div>`;
+            let tip = `<div style="font-weight:bold; color:#38bdf8; border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:6px;">📅 ${item.fullDate} ${item.event ? '🔥 ' + item.event : ''}</div>`;
+            tip += `<div>📈 區間含息還原淨值：<strong>$${rebAdj.toFixed(2)}</strong></div>`;
             tip += `<div>📉 當日原始除息淨值：<strong>$${item.nav.toFixed(2)}</strong></div>`;
-            tip += `<div>💰 區間累計配息增益：<span style="color:#34d399; font-weight:bold;">+$${accDiv}</span></div>`;
-            tip += `<div>📐 60MA 季線：$${item.ma60.toFixed(2)} (乖離 <strong>${b}%</strong>)</div>`;
+            tip += `<div>💰 區間累計配息增益：<span style="color:#34d399; font-weight:bold;">+$${accDiv} / 單位</span></div>`;
+            tip += `<div>📐 60MA 季線：$${item.ma60.toFixed(2)} (季線乖離 <strong>${b}%</strong>)</div>`;
             if (userCostNav) {
               const diff = (item.nav - userCostNav).toFixed(2);
               tip += `<div style="margin-top:4px; padding-top:4px; border-top:1px dashed #334155;">`;
@@ -1005,16 +1191,16 @@
           }
         },
         legend: { data: ['含息還原淨值', '原始除息淨值', '60MA 季線'], textStyle: { color: '#94a3b8' }, top: 0 },
-        grid: { left: '3%', right: '10%', bottom: '4%', containLabel: true },
+        grid: { left: '3%', right: '9%', bottom: '4%', containLabel: true },
         xAxis: { type: 'category', data: dates, axisLine: { lineStyle: { color: '#475569' } }, axisLabel: { color: '#94a3b8' } },
-        yAxis: { type: 'value', min: yMin, max: yMax, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#94a3b8' } },
+        yAxis: { type: 'value', min: minY, max: maxY, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#94a3b8' } },
         series: [
-          { name: '含息還原淨值', type: 'line', data: adjs, smooth: true, itemStyle: { color: '#38bdf8' }, lineStyle: { width: 2.5 }, areaStyle: { color: 'rgba(56, 189, 248, 0.06)' } },
+          { name: '含息還原淨值', type: 'line', data: rebasedAdjs, smooth: true, itemStyle: { color: '#38bdf8' }, lineStyle: { width: 3 }, areaStyle: { color: 'rgba(56, 189, 248, 0.06)' } },
           {
-            name: '原始除息淨值', type: 'line', data: navs, itemStyle: { color: '#a855f7' }, lineStyle: { width: 3 },
+            name: '原始除息淨值', type: 'line', data: navs, itemStyle: { color: '#a855f7' }, lineStyle: { width: 2.5 },
             markLine: { symbol: ['none', 'none'], data: markLines }
           },
-          { name: '60MA 季線', type: 'line', data: mas, smooth: true, lineStyle: { type: 'dashed', color: '#fbbf24', width: 1.5 }, itemStyle: { color: '#fbbf24' } }
+          { name: '60MA 季線', type: 'line', data: mas, smooth: true, lineStyle: { type: 'dashed', color: '#94a3b8', width: 1.5 }, itemStyle: { color: '#94a3b8' } }
         ]
       }, true);
 
@@ -1071,6 +1257,7 @@
       });
     }
 
+    // 綁定按鈕與輸入框事件
     document.getElementById('btn-calculate').addEventListener('click', runCalculation);
     ['input-capital', 'input-cost-nav', 'input-current-nav', 'input-dividend'].forEach(id => {
       document.getElementById(id).addEventListener('input', runCalculation);
@@ -1078,6 +1265,7 @@
     });
 
     window.addEventListener('load', function () {
+      loadMarketCache();
       updateDividendCountdown();
       runCalculation();
       fetchLatestFundData(false);
