@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>末路兼職 - Stage 1 驗證模組</title>
+    <title>末路兼職 - Stage 1 驗證模組（全螢幕橫向版）</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
         body {
@@ -12,29 +12,55 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 100vw; height: 100vh; overflow: hidden; position: fixed;
         }
+
+        /* 全螢幕引導遮罩 */
+        #fullscreen-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(11, 11, 16, 0.95); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 20px; transition: opacity 0.3s ease;
+        }
+        #fullscreen-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .btn-enter {
+            background: #00d2d3; color: #0b0b10; border: none; padding: 14px 28px;
+            font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 210, 211, 0.4); margin-top: 20px;
+        }
+        .btn-enter:active { transform: scale(0.95); }
+
         #ui-header {
-            width: 95vw; max-width: 960px; display: flex; justify-content: space-between; align-items: center;
-            background: #161622; padding: 10px 16px; border-radius: 12px; margin-bottom: 8px;
-            border: 1px solid #2a2a40; font-size: 14px; font-weight: bold;
+            width: 98vw; max-width: 960px; display: flex; justify-content: space-between; align-items: center;
+            background: #161622; padding: 8px 16px; border-radius: 10px; margin-bottom: 6px;
+            border: 1px solid #2a2a40; font-size: 13px; font-weight: bold;
         }
         .status-group { display: flex; align-items: center; gap: 8px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4757; display: inline-block; }
         .dot.connected { background: #2ed573; box-shadow: 0 0 8px #2ed573; }
         
         #canvas-container {
-            width: 95vw; max-width: 960px; aspect-ratio: 16 / 9;
-            background: #12121c; border: 2px solid #2a2a40; border-radius: 12px;
+            width: 98vw; max-width: 960px; aspect-ratio: 16 / 9;
+            background: #12121c; border: 2px solid #2a2a40; border-radius: 10px;
             overflow: hidden; position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
         }
         canvas { width: 100%; height: 100%; display: block; }
 
         #footer-hint {
-            width: 95vw; max-width: 960px; font-size: 11px; color: #787898;
-            margin-top: 8px; text-align: center; line-height: 1.4;
+            width: 98vw; max-width: 960px; font-size: 11px; color: #787898;
+            margin-top: 6px; text-align: center; line-height: 1.3;
         }
     </style>
 </head>
 <body>
+
+    <!-- 首次進入或轉向時的全螢幕觸發層（解決瀏覽器隱藏網址列限制） -->
+    <div id="fullscreen-overlay">
+        <h2 style="margin-bottom: 10px; color: #00d2d3;">《末路兼職》Stage 1</h2>
+        <p style="color: #a4b0be; font-size: 14px; max-width: 400px; line-height: 1.5;">
+            為了獲得最佳沈浸感與手把操控體驗，請點擊下方按鈕以進入**全螢幕橫向模式**（將自動隱藏網址列）。
+        </p>
+        <button class="btn-enter" onclick="enterFullscreenGame()">🎮 進入全螢幕遊戲</button>
+    </div>
 
     <div id="ui-header">
         <div class="status-group">
@@ -43,6 +69,7 @@
         </div>
         <div class="status-group">
             <span>🧠 SAN 值: <span id="san-val" style="color:#ff4757;">100</span> / 100</span>
+            <button onclick="enterFullscreenGame()" style="background:#2a2a40; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; margin-left: 10px;">全螢幕</button>
         </div>
     </div>
 
@@ -51,7 +78,7 @@
     </div>
 
     <div id="footer-hint">
-        🎮 操作指南：左搖桿/十字鍵左右走位 ｜ 靠近收銀台(X:280) 按下 A 鍵發動 1.5 秒 QTE ｜ 大門/貨架/倉庫門可互動
+        🎮 操作指南：左搖桿/十字鍵左右走位 ｜ 靠近收銀台(X:280) 按下 A 鍵發動 1.5 秒 QTE ｜ 支援藍牙手把
     </div>
 
 <script>
@@ -60,16 +87,42 @@ const ctx = canvas.getContext('2d');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const sanValSpan = document.getElementById('san-val');
+const overlay = document.getElementById('fullscreen-overlay');
 
 let activeGamepadIndex = null;
 const DEADZONE = 0.15;
 
-// 遊戲資料模型 (對應規格書 Stage 1 JSON)
+// 全螢幕與橫向鎖定觸發函數
+function enterFullscreenGame() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => console.log(err));
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    }
+
+    // 嘗試鎖定螢幕為橫向 (支援的行動裝置會自動轉橫並藏網址列)
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+    }
+
+    // 隱藏引導遮罩
+    overlay.classList.add('hidden');
+}
+
+// 監聽瀏覽器全螢幕狀態變化
+document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) {
+        // 如果使用者退出全螢幕，可以選擇重新顯示引導或保持乾淨介面
+    }
+});
+
+// 遊戲資料模型 (Stage 1 JSON)
 const gameState = {
     player: {
         x: 100, y: 420, width: 64, height: 96,
         speed: 180, sanCurrent: 100, sanMax: 100,
-        state: "IDLE", facing: 1 // 1: 右, -1: 左
+        state: "IDLE", facing: 1
     },
     nodes: [
         { id: "node_entrance_gate", x: 60, width: 80, action: "ACTION_CLOCK_OUT", btn: "A", name: "大門打卡" },
@@ -97,7 +150,7 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
     if (e.key === ' ' || e.key === 'Enter') {
-        e.preventDefault(); // 阻止頁面滾動
+        e.preventDefault();
         triggerAction("A");
     }
 });
@@ -128,7 +181,6 @@ function applyDeadzone(val) {
     return Math.abs(val) < DEADZONE ? 0 : val;
 }
 
-// 觸發手把震動安全封裝
 function triggerRumble(duration, weak, strong) {
     const gps = navigator.getGamepads ? navigator.getGamepads() : [];
     const gp = gps[activeGamepadIndex];
@@ -138,8 +190,6 @@ function triggerRumble(duration, weak, strong) {
             weakMagnitude: weak, strongMagnitude: strong
         }).catch(() => {});
     }
-    gameState.vibrationTimer = duration / 1000;
-    gameState.vibrationIntensity = strong;
 }
 
 function pollGamepad(dt) {
@@ -149,7 +199,6 @@ function pollGamepad(dt) {
     }
     const gp = gps[activeGamepadIndex];
     if (!gp) {
-        // 無手把時使用鍵盤
         let moveDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
         updatePlayerMovement(moveDir, dt);
         if (keys.actionA) { triggerAction("A"); keys.actionA = false; }
@@ -171,30 +220,19 @@ function pollGamepad(dt) {
 
     updatePlayerMovement(moveDir, dt);
 
-    // 良值手把按鍵對應 (Switch 佈局)
-    const btnB = gp.buttons[0]?.pressed || false; // Switch B (底部)
-    const btnA = gp.buttons[1]?.pressed || false; // Switch A (右側) -> 對應規格書主互動
-    const btnX = gp.buttons[3]?.pressed || false; // Switch X (頂部)
+    const btnA = gp.buttons[1]?.pressed || false; // A 鍵
+    const btnX = gp.buttons[3]?.pressed || false; // X 鍵
 
-    // 上升緣觸發 A 鍵
-    if (btnA && !prevBtnA) {
-        triggerAction("A");
-    }
+    if (btnA && !prevBtnA) { triggerAction("A"); }
     prevBtnA = btnA;
 
-    // 上升緣觸發 X 鍵
-    if (btnX && !prevBtnX) {
-        triggerAction("X");
-    }
+    if (btnX && !prevBtnX) { triggerAction("X"); }
     prevBtnX = btnX;
 }
 
 function updatePlayerMovement(dir, dt) {
     const p = gameState.player;
-    if (gameState.qte.active) {
-        p.state = "INTERACTING";
-        return;
-    }
+    if (gameState.qte.active) { p.state = "INTERACTING"; return; }
 
     if (Math.abs(dir) > 0.05) {
         p.state = "WALK";
@@ -203,16 +241,12 @@ function updatePlayerMovement(dir, dt) {
     } else {
         p.state = "IDLE";
     }
-
-    // 限制在便利商店範圍內 (0 ~ 1200)
     p.x = Math.max(30, Math.min(gameState.worldWidth - 30, p.x));
 }
 
-// 檢測當前靠近哪個互動節點
 function getActiveNode() {
     const p = gameState.player;
     for (let node of gameState.nodes) {
-        // AABB 區間判定
         if (p.x >= node.x - node.width/2 && p.x <= node.x + node.width/2) {
             return node;
         }
@@ -225,7 +259,6 @@ function triggerAction(btnName) {
     if (!node) return;
 
     if (gameState.qte.active) {
-        // QTE 進行中再次按下一律判定為成功拆解
         if (node.action === "ACTION_CHECKOUT_QTE" && btnName === node.btn) {
             gameState.qte.success = true;
             triggerRumble(120, 0.0, 0.8);
@@ -234,12 +267,10 @@ function triggerAction(btnName) {
         return;
     }
 
-    // 啟動互動
     if (node.btn === btnName) {
         if (node.action === "ACTION_CHECKOUT_QTE") {
             startQTE();
         } else {
-            // 一般互動回饋
             triggerRumble(150, 0.2, 0.4);
         }
     }
@@ -249,53 +280,43 @@ function startQTE() {
     gameState.qte.active = true;
     gameState.qte.timer = gameState.qte.duration;
     gameState.qte.success = false;
-    triggerRumble(1500, 0.3, 0.1); // 掃碼微震
+    triggerRumble(1500, 0.3, 0.1);
 }
 
 function endQTE(success) {
     gameState.qte.active = false;
     if (!success) {
-        // 失敗扣除 SAN 值
         gameState.player.sanCurrent = Math.max(0, gameState.player.sanCurrent - 15);
         sanValSpan.innerText = gameState.player.sanCurrent;
-        gameState.flashRed = 0.6; // 紅色閃爍
-        triggerRumble(350, 0.9, 0.9); // 強烈報錯震動
+        gameState.flashRed = 0.6;
+        triggerRumble(350, 0.9, 0.9);
     }
 }
 
-// 遊戲主迴圈
 function mainLoop(timestamp) {
     let dt = (timestamp - lastTime) / 1000;
-    if (dt > 0.1) dt = 0.1; // 防止頁面切換回來時 dt 過大
+    if (dt > 0.1) dt = 0.1;
     lastTime = timestamp;
 
-    // 1. 讀取手把輸入
     pollGamepad(dt);
 
-    // 2. 更新 QTE 計時器
     if (gameState.qte.active) {
         gameState.qte.timer -= dt;
-        if (gameState.qte.timer <= 0) {
-            endQTE(false);
-        }
+        if (gameState.qte.timer <= 0) { endQTE(false); }
     }
 
-    // 3. 鏡頭平滑跟隨主角
     const targetCamX = gameState.player.x - canvas.width / 2;
     gameState.cameraX += (targetCamX - gameState.cameraX) * 0.1;
     gameState.cameraX = Math.max(0, Math.min(gameState.worldWidth - canvas.width, gameState.cameraX));
 
-    // --- 畫面渲染 ---
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.save();
     ctx.translate(-gameState.cameraX, 0);
 
-    // 渲染背景地面與便利商店場景
+    // 背景地面
     ctx.fillStyle = "#1e1e2d";
     ctx.fillRect(0, 0, gameState.worldWidth, 540);
 
-    // 地板磁磚線條
     ctx.strokeStyle = "#28283d";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -304,24 +325,20 @@ function mainLoop(timestamp) {
     }
     ctx.stroke();
 
-    // 渲染互動節點
     const activeNode = getActiveNode();
     gameState.nodes.forEach(node => {
         const isActive = (node === activeNode && !gameState.qte.active);
-        
         ctx.fillStyle = isActive ? "#3b3b5c" : "#242436";
         ctx.fillRect(node.x - node.width/2, 380, node.width, 100);
         ctx.strokeStyle = isActive ? "#00d2d3" : "#4b4b6b";
         ctx.lineWidth = isActive ? 3 : 1;
         ctx.strokeRect(node.x - node.width/2, 380, node.width, 100);
 
-        // 節點名稱
         ctx.fillStyle = "#a4b0be";
         ctx.font = "12px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(node.name, node.x, 365);
 
-        // 頭頂按鈕提示
         if (isActive) {
             ctx.fillStyle = "#ff4757";
             ctx.beginPath();
@@ -333,47 +350,33 @@ function mainLoop(timestamp) {
         }
     });
 
-    // 渲染主角 (白盒藍色方塊 + 狀態)
     const p = gameState.player;
     ctx.save();
     ctx.translate(p.x, p.y + p.height / 2);
-    
-    // 主角身體
     ctx.fillStyle = p.state === "WALK" ? "#00d2d3" : "#2e86de";
     ctx.fillRect(-p.width / 2, -p.height, p.width, p.height);
     
-    // 眼睛方向
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(p.facing > 0 ? 10 : -22, -75, 12, 12);
-
-    // 狀態文字
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(p.state, 0, -p.height - 10);
     ctx.restore();
 
-    ctx.restore(); // 恢復相機位移
+    ctx.restore();
 
-    // 4. 渲染 QTE 介面覆蓋層
     if (gameState.qte.active) {
         ctx.save();
         ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // QTE 圓環計時
         const cx = canvas.width / 2;
         const cy = canvas.height / 2 - 30;
         const radius = 45;
 
-        // 外發光環
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.strokeStyle = "#33334d";
         ctx.lineWidth = 8;
         ctx.stroke();
 
-        // 剩餘時間進度弧度
         const progress = gameState.qte.timer / gameState.qte.duration;
         ctx.beginPath();
         ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress));
@@ -381,7 +384,6 @@ function mainLoop(timestamp) {
         ctx.lineWidth = 8;
         ctx.stroke();
 
-        // 中間按鈕提示
         ctx.fillStyle = "#ff4757";
         ctx.beginPath();
         ctx.arc(cx, cy, 26, 0, Math.PI * 2);
@@ -392,14 +394,12 @@ function mainLoop(timestamp) {
         ctx.textBaseline = "middle";
         ctx.fillText("A", cx, cy);
 
-        // 提示文字
         ctx.font = "bold 16px sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.fillText("【收銀掃碼 QTE】快速按下 A 鍵！", cx, cy + 70);
         ctx.restore();
     }
 
-    // 5. 扣血紅色閃爍特效
     if (gameState.flashRed > 0) {
         gameState.flashRed -= dt;
         ctx.fillStyle = `rgba(255, 71, 87, ${gameState.flashRed})`;
