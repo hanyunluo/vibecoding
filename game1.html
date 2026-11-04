@@ -1,1371 +1,1787 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>末路兼職 Dead-End Job - EP1: 深夜超商 (Prototype)</title>
-<style>
-  * {
-    box-sizing: border-box;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-  }
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #07050a;
-    overflow: hidden;
-    touch-action: none;
-    font-family: 'Courier New', Courier, 'Noto Sans TC', monospace;
-    color: #fff;
-  }
-  #game-wrapper {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: radial-gradient(circle, #1a1224 0%, #050308 100%);
-  }
-  canvas {
-    width: 100%;
-    height: 100%;
-    max-width: 177.78vh; /* 16:9 ratio */
-    max-height: 56.25vw;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    box-shadow: 0 0 40px rgba(0,0,0,0.9);
-    background: #0d0a14;
-  }
-  /* 虛擬觸控 UI (連接手把時自動淡出) */
-  #touch-controls {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    height: 180px;
-    pointer-events: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 0 35px;
-    z-index: 20;
-    transition: opacity 0.25s ease;
-  }
-  #touch-controls.hidden {
-    opacity: 0;
-  }
-  .joystick-zone {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 3px solid rgba(255, 255, 255, 0.25);
-    position: relative;
-    pointer-events: auto;
-    touch-action: none;
-  }
-  .joystick-knob {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: rgba(180, 255, 100, 0.65);
-    border: 3px solid #000;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  .action-buttons {
-    display: flex;
-    gap: 16px;
-    align-items: flex-end;
-    pointer-events: auto;
-  }
-  .t-btn {
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    border: 3px solid #000;
-    color: #fff;
-    font-weight: 900;
-    font-size: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 0 #000;
-    touch-action: none;
-  }
-  .t-btn:active, .t-btn.active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #000;
-    filter: brightness(1.3);
-  }
-  .btn-a { background: rgba(46, 204, 113, 0.75); width: 78px; height: 78px; }
-  .btn-b { background: rgba(231, 76, 60, 0.75); }
-  .btn-x { background: rgba(52, 152, 219, 0.75); }
-  .t-btn span { font-size: 10px; opacity: 0.9; }
-</style>
+    <meta charset="UTF-8">
+    <!-- 支援跨平台行動裝置全螢幕與安全區域適配 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>末路兼職 (꿀알바 / DEAD END JOB) - IINE Gamepad Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-font: 'Press Start 2P', 'Noto Sans TC', monospace;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #07070c;
+            color: #f8fafc;
+            font-family: var(--pixel-font);
+            overflow-x: hidden;
+        }
+        /* 橫式模式：徹底消除邊界、鎖定全螢幕 100dvh */
+        body.landscape-mode {
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            touch-action: none;
+        }
+        /* 直式模式：允許自然捲動，讓瀏覽器網址列自然浮現 */
+        body.portrait-mode {
+            overflow-y: auto;
+            position: relative;
+            min-height: 135vh; /* 確保直式可滑動以喚出/保留網址列 */
+            touch-action: pan-y;
+        }
+        /* 高畫質復古像素渲染核心 */
+        canvas {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            display: block;
+        }
+        /* CRT 掃描線與暗角特效 */
+        .crt-overlay {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.35) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 4px, 6px 100%;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.75);
+            pointer-events: none;
+        }
+        /* 像素邊框按鈕 */
+        .pixel-btn {
+            position: relative;
+            background: #10b981;
+            color: #052e16;
+            border: 3px solid #ecfdf5;
+            box-shadow: 0 4px 0 #047857, 0 6px 15px rgba(16, 185, 129, 0.4);
+            transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+        }
+        .pixel-btn:active, .pixel-btn.active-press {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #047857;
+        }
+        .pixel-panel {
+            background: rgba(12, 12, 22, 0.92);
+            border: 3px solid #38bdf8;
+            box-shadow: 0 0 0 3px #090d16, 0 10px 30px rgba(0, 0, 0, 0.85);
+        }
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.85; }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 0.9s infinite steps(4);
+        }
+        @keyframes glitch-skew {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-6deg); filter: hue-rotate(90deg); }
+            40% { transform: skew(6deg); }
+            60% { transform: skew(-2deg); filter: none; }
+            100% { transform: skew(0deg); }
+        }
+        .glitch-text {
+            animation: glitch-skew 2.2s infinite;
+        }
+    </style>
 </head>
-<body>
-
-<div id="game-wrapper">
-  <canvas id="gameCanvas" width="960" height="540"></canvas>
-
-  <!-- 跨平台虛擬觸控搖桿與按鍵 -->
-  <div id="touch-controls">
-    <div class="joystick-zone" id="joyZone">
-      <div class="joystick-knob" id="joyKnob"></div>
-    </div>
-    <div class="action-buttons">
-      <div class="t-btn btn-x" id="btnX">X<span>攻擊/次要</span></div>
-      <div class="t-btn btn-b" id="btnB">B<span>翻滾閃避</span></div>
-      <div class="t-btn btn-a" id="btnA">A<span>互動/確認</span></div>
-    </div>
-  </div>
-</div>
-
-<script>
-/**
- * ============================================================================
- * 1. WEB AUDIO SYNTHESIZER (復古怪誕 Funky Bass + 鬼魅滑音 Ooo-ooo + 8-Bit 語音粒子)
- * ============================================================================
- */
-class SoundEngine {
-  constructor() {
-    this.ctx = null;
-    this.unlocked = false;
-    this.bgmTimer = null;
-    this.step = 0;
-    this.bossMode = false;
-  }
-
-  unlock() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-    if (!this.unlocked) {
-      this.unlocked = true;
-      this.startBGM();
-    }
-  }
-
-  // 播放 8-bit 音效與語音粒子
-  playTone(freq, type = 'square', duration = 0.08, vol = 0.15, slideFreq = null) {
-    if (!this.ctx || !this.unlocked) return;
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, now);
-    if (slideFreq) {
-      osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
-    }
-    gain.gain.setValueAtTime(vol, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(now);
-    osc.stop(now + duration);
-  }
-
-  playAcceptSFX() {
-    this.playTone(523.25, 'square', 0.1, 0.2);
-    setTimeout(() => this.playTone(659.25, 'square', 0.1, 0.2), 90);
-    setTimeout(() => this.playTone(1046.5, 'square', 0.35, 0.25), 180);
-  }
-
-  playCoinSFX() {
-    this.playTone(987.77, 'square', 0.06, 0.15);
-    setTimeout(() => this.playTone(1318.5, 'square', 0.2, 0.18), 60);
-  }
-
-  playVoiceBlip(charType = 'player') {
-    if (charType === 'player') {
-      this.playTone(190 + Math.random() * 60, 'triangle', 0.045, 0.15);
-    } else if (charType === 'creepy') {
-      // 崔熙東：高低錯位失真音
-      this.playTone(140 + Math.random() * 280, 'sawtooth', 0.06, 0.14);
-    } else if (charType === 'spider') {
-      // 女蜘蛛怪：虛弱氣音下滑
-      this.playTone(520 + Math.random() * 80, 'sine', 0.09, 0.12, 260);
-    } else if (charType === 'system') {
-      this.playTone(800, 'square', 0.03, 0.1);
-    }
-  }
-
-  playShockSFX() {
-    this.playTone(110, 'sawtooth', 0.6, 0.35, 45);
-    this.playTone(117, 'square', 0.6, 0.3, 40);
-  }
-
-  startBGM() {
-    if (this.bgmTimer) clearInterval(this.bgmTimer);
-    // Funky Bass 音階 (C minor / Phrygian 詭異律動)
-    const normalBass = [130.8, 0, 130.8, 155.5, 174.6, 0, 196.0, 185.0];
-    const bossBass   = [110.0, 110.0, 130.8, 116.5, 146.8, 110.0, 164.8, 155.5];
-
-    this.bgmTimer = setInterval(() => {
-      if (!this.ctx || this.ctx.state !== 'running') return;
-      const idx = this.step % 8;
-      const bassNote = this.bossMode ? bossBass[idx] : normalBass[idx];
-
-      // 1. Funky Bassline
-      if (bassNote > 0) {
-        this.playTone(bassNote, 'sawtooth', this.bossMode ? 0.14 : 0.18, 0.11);
-      }
-
-      // 2. 參考影片標誌性的「嗚～嗚～ (Ooo-ooo)」鬼魅滑音人聲合成
-      if (this.step % 16 === 0) {
-        const startF = this.bossMode ? 587.3 : 523.2;
-        const endF   = this.bossMode ? 698.4 : 659.2;
-        this.playTone(startF, 'sine', 0.55, 0.09, endF);
-      } else if (this.step % 16 === 4) {
-        const startF = this.bossMode ? 659.2 : 587.3;
-        const endF   = this.bossMode ? 440.0 : 392.0;
-        this.playTone(startF, 'sine', 0.65, 0.09, endF);
-      }
-
-      this.step++;
-    }, 185);
-  }
-}
-
-const sfx = new SoundEngine();
-
-/**
- * ============================================================================
- * 2. UNIFIED INPUT MANAGER (原生 Gamepad API + 鍵盤 + iOS/Android 觸控三合一)
- * ============================================================================
- */
-class UnifiedInput {
-  constructor() {
-    this.mode = 'KEYBOARD'; // 'GAMEPAD' | 'TOUCH' | 'KEYBOARD'
-    this.axisX = 0;
-    this.axisY = 0;
-    this.prevAxisX = 0;
-
-    // 動作狀態: A (確認/互動), B (翻滾閃避), X (攻擊/投擲/次要選項)
-    this.actions = {
-      A: { pressed: false, justPressed: false, _prev: false },
-      B: { pressed: false, justPressed: false, _prev: false },
-      X: { pressed: false, justPressed: false, _prev: false }
-    };
-
-    this.keys = {};
-    this.touchState = { x: 0, y: 0, A: false, B: false, X: false };
-    this.gamepadIndex = null;
-
-    this.initKeyboard();
-    this.initGamepadEvents();
-    this.initTouch();
-  }
-
-  setMode(newMode) {
-    if (this.mode !== newMode) {
-      this.mode = newMode;
-      const touchEl = document.getElementById('touch-controls');
-      if (newMode === 'GAMEPAD') {
-        touchEl.classList.add('hidden');
-      } else if (newMode === 'TOUCH') {
-        touchEl.classList.remove('hidden');
-      }
-    }
-  }
-
-  initKeyboard() {
-    window.addEventListener('keydown', (e) => {
-      this.keys[e.code] = true;
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
-        e.preventDefault();
-      }
-      sfx.unlock();
-      if (this.mode === 'TOUCH') this.setMode('KEYBOARD');
-    });
-    window.addEventListener('keyup', (e) => {
-      this.keys[e.code] = false;
-    });
-  }
-
-  initGamepadEvents() {
-    window.addEventListener('gamepadconnected', (e) => {
-      this.gamepadIndex = e.gamepad.index;
-      this.setMode('GAMEPAD');
-      this.vibrate(120, 0.5, 0.5);
-    });
-    window.addEventListener('gamepaddisconnected', () => {
-      this.gamepadIndex = null;
-      this.setMode('KEYBOARD');
-    });
-  }
-
-  initTouch() {
-    const joyZone = document.getElementById('joyZone');
-    const joyKnob = document.getElementById('joyKnob');
-    let joyTouchId = null;
-
-    const updateJoy = (clientX, clientY) => {
-      const rect = joyZone.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const maxR = rect.width / 2 - 20;
-      let dx = clientX - cx;
-      let dy = clientY - cy;
-      const dist = Math.hypot(dx, dy);
-      if (dist > maxR) {
-        dx = (dx / dist) * maxR;
-        dy = (dy / dist) * maxR;
-      }
-      joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-      this.touchState.x = Math.abs(dx / maxR) > 0.15 ? dx / maxR : 0;
-      this.touchState.y = Math.abs(dy / maxR) > 0.15 ? dy / maxR : 0;
-    };
-
-    joyZone.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      sfx.unlock();
-      this.setMode('TOUCH');
-      const t = e.changedTouches[0];
-      joyTouchId = t.identifier;
-      updateJoy(t.clientX, t.clientY);
-    }, { passive: false });
-
-    joyZone.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      for (let t of e.changedTouches) {
-        if (t.identifier === joyTouchId) updateJoy(t.clientX, t.clientY);
-      }
-    }, { passive: false });
-
-    const resetJoy = (e) => {
-      for (let t of e.changedTouches) {
-        if (t.identifier === joyTouchId) {
-          joyTouchId = null;
-          joyKnob.style.transform = `translate(-50%, -50%)`;
-          this.touchState.x = 0;
-          this.touchState.y = 0;
-        }
-      }
-    };
-    joyZone.addEventListener('touchend', resetJoy);
-    joyZone.addEventListener('touchcancel', resetJoy);
-
-    const bindBtn = (id, key) => {
-      const el = document.getElementById(id);
-      el.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        sfx.unlock();
-        this.setMode('TOUCH');
-        this.touchState[key] = true;
-        el.classList.add('active');
-      }, { passive: false });
-      const end = (e) => {
-        e.preventDefault();
-        this.touchState[key] = false;
-        el.classList.remove('active');
-      };
-      el.addEventListener('touchend', end);
-      el.addEventListener('touchcancel', end);
-    };
-    bindBtn('btnA', 'A');
-    bindBtn('btnB', 'B');
-    bindBtn('btnX', 'X');
-  }
-
-  // 手把震動回饋 (Dual-Rumble)
-  vibrate(durationMs = 100, weak = 0.5, strong = 0.5) {
-    if (!navigator.getGamepads) return;
-    const pads = navigator.getGamepads();
-    const gp = pads[this.gamepadIndex] || pads[0];
-    if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {
-      gp.vibrationActuator.playEffect('dual-rumble', {
-        startDelay: 0,
-        duration: durationMs,
-        weakMagnitude: weak,
-        strongMagnitude: strong
-      }).catch(() => {});
-    }
-  }
-
-  // 每一幀主動輪詢 (Polling in requestAnimationFrame)
-  poll() {
-    this.prevAxisX = this.axisX;
-    let ax = 0, ay = 0;
-    let btnA = false, btnB = false, btnX = false;
-
-    // 1. 輪詢 Gamepad API
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    let activePad = null;
-    for (let i = 0; i < pads.length; i++) {
-      if (pads[i] && pads[i].connected) {
-        activePad = pads[i];
-        break;
-      }
-    }
-
-    if (activePad) {
-      const deadzone = 0.18;
-      const rawX = activePad.axes[0] || 0;
-      const rawY = activePad.axes[1] || 0;
-      const dpadLeft  = activePad.buttons[14]?.pressed;
-      const dpadRight = activePad.buttons[15]?.pressed;
-
-      if (Math.abs(rawX) > deadzone) ax = rawX;
-      else if (dpadLeft) ax = -1;
-      else if (dpadRight) ax = 1;
-
-      if (Math.abs(rawY) > deadzone) ay = rawY;
-
-      // Standard Gamepad Mapping:
-      // buttons[0] = A/Cross, buttons[1] = B/Circle, buttons[2] = X/Square, buttons[7] = RT/R2
-      const gpA = activePad.buttons[0]?.pressed || activePad.buttons[7]?.pressed;
-      const gpB = activePad.buttons[1]?.pressed || activePad.buttons[5]?.pressed;
-      const gpX = activePad.buttons[2]?.pressed || activePad.buttons[3]?.pressed;
-
-      if (Math.abs(ax) > 0 || gpA || gpB || gpX) {
-        this.setMode('GAMEPAD');
-        sfx.unlock();
-      }
-      btnA = btnA || gpA;
-      btnB = btnB || gpB;
-      btnX = btnX || gpX;
-    }
-
-    // 2. 鍵盤輸入合併
-    if (this.keys['ArrowLeft'] || this.keys['KeyA']) ax = -1;
-    if (this.keys['ArrowRight'] || this.keys['KeyD']) ax = 1;
-    if (this.keys['KeyJ'] || this.keys['KeyZ'] || this.keys['Space'] || this.keys['Enter']) btnA = true;
-    if (this.keys['KeyK'] || this.keys['KeyX'] || this.keys['ShiftLeft']) btnB = true;
-    if (this.keys['KeyL'] || this.keys['KeyC'] || this.keys['KeyE']) btnX = true;
-
-    // 3. 觸控輸入合併
-    if (Math.abs(this.touchState.x) > 0) ax = this.touchState.x;
-    if (this.touchState.A) btnA = true;
-    if (this.touchState.B) btnB = true;
-    if (this.touchState.X) btnX = true;
-
-    this.axisX = ax;
-    this.axisY = ay;
-
-    const updateBtn = (act, state) => {
-      act.justPressed = state && !act._prev;
-      act.pressed = state;
-      act._prev = state;
-    };
-    updateBtn(this.actions.A, btnA);
-    updateBtn(this.actions.B, btnB);
-    updateBtn(this.actions.X, btnX);
-  }
-
-  getPromptLabel(btn) {
-    if (this.mode === 'GAMEPAD') {
-      return btn === 'A' ? '手把 Ⓐ' : btn === 'B' ? '手把 Ⓑ' : '手把 Ⓧ';
-    } else if (this.mode === 'TOUCH') {
-      return `觸控 [${btn}]`;
-    } else {
-      return btn === 'A' ? '[J / Space]' : btn === 'B' ? '[K / Shift]' : '[L / E]';
-    }
-  }
-}
-
-const input = new UnifiedInput();
-
-/**
- * ============================================================================
- * 3. GAME STATE & EPISODE 1 LOGIC (深夜超商：由左至右 2400px 橫向卷軸)
- * ============================================================================
- */
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-const STATE = {
-  INTRO_PHONE: 0,    // 階段0: 片頭與手機點擊 ACCEPT 解鎖音效
-  EXPLORE: 1,        // 階段1~2: 超商橫向卷軸探索
-  MANUAL_UI: 2,      // 第一人稱觀看規則手冊
-  SPIDER_CHOICE: 3,  // 倉庫女蜘蛛怪抉擇
-  CUTIN_REVEAL: 4,   // 崔熙東說溜嘴 + 撕開手冊第二頁 QTE
-  BOSS_FIGHT: 5,     // 階段4: 巨大鼠怪生存戰 + 拉扯 QTE + 破窗引陽光
-  VICTORY: 6         // 06:00 破曉結算 50倍時薪
-};
-
-const game = {
-  state: STATE.INTRO_PHONE,
-  cameraX: 0,
-  worldWidth: 2400,
-  salary: 0,
-  displaySalary: 0,
-  clockMinutes: 22 * 60, // 22:00 起算 (至隔天 06:00 = 30 * 60 = 1800)
-  glitchIntensity: 0,
-  shakeTimer: 0,
-  sunlightProgress: 0, // 0 ~ 1 破曉陽光
-
-  // 劇情旗標
-  manualRead: false,
-  heedongSpawned: false,
-  spiderResolved: false,
-  sanityBuff: false, // 詢問女蜘蛛怪獲得的清醒Buff
-  secondPageTornProgress: 0,
-
-  // 第一人稱手冊文字
-  manualLines: [
-    "【蜘蛛人力派遣：深夜超商工作守則】",
-    "規則 1：大夜班兼職人員為兩人一組。",
-    "規則 2：值班期間（22:00-06:00），絕對不能擅自離開超商。",
-    "規則 3：聽到倉庫傳來怪聲，絕對不要進去。",
-    "規則 4：如果遇到妖魔鬼怪，倉庫裡有十字架可以對付。"
-  ],
-  manualRevealedCount: 1,
-
-  // 字幕與對話框
-  dialogue: null, // { speaker, text, charIndex, timer, voiceType, onComplete }
-
-  // 主角：卞革浚
-  player: {
-    x: 220,
-    y: 390,
-    vx: 0,
-    facing: 1,
-    hp: 100,
-    maxHp: 100,
-    dodgeTimer: 0,
-    invulnTimer: 0,
-    grabbedByRat: false,
-    qteEscapeProgress: 0,
-    lastShakeSign: 0,
-    blindsPullProgress: 0,
-    animFrame: 0
-  },
-
-  // 偽人同事：崔熙東 / 巨大鼠怪 Boss
-  boss: {
-    x: 980,
-    y: 390,
-    active: false,
-    transformed: false,
-    state: 'IDLE', // 'IDLE' | 'CHARGE' | 'STUNNED'
-    vx: 0,
-    timer: 0,
-    rats: []
-  }
-};
-
-// 初始化鼠怪身上的蠕動老鼠粒子
-for (let i = 0; i < 38; i++) {
-  game.boss.rats.push({
-    ox: (Math.random() - 0.5) * 110,
-    oy: -Math.random() * 135,
-    spd: 2 + Math.random() * 4,
-    phase: Math.random() * Math.PI * 2
-  });
-}
-
-// 觸發底部打字機對話
-function startDialogue(speaker, text, voiceType = 'player', onComplete = null) {
-  game.dialogue = {
-    speaker,
-    text,
-    charIndex: 0,
-    timer: 0,
-    voiceType,
-    onComplete
-  };
-}
-
-function addSalary(amount) {
-  game.salary += amount;
-  sfx.playCoinSFX();
-}
-
-// 觸發畫面點擊 ACCEPT (支援滑鼠/觸控直接點 Canvas)
-canvas.addEventListener('pointerdown', (e) => {
-  sfx.unlock();
-  if (game.state === STATE.INTRO_PHONE) {
-    triggerAcceptJob();
-  } else if (game.state === STATE.VICTORY) {
-    resetPrototype();
-  }
-});
-
-function triggerAcceptJob() {
-  sfx.playAcceptSFX();
-  input.vibrate(200, 0.8, 1.0);
-  game.glitchIntensity = 12;
-  game.state = STATE.EXPLORE;
-  startDialogue(
-    "卞革浚",
-    "全租房被騙、股票慘賠……為了這 50 倍時薪，今晚死也要撐到早上 6 點！先去收銀台（向右走）看看工作手冊吧。",
-    "player"
-  );
-}
-
-function resetPrototype() {
-  game.state = STATE.EXPLORE;
-  game.salary = 0;
-  game.clockMinutes = 22 * 60;
-  game.sunlightProgress = 0;
-  game.manualRead = false;
-  game.heedongSpawned = false;
-  game.spiderResolved = false;
-  game.sanityBuff = false;
-  game.secondPageTornProgress = 0;
-  game.manualRevealedCount = 1;
-  game.player.x = 220;
-  game.player.hp = 100;
-  game.player.grabbedByRat = false;
-  game.player.blindsPullProgress = 0;
-  game.boss.transformed = false;
-  game.boss.x = 980;
-  sfx.bossMode = false;
-}
-
-/**
- * ============================================================================
- * 4. UPDATE LOOP (核心遊戲與 QTE 邏輯更新)
- * ============================================================================
- */
-function update() {
-  input.poll();
-
-  if (game.glitchIntensity > 0) game.glitchIntensity *= 0.9;
-  if (game.shakeTimer > 0) game.shakeTimer--;
-  if (game.displaySalary < game.salary) {
-    game.displaySalary += Math.ceil((game.salary - game.displaySalary) * 0.15);
-  }
-
-  // 0. 片頭手機接案畫面
-  if (game.state === STATE.INTRO_PHONE) {
-    if (input.actions.A.justPressed) {
-      triggerAcceptJob();
-    }
-    return;
-  }
-
-  // 對話框打字機推進
-  if (game.dialogue) {
-    game.dialogue.timer++;
-    if (game.dialogue.charIndex < game.dialogue.text.length) {
-      if (game.dialogue.timer % 2 === 0) {
-        game.dialogue.charIndex++;
-        sfx.playVoiceBlip(game.dialogue.voiceType);
-      }
-      if (input.actions.A.justPressed) {
-        game.dialogue.charIndex = game.dialogue.text.length;
-      }
-    } else {
-      if (input.actions.A.justPressed) {
-        const cb = game.dialogue.onComplete;
-        game.dialogue = null;
-        if (cb) cb();
-      }
-    }
-    return;
-  }
-
-  // 1. 第一人稱觀看規則手冊 UI
-  if (game.state === STATE.MANUAL_UI) {
-    if (input.actions.A.justPressed) {
-      if (game.manualRevealedCount < game.manualLines.length) {
-        game.manualRevealedCount++;
-        sfx.playVoiceBlip('system');
-        input.vibrate(40, 0.3, 0.1);
-      } else {
-        // 讀完第一頁，崔熙東登場
-        game.state = STATE.EXPLORE;
-        game.manualRead = true;
-        game.heedongSpawned = true;
-        game.clockMinutes = 23 * 60 + 30; // 23:30
-        addSalary(250000);
-        startDialogue(
-          "崔熙東 (怪異的同事)",
-          "嘿嘿……你就是新來的革浚哥嗎？我守櫃檯就好，倉庫（最右邊 X:2150）好像有怪聲，你去幫我盤點貨物吧～",
-          "creepy"
-        );
-      }
-    }
-    return;
-  }
-
-  // 2. 倉庫女蜘蛛怪心理博弈抉擇
-  if (game.state === STATE.SPIDER_CHOICE) {
-    if (input.actions.A.justPressed) {
-      // 選擇詢問女怪物 -> 獲得清醒理智 Buff
-      game.sanityBuff = true;
-      game.spiderResolved = true;
-      game.clockMinutes = 26 * 60; // 02:00
-      addSalary(600000);
-      sfx.playVoiceBlip('spider');
-      input.vibrate(150, 0.4, 0.6);
-      game.state = STATE.EXPLORE;
-      startDialogue(
-        "倉庫的女蜘蛛怪 (前任工讀生)",
-        "（虛弱地劇烈點頭，用蜘蛛步足指向十字架背面的血跡——原來那是崔熙東編造來害死工讀生的假規則！獲得【清醒理智 Buff：跑速與閃避提升】！快往左走出倉庫！）",
-        "spider"
-      );
-    } else if (input.actions.X.justPressed) {
-      // 直接拿十字架 -> 被女怪物撞開警告
-      game.spiderResolved = true;
-      game.clockMinutes = 26 * 60;
-      addSalary(300000);
-      game.shakeTimer = 15;
-      input.vibrate(250, 0.9, 0.9);
-      game.state = STATE.EXPLORE;
-      startDialogue(
-        "卞革浚",
-        "哇啊啊！女怪物突然拼死撞開了我的手！十字架背面全是誘捕的血跡……原來手冊上的十字架是陷阱！快往左離開倉庫！",
-        "player"
-      );
-    }
-    return;
-  }
-
-  // 3. 識破崔熙東 + 狂按 A 撕開手冊第二頁 QTE
-  if (game.state === STATE.CUTIN_REVEAL) {
-    if (input.actions.A.justPressed) {
-      game.secondPageTornProgress += 18;
-      game.shakeTimer = 6;
-      sfx.playTone(220 + game.secondPageTornProgress * 4, 'sawtooth', 0.06, 0.2);
-      input.vibrate(60, 0.6, 0.8);
-    }
-    game.secondPageTornProgress = Math.max(0, game.secondPageTornProgress - 0.25);
-
-    if (game.secondPageTornProgress >= 100) {
-      // 撕開成功！崔熙東化身巨大鼠怪 Boss 戰開始！
-      sfx.playShockSFX();
-      sfx.bossMode = true;
-      input.vibrate(500, 1.0, 1.0);
-      game.glitchIntensity = 25;
-      game.shakeTimer = 35;
-      game.boss.transformed = true;
-      game.boss.x = 1550;
-      game.boss.state = 'CHARGE';
-      game.boss.timer = 60;
-      game.clockMinutes = 28 * 60 + 30; // 04:30
-      game.state = STATE.BOSS_FIGHT;
-      startDialogue(
-        "超商手冊第二頁 (血字)",
-        "【警告：第二名兼職生不是人！！！】崔熙東的身體炸裂成無數隻嗜血老鼠！撐到早上 06:00，並在 05:50 時衝到最左側大門拉開遮光捲簾！",
-        "creepy"
-      );
-    }
-    return;
-  }
-
-  // 4. 破曉勝利畫面
-  if (game.state === STATE.VICTORY) {
-    if (input.actions.A.justPressed) {
-      resetPrototype();
-    }
-    return;
-  }
-
-  // ==========================================================================
-  // 橫向卷軸移動與 Boss 戰邏輯 (STATE.EXPLORE & STATE.BOSS_FIGHT)
-  // ==========================================================================
-  const p = game.player;
-  p.animFrame++;
-
-  if (p.invulnTimer > 0) p.invulnTimer--;
-  if (p.dodgeTimer > 0) p.dodgeTimer--;
-
-  // 若被鼠怪抓住：《潛水員戴夫》式左右搖晃左搖桿 QTE
-  if (p.grabbedByRat) {
-    const sign = Math.sign(input.axisX);
-    if (sign !== 0 && sign !== p.lastShakeSign) {
-      p.lastShakeSign = sign;
-      p.qteEscapeProgress += 16;
-      sfx.playTone(300 + p.qteEscapeProgress * 3, 'square', 0.04, 0.15);
-      input.vibrate(40, 0.5, 0.5);
-    }
-    if (input.actions.A.justPressed || input.actions.B.justPressed) {
-      p.qteEscapeProgress += 10;
-    }
-    p.hp -= 0.12;
-    if (p.qteEscapeProgress >= 100) {
-      // 掙脫成功！
-      p.grabbedByRat = false;
-      p.invulnTimer = 60;
-      p.vx = -10;
-      game.boss.state = 'STUNNED';
-      game.boss.timer = 55;
-      addSalary(400000);
-      sfx.playAcceptSFX();
-    }
-  } else {
-    // 正常橫向移動與翻滾閃避
-    const baseSpeed = game.sanityBuff ? 6.2 : 5.0;
-    if (input.actions.B.justPressed && p.dodgeTimer === 0) {
-      p.dodgeTimer = 22;
-      p.invulnTimer = game.sanityBuff ? 32 : 24;
-      p.vx = p.facing * 11;
-      sfx.playTone(180, 'triangle', 0.12, 0.2, 90);
-    }
-
-    if (p.dodgeTimer > 0) {
-      p.x += p.vx;
-      p.vx *= 0.92;
-    } else {
-      p.vx = input.axisX * baseSpeed;
-      p.x += p.vx;
-      if (Math.abs(input.axisX) > 0.1) {
-        p.facing = Math.sign(input.axisX);
-      }
-    }
-  }
-
-  // 邊界限制 (未讀手冊前不能進最右側倉庫)
-  const maxRight = game.manualRead ? 2320 : 1750;
-  p.x = Math.max(90, Math.min(maxRight, p.x));
-
-  // 鏡頭平滑跟隨
-  const targetCamX = Math.max(0, Math.min(game.worldWidth - canvas.width, p.x - canvas.width * 0.4));
-  game.cameraX += (targetCamX - game.cameraX) * 0.12;
-
-  // --------------------------------------------------------------------------
-  // 探索階段互動節點判定 (STATE.EXPLORE)
-  // --------------------------------------------------------------------------
-  if (game.state === STATE.EXPLORE) {
-    // 節點 A: 收銀台工作手冊 (X: 700)
-    if (!game.manualRead && Math.abs(p.x - 700) < 90 && input.actions.A.justPressed) {
-      game.state = STATE.MANUAL_UI;
-      sfx.playVoiceBlip('system');
-    }
-
-    // 節點 B: 貨架區快速補貨賺外快 (X: 1300)
-    if (Math.abs(p.x - 1300) < 85 && input.actions.A.justPressed) {
-      addSalary(50000);
-      input.vibrate(30, 0.2, 0.2);
-    }
-
-    // 節點 C: 倉庫深處發現女蜘蛛怪與十字架 (X: 2150)
-    if (game.manualRead && !game.spiderResolved && Math.abs(p.x - 2150) < 110 && input.actions.A.justPressed) {
-      sfx.playShockSFX();
-      game.glitchIntensity = 15;
-      game.state = STATE.SPIDER_CHOICE;
-    }
-
-    // 節點 D: 走出倉庫遇到崔熙東說溜嘴 (X < 1550)
-    if (game.spiderResolved && p.x < 1550) {
-      sfx.playShockSFX();
-      game.glitchIntensity = 18;
-      startDialogue(
-        "崔熙東",
-        "革浚哥，盤點完了嗎？倉庫裡的那個「女人」……還乖嗎？",
-        "creepy",
-        () => {
-          startDialogue(
-            "卞革浚 (內心驚駭)",
-            "等等……我根本沒跟他說倉庫裡的是「女人」！！快狂按確認鍵撕開工作手冊黏住的第二頁！",
-            "player",
-            () => {
-              game.state = STATE.CUTIN_REVEAL;
+<body class="landscape-mode select-none">
+
+    <!-- 頂部懸浮狀態列 (手把連線狀態、音效、CRT開關、橫式全螢幕按鈕) -->
+    <header id="top-hud" class="fixed top-0 left-0 right-0 z-40 flex flex-wrap items-center justify-between px-2 py-1.5 bg-slate-950/85 border-b-2 border-slate-800 backdrop-blur-sm text-[10px] sm:text-xs gap-1">
+        <div class="flex items-center gap-2">
+            <!-- 良值手把即時連線燈號 -->
+            <div id="gamepad-badge" class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-amber-400">
+                <span id="gamepad-leds" class="inline-flex gap-0.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                </span>
+                <span id="gamepad-status-text" class="font-bold tracking-tight">等待良值手把 (按任意鍵喚醒)</span>
+            </div>
+            <!-- 即時按鍵訊號回饋 -->
+            <div id="live-input-pill" class="hidden md:flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-950/90 border border-indigo-500/50 text-indigo-200 text-[10px]">
+                <span>輸入訊號:</span>
+                <span id="last-btn-readout" class="text-emerald-300 font-bold">無</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+            <button id="btn-audio-toggle" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-300 font-bold active:translate-y-0.5" title="切換晶片搖滾配樂">
+                🔊 BGM: ON
+            </button>
+            <button id="btn-crt-toggle" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-purple-300 font-bold active:translate-y-0.5" title="切換復古CRT掃描線">
+                📺 CRT
+            </button>
+            <button id="btn-fullscreen" class="px-2.5 py-1 rounded bg-emerald-700 hover:bg-emerald-600 border border-emerald-400 text-white font-bold shadow active:translate-y-0.5">
+                ⛶ 橫式全螢幕消除網址列
+            </button>
+        </div>
+    </header>
+
+    <!-- 主遊戲舞台容器 -->
+    <main id="game-wrapper" class="relative w-full h-full flex flex-col items-center justify-center bg-[#07070c]">
+        
+        <!-- 遊戲 Canvas 外框 -->
+        <div id="canvas-container" class="relative w-full h-full flex items-center justify-center overflow-hidden">
+            <canvas id="game-canvas" width="640" height="360" class="w-full h-full object-contain bg-[#0b0c14]"></canvas>
+            <!-- CRT 濾鏡層 -->
+            <div id="crt-layer" class="crt-overlay absolute inset-0"></div>
+
+            <!-- 遊戲死亡 (過勞陣亡) 專屬覆蓋層：支援手把 [+] 加號鍵瞬間重開 -->
+            <div id="gameover-modal" class="hidden absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+                <div class="pixel-panel max-w-md w-full p-5 text-center border-red-500 animate-fade-in">
+                    <div class="inline-block px-3 py-1 mb-2 bg-red-950 border border-red-500 text-red-300 text-[10px]">
+                        ☠ WORK HAZARD FATALITY / 兼職契約終止
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-red-500 tracking-wider mb-1 glitch-text">
+                        過勞陣亡
+                    </h2>
+                    <p id="death-reason-text" class="text-xs text-slate-300 mb-4">
+                        你在詭異的打工現場被暗影吞噬了...
+                    </p>
+
+                    <!-- 薪資結算表 -->
+                    <div class="bg-slate-900/95 border-2 border-slate-700 p-3 mb-4 text-left text-xs space-y-1.5">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">累計打工時薪 (WON):</span>
+                            <span id="final-score-won" class="text-amber-400 font-bold">₩ 0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">存活班表階段:</span>
+                            <span id="final-stage-name" class="text-cyan-300 font-bold">STAGE 1</span>
+                        </div>
+                        <div class="flex justify-between border-t border-slate-800 pt-1.5">
+                            <span class="text-slate-400">最高兼職紀錄:</span>
+                            <span id="best-score-won" class="text-emerald-400 font-bold">₩ 0</span>
+                        </div>
+                    </div>
+
+                    <!-- 製作人指定核心機制：手把 [ + ] 加號按鈕重新開始提示 -->
+                    <div class="bg-emerald-950/90 border-2 border-emerald-400 p-3 mb-4 rounded animate-pulse-fast">
+                        <div class="flex items-center justify-center gap-2 text-emerald-300 font-black text-xs sm:text-sm">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-900 border-2 border-emerald-400 text-white text-base shadow-lg">+</span>
+                            <span>按良值手把【 + 加號鍵 】立即重開！</span>
+                        </div>
+                        <p class="text-[10px] text-emerald-200/80 mt-1">
+                            (支援 Switch Pro [+] / Start 鍵 / 鍵盤 [+] 或 Enter)
+                        </p>
+                    </div>
+
+                    <button id="btn-restart-click" class="pixel-btn w-full py-2.5 text-xs sm:text-sm font-black cursor-pointer">
+                        ↻ 立即重新簽署打工契約 (RESTART)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 觸控虛擬手把 (當在手機/iPad未接實體手把、或需要輔助觸控時顯示，接上良值手把時自動半透明收斂) -->
+        <div id="touch-controls" class="fixed bottom-2 left-0 right-0 z-30 flex items-end justify-between px-4 pointer-events-none transition-opacity duration-300">
+            <!-- 左側十字方向鍵 (D-Pad) -->
+            <div class="pointer-events-auto grid grid-cols-3 gap-1 w-32 h-32 opacity-75 hover:opacity-100">
+                <div></div>
+                <button data-touch="up" class="bg-slate-800/90 active:bg-cyan-600 border-2 border-slate-500 rounded flex items-center justify-center text-white text-lg">▲</button>
+                <div></div>
+                <button data-touch="left" class="bg-slate-800/90 active:bg-cyan-600 border-2 border-slate-500 rounded flex items-center justify-center text-white text-lg">◀</button>
+                <div class="bg-slate-900/80 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-400">IINE</div>
+                <button data-touch="right" class="bg-slate-800/90 active:bg-cyan-600 border-2 border-slate-500 rounded flex items-center justify-center text-white text-lg">▶</button>
+                <div></div>
+                <button data-touch="down" class="bg-slate-800/90 active:bg-cyan-600 border-2 border-slate-500 rounded flex items-center justify-center text-white text-lg">▼</button>
+                <div></div>
+            </div>
+
+            <!-- 中央虛擬 [ + ] 加號鍵與 [-] 鍵 -->
+            <div class="pointer-events-auto flex items-center gap-3 mb-2 opacity-80">
+                <button data-touch="plus" class="px-3 py-1.5 rounded-full bg-slate-800/90 active:bg-emerald-600 border-2 border-emerald-400 text-emerald-300 font-black text-xs shadow-lg">
+                    ＋ 重開/接案
+                </button>
+            </div>
+
+            <!-- 右側動作鍵 (A/B 跳躍接案、X/Y 衝刺閃避) -->
+            <div class="pointer-events-auto flex items-center gap-3 mb-2 opacity-75 hover:opacity-100">
+                <button data-touch="dash" class="w-14 h-14 rounded-full bg-amber-600/90 active:bg-amber-400 border-2 border-amber-200 text-slate-950 font-black text-xs shadow-lg flex flex-col items-center justify-center">
+                    <span>X / Y</span>
+                    <span class="text-[9px]">衝刺閃避</span>
+                </button>
+                <button data-touch="jump" class="w-16 h-16 rounded-full bg-emerald-600/90 active:bg-emerald-400 border-2 border-emerald-200 text-slate-950 font-black text-xs shadow-lg flex flex-col items-center justify-center">
+                    <span>A / B</span>
+                    <span class="text-[9px]">跳躍/接案</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 直式模式專屬資訊面板 (當轉成直式時出現，讓網址列自然顯示並提供良值手把硬體檢測器) -->
+    <section id="portrait-inspector" class="hidden w-full max-w-xl mx-auto px-4 py-6 space-y-4">
+        <div class="pixel-panel p-4 border-amber-400">
+            <div class="flex items-center justify-between mb-2">
+                <span class="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-[10px] rounded">
+                    📱 直式檢視模式 (PORTRAIT MODE)
+                </span>
+                <span class="text-[10px] text-amber-300">網址列已恢復顯示</span>
+            </div>
+            <h3 class="text-sm sm:text-base font-black text-white mb-1">
+                轉為【橫式 Landscape】即可消除網址列進入全螢幕！
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                依照製作人規格：目前為<strong>直式狀態</strong>，已自動解除全螢幕鎖定並保留上方瀏覽器網址列；只要將手機/平板旋轉為<strong>橫式</strong>（或點擊上方全螢幕鈕），就會立即隱藏網址列並鎖定滿版像素畫面！
+            </p>
+        </div>
+
+        <!-- 良值手把 (IINE Pro Controller) 即時硬體測試儀 -->
+        <div class="pixel-panel p-4 border-cyan-500">
+            <h4 class="text-xs font-black text-cyan-300 mb-2 flex items-center justify-between">
+                <span>🎮 良值手把 (Gamepad API) 即時訊號檢測台</span>
+                <span id="diag-controller-id" class="text-[10px] text-emerald-400">未偵測</span>
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] mb-3">
+                <div class="bg-slate-900 p-2 rounded border border-slate-700">
+                    <div class="text-slate-400">左類比搖桿 (L-Stick)</div>
+                    <div id="diag-axes" class="text-amber-300 font-bold mt-0.5">X: 0.00, Y: 0.00</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded border border-slate-700">
+                    <div class="text-slate-400">[ + ] 加號鍵狀態</div>
+                    <div id="diag-plus-btn" class="text-emerald-400 font-bold mt-0.5">待命 (Button 9)</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded border border-slate-700">
+                    <div class="text-slate-400">跳躍 / 接案鍵</div>
+                    <div class="text-cyan-300 font-bold mt-0.5">A / B (Btn 0, 1)</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded border border-slate-700">
+                    <div class="text-slate-400">無敵衝刺閃避</div>
+                    <div class="text-purple-300 font-bold mt-0.5">X/Y/R/ZR (2,3,5,7)</div>
+                </div>
+            </div>
+            <!-- 16顆按鈕燈號矩陣 -->
+            <div id="diag-button-grid" class="grid grid-cols-8 gap-1 text-[9px] text-center">
+                <!-- 由 JS 動態生成 B0 ~ B15 測試燈號 -->
+            </div>
+        </div>
+    </section>
+
+    <script>
+        /**
+         * ============================================================================
+         * 《末路兼職：꿀알바 (DEAD END JOB)》 - 高畫質復古像素引擎 + 良值手把 Gamepad API
+         * 專為製作人打造的跨平台 (PC / Mac / iPad / iOS / Android) 像素動作生存遊戲
+         * ============================================================================
+         */
+
+        // --- 1. 音效與配樂合成器 (Web Audio API Chiptune & Dark Synthwave) ---
+        class RetroSoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.isPlayingBgm = false;
+                this.bgmStep = 0;
+                this.bgmTimer = null;
             }
-          );
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggle() {
+                this.init();
+                this.enabled = !this.enabled;
+                if (!this.enabled) {
+                    this.stopBgm();
+                } else {
+                    this.startBgm();
+                }
+                return this.enabled;
+            }
+
+            // 播放單音合成器
+            playTone(freq, type = 'square', duration = 0.12, vol = 0.12, slideFreq = null) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+                    if (slideFreq) {
+                        osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
+                    }
+                    gain.gain.setValueAtTime(vol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {}
+            }
+
+            // 手機接案提示音 (叮咚！高額打工)
+            playPhoneAccept() {
+                this.playTone(587.33, 'square', 0.09, 0.16); // D5
+                setTimeout(() => this.playTone(880, 'square', 0.12, 0.18), 80); // A5
+                setTimeout(() => this.playTone(1174.66, 'square', 0.22, 0.2), 170); // D6
+            }
+
+            // 撿取韓元金幣音效
+            playCoin() {
+                this.playTone(987.77, 'square', 0.07, 0.14); // B5
+                setTimeout(() => this.playTone(1318.51, 'square', 0.16, 0.16), 65); // E6
+            }
+
+            // 跳躍音效
+            playJump() {
+                this.playTone(190, 'square', 0.16, 0.13, 540);
+            }
+
+            // 衝刺閃避音效
+            playDash() {
+                this.playTone(480, 'sawtooth', 0.14, 0.15, 120);
+            }
+
+            // 受傷駭客雜訊音
+            playHit() {
+                this.playTone(135, 'sawtooth', 0.25, 0.24, 55);
+                setTimeout(() => this.playTone(92, 'square', 0.22, 0.22, 40), 60);
+            }
+
+            // 過勞陣亡音效
+            playGameOver() {
+                const notes = [392, 349.23, 329.63, 261.63, 196, 130.81];
+                notes.forEach((n, idx) => {
+                    setTimeout(() => this.playTone(n, 'sawtooth', 0.22, 0.18, n * 0.85), idx * 120);
+                });
+            }
+
+            // 參考影片風格：高速急促暗黑搖滾電子 Bassline + 詭異琶音
+            startBgm() {
+                if (!this.enabled || this.isPlayingBgm) return;
+                this.init();
+                this.isPlayingBgm = true;
+
+                // D minor 詭譎緊湊低音與高音旋律
+                const bassNotes = [
+                    146.83, 146.83, 293.66, 146.83,
+                    174.61, 146.83, 220.00, 207.65,
+                    146.83, 146.83, 293.66, 146.83,
+                    130.81, 130.81, 174.61, 164.81
+                ];
+                const leadNotes = [
+                    587.33, 0, 659.25, 698.46,
+                    880.00, 698.46, 659.25, 587.33,
+                    523.25, 0, 587.33, 659.25,
+                    440.00, 0, 554.37, 587.33
+                ];
+
+                this.bgmTimer = setInterval(() => {
+                    if (!this.enabled || gameState.mode === 'GAMEOVER') return;
+                    const step = this.bgmStep % 16;
+                    // Driving Bass
+                    const bFreq = bassNotes[step];
+                    if (bFreq) {
+                        this.playTone(bFreq * 0.5, 'sawtooth', 0.11, 0.08);
+                    }
+                    // Eerie Lead Arpeggio
+                    const lFreq = leadNotes[step];
+                    if (lFreq && (gameState.mode === 'PLAYING' || step % 2 === 0)) {
+                        const stageShift = gameState.stage === 2 ? 1.122 : (gameState.stage === 3 ? 1.25 : 1);
+                        this.playTone(lFreq * stageShift, 'square', 0.09, 0.05);
+                    }
+                    this.bgmStep++;
+                }, 135);
+            }
+
+            stopBgm() {
+                this.isPlayingBgm = false;
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            }
         }
-      );
-    }
-  }
 
-  // --------------------------------------------------------------------------
-  // Boss 戰階段邏輯 (STATE.BOSS_FIGHT: 04:30 撐到 06:00 並拉開最左側捲簾)
-  // --------------------------------------------------------------------------
-  if (game.state === STATE.BOSS_FIGHT) {
-    // 時間推進 (約 35 秒從 04:30 走到 05:55)
-    if (game.clockMinutes < 29 * 60 + 55) {
-      game.clockMinutes += 0.045;
-    }
+        const sound = new RetroSoundEngine();
 
-    const b = game.boss;
-    b.timer--;
+        // --- 2. 橫式全螢幕消除網址列 & 直式自動恢復網址列管理系統 ---
+        const topHud = document.getElementById('top-hud');
+        const portraitInspector = document.getElementById('portrait-inspector');
+        const gameWrapper = document.getElementById('game-wrapper');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
 
-    // 玩家按 X 拿十字架/滅火器砸鼠怪 (還原劇情：常規武器只會讓老鼠散開又重組，-0 HP)
-    if (input.actions.X.justPressed && Math.abs(p.x - b.x) < 220) {
-      b.state = 'STUNNED';
-      b.timer = 35;
-      game.shakeTimer = 8;
-      sfx.playTone(150, 'square', 0.1, 0.25, 60);
-      input.vibrate(80, 0.6, 0.4);
-    }
-
-    if (b.state === 'STUNNED') {
-      if (b.timer <= 0) {
-        b.state = 'CHARGE';
-        b.timer = 90;
-      }
-    } else if (b.state === 'CHARGE') {
-      const dir = Math.sign(p.x - b.x);
-      b.vx = dir * 4.3;
-      b.x += b.vx;
-
-      // 碰撞判定
-      if (!p.grabbedByRat && p.invulnTimer <= 0 && Math.abs(p.x - b.x) < 68) {
-        p.grabbedByRat = true;
-        p.qteEscapeProgress = 0;
-        game.shakeTimer = 18;
-        game.glitchIntensity = 14;
-        sfx.playShockSFX();
-        input.vibrate(300, 0.9, 1.0);
-      }
-    }
-
-    // 破曉決戰：當時間到達 05:50 (1790分) 後，最左側大門 (X < 230) 解鎖拉捲簾 QTE！
-    if (game.clockMinutes >= 29 * 60 + 50 && p.x < 240 && !p.grabbedByRat) {
-      if (input.actions.A.justPressed || input.actions.X.justPressed) {
-        p.blindsPullProgress += 22;
-        game.shakeTimer = 8;
-        sfx.playTone(400 + p.blindsPullProgress * 5, 'square', 0.08, 0.25);
-        input.vibrate(90, 0.8, 0.9);
-
-        if (p.blindsPullProgress >= 100) {
-          // 06:00 破曉金光照射！鼠怪灰飛煙滅！
-          game.clockMinutes = 30 * 60; // 06:00
-          game.sunlightProgress = 1;
-          addSalary(2750000); // 湊滿 400萬韓元 50倍高薪
-          sfx.playAcceptSFX();
-          sfx.bossMode = false;
-          input.vibrate(600, 1.0, 1.0);
-          game.state = STATE.VICTORY;
+        function checkOrientationAndViewport() {
+            const isLandscape = window.innerWidth >= window.innerHeight;
+            if (isLandscape) {
+                document.body.classList.add('landscape-mode');
+                document.body.classList.remove('portrait-mode');
+                portraitInspector.classList.add('hidden');
+                gameWrapper.style.height = '100dvh';
+                // 嘗試收合行動瀏覽器網址列
+                window.scrollTo(0, 1);
+            } else {
+                // 直式模式：自動退出全螢幕鎖定，讓瀏覽器網址列出現
+                document.body.classList.remove('landscape-mode');
+                document.body.classList.add('portrait-mode');
+                portraitInspector.classList.remove('hidden');
+                gameWrapper.style.height = '62vh';
+                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                    try {
+                        if (document.exitFullscreen) document.exitFullscreen();
+                        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    } catch (e) {}
+                }
+            }
         }
-      }
-    }
 
-    // 若血量歸零則自動觸發腎上腺素保底回血 (讓製作人順暢測試全流程)
-    if (p.hp <= 0) {
-      p.hp = 50;
-      p.grabbedByRat = false;
-      p.invulnTimer = 90;
-      game.glitchIntensity = 20;
-    }
-  }
-}
+        async function requestLandscapeFullscreen() {
+            sound.init();
+            const docEl = document.documentElement;
+            try {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (docEl.requestFullscreen) {
+                        await docEl.requestFullscreen({ navigationUI: 'hide' });
+                    } else if (docEl.webkitRequestFullscreen) {
+                        docEl.webkitRequestFullscreen();
+                    }
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    await screen.orientation.lock('landscape').catch(() => {});
+                }
+            } catch (e) {}
+            window.scrollTo(0, 1);
+        }
 
-/**
- * ============================================================================
- * 5. RENDER ENGINE (粗黑外框像素美術 + 漫畫網點 + RGB 色差濾鏡)
- * ============================================================================
- */
-function formatClock(totalMin) {
-  const m = Math.floor(totalMin) % (24 * 60);
-  const hh = String(Math.floor(m / 60)).padStart(2, '0');
-  const mm = String(m % 60).padStart(2, '0');
-  return `${hh}:${mm}`;
-}
+        btnFullscreen.addEventListener('click', () => {
+            requestLandscapeFullscreen();
+        });
 
-// 繪製粗黑框像素矩形輔助函式
-function drawPixelRect(x, y, w, h, fill, outline = '#000', lineW = 3) {
-  ctx.fillStyle = fill;
-  ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
-  if (outline) {
-    ctx.strokeStyle = outline;
-    ctx.lineWidth = lineW;
-    ctx.strokeRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
-  }
-}
+        window.addEventListener('resize', checkOrientationAndViewport);
+        window.addEventListener('orientationchange', () => setTimeout(checkOrientationAndViewport, 150));
 
-function drawPlayer(x, y, p) {
-  ctx.save();
-  ctx.translate(Math.floor(x), Math.floor(y));
-  if (p.invulnTimer > 0 && Math.floor(p.invulnTimer / 3) % 2 === 0) {
-    ctx.globalAlpha = 0.45;
-  }
-  const bob = Math.abs(p.vx) > 0.2 ? Math.sin(p.animFrame * 0.35) * 4 : 0;
-  ctx.scale(p.facing, 1);
+        // --- 3. 良值手把 (IINE Gamepad API) 跨平台核心控制引擎 ---
+        const diagGrid = document.getElementById('diag-button-grid');
+        for (let i = 0; i < 16; i++) {
+            const cell = document.createElement('div');
+            cell.id = `diag-btn-${i}`;
+            cell.className = 'py-1 rounded bg-slate-900 border border-slate-700 text-slate-500 font-mono';
+            cell.textContent = i === 9 ? 'B9(+)' : (i === 8 ? 'B8(-)' : `B${i}`);
+            diagGrid.appendChild(cell);
+        }
 
-  // 雙腿
-  drawPixelRect(-14, -28 + bob, 11, 28, '#1c2833');
-  drawPixelRect(3, -28 - bob, 11, 28, '#1c2833');
+        const inputState = {
+            x: 0,
+            y: 0,
+            jumpPressed: false,
+            jumpJustPressed: false,
+            dashPressed: false,
+            dashJustPressed: false,
+            plusPressed: false,
+            plusJustPressed: false,
+            gamepadConnected: false,
+            gamepadName: '',
+            lastActiveBtn: '無',
+            prevJump: false,
+            prevDash: false,
+            prevPlus: false
+        };
 
-  // 卞革浚標誌性「黑白條紋長袖」身體
-  drawPixelRect(-18, -74 + bob, 36, 48, '#ecf0f1');
-  ctx.fillStyle = '#111';
-  for (let sy = -68; sy < -30; sy += 10) {
-    ctx.fillRect(-16, sy + bob, 32, 5);
-  }
+        // 鍵盤與觸控狀態備援
+        const keys = {};
+        const touchFlags = { up: false, down: false, left: false, right: false, jump: false, dash: false, plus: false };
 
-  // 頭部與亂髮
-  drawPixelRect(-16, -110 + bob, 32, 36, '#f5cba7');
-  drawPixelRect(-19, -118 + bob, 38, 14, '#111'); // 蓬亂黑髮
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            keys[e.key] = true;
+            sound.init();
+            // 若在橫式下首次按鍵，協助隱藏網址列
+            if (window.innerWidth > window.innerHeight) window.scrollTo(0, 1);
+        });
 
-  // 粗框眼鏡與濃重黑眼圈
-  drawPixelRect(0, -98 + bob, 14, 10, '#fff', '#000', 3);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(6, -95 + bob, 4, 4);
-  ctx.fillStyle = '#5b2c6f'; // 熬夜黑眼圈
-  ctx.fillRect(0, -87 + bob, 13, 3);
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+            keys[e.key] = false;
+        });
 
-  ctx.restore();
-}
+        // 綁定觸控虛擬按鈕
+        document.querySelectorAll('[data-touch]').forEach((btn) => {
+            const action = btn.getAttribute('data-touch');
+            const setFlag = (val) => {
+                touchFlags[action] = val;
+                if (val) {
+                    sound.init();
+                    if (window.innerWidth > window.innerHeight) {
+                        requestLandscapeFullscreen();
+                    }
+                }
+            };
+            btn.addEventListener('pointerdown', (e) => { e.preventDefault(); setFlag(true); });
+            btn.addEventListener('pointerup', (e) => { e.preventDefault(); setFlag(false); });
+            btn.addEventListener('pointerleave', (e) => { e.preventDefault(); setFlag(false); });
+            btn.addEventListener('pointercancel', (e) => { e.preventDefault(); setFlag(false); });
+        });
 
-function drawHeedongOrRatBoss(b) {
-  ctx.save();
-  ctx.translate(Math.floor(b.x), Math.floor(b.y));
+        // 監聽良值手把連線與斷線事件
+        window.addEventListener('gamepadconnected', (e) => {
+            updateGamepadHUD(e.gamepad);
+        });
+        window.addEventListener('gamepaddisconnected', () => {
+            inputState.gamepadConnected = false;
+            const badge = document.getElementById('gamepad-badge');
+            const statusText = document.getElementById('gamepad-status-text');
+            badge.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-amber-400';
+            statusText.textContent = '手把已中斷 - 按手把任意鍵重連';
+            document.getElementById('touch-controls').style.opacity = '1';
+        });
 
-  if (!b.transformed) {
-    // 偽人同事：崔熙東 (脖子詭異歪斜抽搐)
-    const twitch = Math.sin(Date.now() * 0.02) * 3;
-    drawPixelRect(-14, -28, 11, 28, '#111');
-    drawPixelRect(3, -28, 11, 28, '#111');
-    drawPixelRect(-18, -76, 36, 48, '#2ecc71'); // 超商綠背心
-    // 歪斜 35 度的詭異頭部
-    ctx.save();
-    ctx.translate(twitch, -85);
-    ctx.rotate(0.32 + Math.sin(Date.now() * 0.015) * 0.12);
-    drawPixelRect(-16, -26, 32, 34, '#d5dbdb');
-    drawPixelRect(-18, -32, 36, 12, '#111');
-    // 詭異紅眼與裂嘴笑
-    ctx.fillStyle = '#ff0044';
-    ctx.fillRect(-10, -14, 6, 6);
-    ctx.fillRect(4, -14, 6, 6);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(-10, -2, 20, 4);
-    ctx.restore();
-  } else {
-    // 巨大聚合鼠怪 Boss (由無數蠕動黑紅老鼠與紅眼組成)
-    const scatter = b.state === 'STUNNED' ? 28 : 0;
-    drawPixelRect(-55, -145, 110, 145, '#2c0b1e', '#000', 4);
+        function updateGamepadHUD(gp) {
+            if (!gp) return;
+            inputState.gamepadConnected = true;
+            inputState.gamepadName = gp.id;
+            const badge = document.getElementById('gamepad-badge');
+            const statusText = document.getElementById('gamepad-status-text');
+            badge.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/90 border border-emerald-400 text-emerald-300 shadow';
+            statusText.textContent = `🎮 良值手把已連線 (${gp.id.slice(0, 18)})`;
+            document.getElementById('diag-controller-id').textContent = gp.id.slice(0, 28);
+            // 連接實體手把時，調降螢幕觸控存在感以免遮擋畫面
+            document.getElementById('touch-controls').style.opacity = '0.28';
+        }
 
-    for (let r of b.rats) {
-      const rx = r.ox + Math.sin(Date.now() * 0.01 * r.spd + r.phase) * (10 + scatter);
-      const ry = r.oy + Math.cos(Date.now() * 0.01 * r.spd + r.phase) * (8 + scatter);
-      drawPixelRect(rx - 14, ry - 10, 28, 18, '#1a1118', '#000', 2);
-      // 猩紅鼠眼
-      ctx.fillStyle = '#ff1144';
-      ctx.fillRect(rx - 8, ry - 5, 5, 5);
-    }
+        function pollInputs() {
+            let moveX = 0;
+            let moveY = 0;
+            let jumpNow = false;
+            let dashNow = false;
+            let plusNow = false;
 
-    if (b.state === 'STUNNED') {
-      ctx.fillStyle = '#ffeb3b';
-      ctx.font = 'bold 18px monospace';
-      ctx.fillText('常規武器無效 (-0 HP)！快去左邊拉窗簾！', -160, -165);
-    }
-  }
-  ctx.restore();
-}
+            // 1. 讀取鍵盤與觸控
+            if (keys['ArrowLeft'] || keys['KeyA'] || touchFlags.left) moveX -= 1;
+            if (keys['ArrowRight'] || keys['KeyD'] || touchFlags.right) moveX += 1;
+            if (keys['ArrowUp'] || keys['KeyW'] || touchFlags.up) moveY -= 1;
+            if (keys['ArrowDown'] || keys['KeyS'] || touchFlags.down) moveY += 1;
 
-function render() {
-  ctx.save();
+            if (keys['Space'] || keys['KeyJ'] || keys['KeyZ'] || touchFlags.jump) jumpNow = true;
+            if (keys['ShiftLeft'] || keys['ShiftRight'] || keys['KeyK'] || keys['KeyX'] || touchFlags.dash) dashNow = true;
+            // 鍵盤上的 + 號 (Equal / NumpadAdd) 或 Enter 對應手把 [+] 加號鍵
+            if (keys['Equal'] || keys['NumpadAdd'] || keys[' +'] || keys['+'] || keys['Enter'] || touchFlags.plus) {
+                plusNow = true;
+            }
 
-  // 震動與 RGB 色差偏移
-  if (game.shakeTimer > 0) {
-    ctx.translate((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12);
-  }
+            // 2. 讀取 Gamepad API (完美相容良值手把 Switch Pro 與 XInput 雙協定)
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let activeGp = null;
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i] && gamepads[i].connected) {
+                    activeGp = gamepads[i];
+                    break;
+                }
+            }
 
-  // ==========================================================================
-  // 階段 0：像素片頭動畫與第一人稱手機點擊 [ACCEPT]
-  // ==========================================================================
-  if (game.state === STATE.INTRO_PHONE) {
-    ctx.fillStyle = '#0c0714';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (activeGp) {
+                if (!inputState.gamepadConnected) {
+                    updateGamepadHUD(activeGp);
+                }
 
-    // 紫色漫畫網點背景 (Halftone Dots)
-    ctx.fillStyle = 'rgba(142, 68, 173, 0.16)';
-    for (let x = 0; x < canvas.width; x += 24) {
-      for (let y = 0; y < canvas.height; y += 24) {
-        ctx.fillRect(x, y, 6, 6);
-      }
-    }
+                // 搖桿軸 (設定 0.18 死區避免良值搖桿微小漂移)
+                const ax0 = activeGp.axes[0] || 0;
+                const ax1 = activeGp.axes[1] || 0;
+                if (Math.abs(ax0) > 0.18) moveX = ax0;
+                if (Math.abs(ax1) > 0.18) moveY = ax1;
 
-    // 漢江大橋與主角剪影
-    ctx.fillStyle = '#1b112c';
-    ctx.fillRect(0, 340, canvas.width, 200);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText('《末路兼職 꿀알바》EP1：深夜超商 (50倍時薪的生死煉獄)', 40, 50);
-    ctx.fillStyle = '#bdc3c7';
-    ctx.font = '16px monospace';
-    ctx.fillText('全租房詐騙、股票崩盤……正當卞革浚站在大橋邊準備投江時，手機突然響起詭異的簡訊聲：', 40, 85);
+                // 良值十字鍵 D-Pad (標準 Buttons 12, 13, 14, 15)
+                const isBtn = (idx) => activeGp.buttons[idx] && (activeGp.buttons[idx].pressed || activeGp.buttons[idx].value > 0.5);
 
-    // 第一人稱雙手拿手機特寫 (還原參考影片 00:00:02)
-    const px = 310, py = 120, pw = 340, ph = 380;
-    drawPixelRect(px - 35, py + 120, 45, 190, '#e59866'); // 左手大拇指
-    drawPixelRect(px + pw - 10, py + 140, 45, 190, '#e59866'); // 右手
-    drawPixelRect(px, py, pw, ph, '#1c2833', '#000', 5); // 手機外框
-    drawPixelRect(px + 18, py + 24, pw - 36, ph - 48, '#11171d', '#000', 3); // 螢幕
+                if (isBtn(12)) moveY = -1;
+                if (isBtn(13)) moveY = 1;
+                if (isBtn(14)) moveX = -1;
+                if (isBtn(15)) moveX = 1;
 
-    // 蜘蛛人力派遣 Logo 與金幣
-    ctx.fillStyle = '#f1c40f';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText('🕷️ 蜘蛛人力派遣 (거미인력)', px + 36, py + 72);
-    ctx.fillStyle = '#ecf0f1';
-    ctx.font = '16px monospace';
-    ctx.fillText('職缺：偏僻深夜超商大夜班', px + 38, py + 115);
-    ctx.fillText('時間：22:00 - 06:00 (撐到日出)', px + 38, py + 145);
-    ctx.fillStyle = '#ff5252';
-    ctx.font = 'bold 20px monospace';
-    ctx.fillText('時薪：50 倍 (₩ 4,000,000)', px + 38, py + 185);
+                // 部分 Android/macOS 藍牙驅動將 D-Pad 映射於 axes[9] (Hat Switch)
+                if (activeGp.axes.length >= 10) {
+                    const hat = activeGp.axes[9];
+                    if (hat < -0.5 && hat >= -1.05) moveY = -1;
+                }
 
-    // 閃爍綠光的 ACCEPT 大按鈕
-    const pulse = Math.sin(Date.now() * 0.008) * 6;
-    drawPixelRect(px + 45 - pulse/2, py + 235 - pulse/2, pw - 90 + pulse, 74 + pulse, '#2ecc71', '#000', 4);
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 28px monospace';
-    ctx.fillText('[ ACCEPT 接下工作 ]', px + 58, py + 282);
+                // A / B 鍵 (Buttons 0, 1) -> 跳躍 / 接案確認
+                if (isBtn(0) || isBtn(1)) jumpNow = true;
 
-    ctx.fillStyle = '#a2ff00';
-    ctx.font = 'bold 16px monospace';
-    ctx.fillText(`👉 按下 ${input.getPromptLabel('A')} 或直接點擊螢幕解鎖 BGM 與配音開始遊戲！`, px - 70, py + 355);
+                // X / Y / R / ZR / L / ZL 鍵 (Buttons 2, 3, 4, 5, 6, 7) -> 衝刺閃避
+                if (isBtn(2) || isBtn(3) || isBtn(4) || isBtn(5) || isBtn(6) || isBtn(7)) dashNow = true;
 
-    ctx.restore();
-    return;
-  }
+                // 【核心關鍵】良值手把 [ + ] 加號鍵：
+                // 標準 Gamepad Mapping 中，Switch Pro 的 [+] 加號鍵與 XInput Start 鍵為 buttons[9]
+                // 同時相容部分藍牙直連模式的 buttons[8] (-) / buttons[16] / buttons[11]
+                if (isBtn(9) || isBtn(8)) {
+                    plusNow = true;
+                }
 
-  // ==========================================================================
-  // 繪製 2400px 由左至右橫向卷軸超商場景
-  // ==========================================================================
-  ctx.save();
-  ctx.translate(-Math.floor(game.cameraX), 0);
+                // 更新檢測台與即時按鍵顯示
+                document.getElementById('diag-axes').textContent = `X: ${ax0.toFixed(2)}, Y: ${ax1.toFixed(2)}`;
+                const plusDiag = document.getElementById('diag-plus-btn');
+                if (isBtn(9) || isBtn(8)) {
+                    plusDiag.textContent = '★ 已按下 [+] 加號鍵！';
+                    plusDiag.className = 'text-amber-300 font-black mt-0.5';
+                } else {
+                    plusDiag.textContent = '待命 (Button 9)';
+                    plusDiag.className = 'text-emerald-400 font-bold mt-0.5';
+                }
 
-  // 背景牆面 (超商區 vs 最右側禁忌倉庫區)
-  ctx.fillStyle = '#1b2631';
-  ctx.fillRect(0, 0, 1850, 400);
-  ctx.fillStyle = '#120914'; // 倉庫陰暗紫黑背景
-  ctx.fillRect(1850, 0, 550, 400);
+                let pressedList = [];
+                for (let b = 0; b < Math.min(16, activeGp.buttons.length); b++) {
+                    const cell = document.getElementById(`diag-btn-${b}`);
+                    if (isBtn(b)) {
+                        pressedList.push(b === 9 ? '+加號(B9)' : `B${b}`);
+                        if (cell) cell.className = 'py-1 rounded bg-emerald-500 border border-white text-slate-950 font-black';
+                    } else {
+                        if (cell) cell.className = 'py-1 rounded bg-slate-900 border border-slate-700 text-slate-500 font-mono';
+                    }
+                }
+                if (pressedList.length > 0) {
+                    sound.init();
+                    document.getElementById('last-btn-readout').textContent = pressedList.join(', ');
+                }
+            }
 
-  // 地板
-  drawPixelRect(0, 390, 2400, 150, '#2c3e50', '#000', 4);
+            // 正規化對角線移動速度
+            const len = Math.hypot(moveX, moveY);
+            if (len > 1) {
+                moveX /= len;
+                moveY /= len;
+            }
 
-  // [最左側 X: 80] 超商玻璃大門與防曬遮光捲簾 (破曉決戰關鍵點)
-  drawPixelRect(80, 90, 180, 300, game.sunlightProgress > 0 ? '#f9e79f' : '#0b132b', '#000', 4);
-  const blindHeight = 290 * (1 - game.player.blindsPullProgress / 100);
-  drawPixelRect(85, 95, 170, blindHeight, '#34495e', '#000', 3);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 15px monospace';
-  ctx.fillText('超商大門 (遮光捲簾)', 95, 75);
+            inputState.x = moveX;
+            inputState.y = moveY;
+            inputState.jumpJustPressed = jumpNow && !inputState.prevJump;
+            inputState.dashJustPressed = dashNow && !inputState.prevDash;
+            inputState.plusJustPressed = plusNow && !inputState.prevPlus;
 
-  if (game.state === STATE.BOSS_FIGHT && game.clockMinutes >= 29 * 60 + 50) {
-    // 05:50 窗縫透出金光提示！
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.35)';
-    ctx.fillRect(80, 90, 220, 300);
-    ctx.fillStyle = '#ffeb3b';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText(`☀️ 05:50 陽光到了！狂按 ${input.getPromptLabel('A')} 扯下遮光捲簾！`, 60, 45);
-  }
+            inputState.jumpPressed = jumpNow;
+            inputState.dashPressed = dashNow;
+            inputState.plusPressed = plusNow;
 
-  // [左中區 X: 650] 收銀台與《超商工作手冊》
-  drawPixelRect(620, 260, 200, 130, '#e67e22', '#000', 4);
-  drawPixelRect(680, 232, 50, 28, '#f1c40f', '#000', 3); // 泛黃手冊
-  if (!game.manualRead) {
-    ctx.fillStyle = '#a2ff00';
-    ctx.font = 'bold 16px monospace';
-    ctx.fillText(`📖 工作手冊 (${input.getPromptLabel('A')} 閱讀)`, 610, 210);
-  }
+            inputState.prevJump = jumpNow;
+            inputState.prevDash = dashNow;
+            inputState.prevPlus = plusNow;
+        }
 
-  // [右中區 X: 1180] 超商貨架走廊
-  for (let sx of [1120, 1380]) {
-    const broken = game.boss.transformed && Math.abs(game.boss.x - sx) < 180;
-    drawPixelRect(sx, broken ? 240 : 130, 160, broken ? 150 : 260, '#2980b9', '#000', 4);
-    ctx.fillStyle = '#fff';
-    ctx.font = '14px monospace';
-    ctx.fillText(broken ? '💥 被鼠怪撞毀的貨架' : '飲料零食貨架', sx + 15, 115);
-  }
+        // --- 4. 遊戲核心狀態與關卡企劃 (完美致敬《末路兼職 꿀알바》動畫片頭) ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const W = 640;
+        const H = 360;
 
-  // [最右側 X: 1850~2350] 禁忌倉庫鐵門與女蜘蛛怪容器
-  drawPixelRect(1830, 60, 35, 330, '#7f8c8d', '#000', 4);
-  ctx.fillStyle = '#ff5252';
-  ctx.font = 'bold 16px monospace';
-  ctx.fillText('⚠️ 倉庫重地 (怪聲來源)', 1880, 90);
+        const STAGE_CONFIGS = {
+            1: {
+                title: 'STAGE 1: 午夜詭異超商',
+                korTitle: '심야 괴담 편의점 (거미인력 파견)',
+                hourlyWage: '時薪 ₩50,000',
+                desc: '躲避貨架間的「赤紅監視眼球」與「暗影鬼手」，收集打工金幣！',
+                bgTop: '#090d1a',
+                bgFloor: '#161f33'
+            },
+            2: {
+                title: 'STAGE 2: 巨型圍棋盤地獄',
+                korTitle: '거대 바둑판 지옥 (VIP 대국실)',
+                hourlyWage: '時薪 ₩250,000',
+                desc: '幕後黑手彈出巨型「黑白圍棋子(바둑돌)」，善用跳躍與衝刺閃避！',
+                bgTop: '#1a0f07',
+                bgFloor: '#7c4d25'
+            },
+            3: {
+                title: 'STAGE 3: 02號隔離走廊與黑霧',
+                korTitle: '02번 격리구역 & 검은 연기',
+                hourlyWage: '時薪 ₩1,000,000',
+                desc: '防護服人員與致命黑霧全面進逼！在極限末路中搶奪高額危險津貼！',
+                bgTop: '#061712',
+                bgFloor: '#112a24'
+            }
+        };
 
-  // 牆上誘捕用的假十字架
-  drawPixelRect(2080, 140, 18, 70, '#f39c12', '#000', 3);
-  drawPixelRect(2062, 158, 54, 18, '#f39c12', '#000', 3);
+        const gameState = {
+            mode: 'TITLE', // 'TITLE' (蜘蛛人力仲介街頭接案), 'PLAYING', 'GAMEOVER'
+            scoreWon: 0,
+            bestWon: 0,
+            stage: 1,
+            stageTimer: 0,
+            stageBannerTimer: 0,
+            timeAlive: 0,
+            screenShake: 0,
+            chromaticGlitch: 0,
+            deathReason: '',
+            // 主角 (條紋長袖、黑眼圈過勞青年)
+            player: {
+                x: 320,
+                y: 250,
+                vx: 0,
+                vy: 0,
+                z: 0,       // 跳躍高度 (2.5D 街機視角)
+                vz: 0,
+                w: 22,
+                h: 32,
+                facing: 1,
+                hp: 3,
+                maxHp: 3,
+                invulnTimer: 0,
+                dashTimer: 0,
+                dashCooldown: 0,
+                animFrame: 0,
+                combo: 0,
+                comboTimer: 0
+            },
+            coins: [],
+            hazards: [],
+            particles: [],
+            floatingTexts: [],
+            eyesBg: []
+        };
 
-  // 角落容器裡的「女蜘蛛怪 (前任工讀生)」
-  const spTwitch = Math.sin(Date.now() * 0.015) * 4;
-  drawPixelRect(2160, 250, 130, 140, '#4a235a', '#000', 4); // 容器
-  // 蜘蛛節肢與女工讀生頭顱
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 5;
-  for (let leg = -2; leg <= 2; leg++) {
-    ctx.beginPath();
-    ctx.moveTo(2225, 260);
-    ctx.lineTo(2225 + leg * 35, 200 + spTwitch);
-    ctx.lineTo(2225 + leg * 55, 280);
-    ctx.stroke();
-  }
-  drawPixelRect(2205, 215 + spTwitch, 36, 36, '#d7bde2', '#000', 3);
-  if (game.manualRead && !game.spiderResolved) {
-    ctx.fillStyle = '#a2ff00';
-    ctx.font = 'bold 16px monospace';
-    ctx.fillText(`🕷️ 調查女怪物與十字架 (${input.getPromptLabel('A')})`, 2020, 120);
-  }
+        // 初始化背景詭異眼球
+        for (let i = 0; i < 12; i++) {
+            gameState.eyesBg.push({
+                x: 45 + (i % 6) * 105,
+                y: 42 + Math.floor(i / 6) * 44,
+                blinkTimer: Math.random() * 200,
+                pupilX: 0,
+                pupilY: 0
+            });
+        }
 
-  // 繪製崔熙東 / 巨大鼠怪 Boss
-  if (game.heedongSpawned || game.boss.transformed) {
-    drawHeedongOrRatBoss(game.boss);
-  }
+        // 啟動或重新開始遊戲 (由 [+] 加號鍵或接案按鈕觸發)
+        function startNewPartTimeJob() {
+            sound.playPhoneAccept();
+            sound.startBgm();
+            document.getElementById('gameover-modal').classList.add('hidden');
 
-  // 繪製主角卞革浚
-  drawPlayer(game.player.x, game.player.y, game.player);
+            gameState.mode = 'PLAYING';
+            gameState.scoreWon = 0;
+            gameState.stage = 1;
+            gameState.stageTimer = 0;
+            gameState.stageBannerTimer = 150;
+            gameState.timeAlive = 0;
+            gameState.screenShake = 0;
+            gameState.chromaticGlitch = 0;
 
-  // 若被鼠怪抓住，顯示頭頂搖桿掙脫提示
-  if (game.player.grabbedByRat) {
-    drawPixelRect(game.player.x - 130, game.player.y - 175, 260, 38, '#000', '#ff0044', 3);
-    drawPixelRect(game.player.x - 126, game.player.y - 171, 2.52 * game.player.qteEscapeProgress, 30, '#ff0044', null);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 15px monospace';
-    ctx.fillText('🕹️ 左右狂搖左搖桿 / 連打 A 掙脫鼠群！', game.player.x - 122, game.player.y - 150);
-  }
+            const p = gameState.player;
+            p.x = W / 2;
+            p.y = 255;
+            p.z = 0;
+            p.vz = 0;
+            p.facing = 1;
+            p.hp = 3;
+            p.invulnTimer = 60;
+            p.dashTimer = 0;
+            p.dashCooldown = 0;
+            p.combo = 0;
+            p.comboTimer = 0;
 
-  ctx.restore();
+            gameState.coins = [];
+            gameState.hazards = [];
+            gameState.particles = [];
+            gameState.floatingTexts = [];
 
-  // ==========================================================================
-  // RGB 色差與漫畫網點故障濾鏡 (Glitch Overlay)
-  // ==========================================================================
-  if (game.glitchIntensity > 0.5) {
-    ctx.fillStyle = 'rgba(255, 0, 80, 0.18)';
-    ctx.fillRect((Math.random() - 0.5) * 20, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'rgba(0, 220, 255, 0.15)';
-    ctx.fillRect(0, (Math.random() - 0.5) * 15, canvas.width, canvas.height);
-  }
+            // 初始生成第一批打工金幣與日薪包裹
+            for (let i = 0; i < 5; i++) {
+                spawnCoin();
+            }
+            addFloatingText(p.x, p.y - 40, '契約成立！開始打工！', '#34d399', 1.2);
+        }
 
-  // ==========================================================================
-  // 頂部 HUD：電子鐘 (22:00 -> 06:00)、50倍薪資跳表、連線狀態
-  // ==========================================================================
-  drawPixelRect(20, 16, 230, 56, '#111', '#fff', 3);
-  ctx.fillStyle = game.state === STATE.BOSS_FIGHT ? '#ff5252' : '#2ecc71';
-  ctx.font = 'bold 26px monospace';
-  ctx.fillText(`🕒 ${formatClock(game.clockMinutes)}`, 34, 52);
-  ctx.fillStyle = '#bdc3c7';
-  ctx.font = '12px monospace';
-  ctx.fillText('目標: 撐到 06:00 日出', 150, 48);
+        function triggerGameOver(reason) {
+            gameState.mode = 'GAMEOVER';
+            gameState.deathReason = reason || '你在高風險打工現場過勞倒下了...';
+            gameState.screenShake = 22;
+            gameState.chromaticGlitch = 30;
+            if (gameState.scoreWon > gameState.bestWon) {
+                gameState.bestWon = gameState.scoreWon;
+            }
+            sound.playGameOver();
 
-  // HP 與 Buff 狀態
-  drawPixelRect(265, 16, 220, 28, '#111', '#fff', 2);
-  drawPixelRect(268, 19, 2.14 * game.player.hp, 22, '#e74c3c', null);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 14px monospace';
-  ctx.fillText(`HP ${Math.ceil(game.player.hp)}% ${game.sanityBuff ? '⚡[清醒理智Buff]' : ''}`, 276, 35);
+            document.getElementById('death-reason-text').textContent = gameState.deathReason;
+            document.getElementById('final-score-won').textContent = `₩ ${gameState.scoreWon.toLocaleString()}`;
+            document.getElementById('final-stage-name').textContent = STAGE_CONFIGS[gameState.stage].title;
+            document.getElementById('best-score-won').textContent = `₩ ${gameState.bestWon.toLocaleString()}`;
+            document.getElementById('gameover-modal').classList.remove('hidden');
+        }
 
-  // 右上角韓元薪資跳表
-  drawPixelRect(canvas.width - 310, 16, 290, 56, '#111', '#f1c40f', 3);
-  ctx.fillStyle = '#f1c40f';
-  ctx.font = 'bold 24px monospace';
-  ctx.fillText(`₩ ${game.displaySalary.toLocaleString()}`, canvas.width - 295, 52);
+        // --- 5. 生成金幣、包裹與三階段詭異怪物/陷阱 ---
+        function spawnCoin() {
+            const isVipBriefcase = Math.random() < 0.22;
+            gameState.coins.push({
+                x: 60 + Math.random() * (W - 120),
+                y: 165 + Math.random() * 155,
+                z: isVipBriefcase ? 18 : 0,
+                type: isVipBriefcase ? 'BRIEFCASE' : 'COIN',
+                value: isVipBriefcase ? 50000 : 10000,
+                bobOffset: Math.random() * Math.PI * 2,
+                life: 650
+            });
+        }
 
-  // 輸入裝置動態狀態列
-  ctx.fillStyle = '#a2ff00';
-  ctx.font = 'bold 13px monospace';
-  ctx.fillText(`輸入模式: ${input.mode} (支援手把/觸控/鍵盤無縫切換)`, 265, 64);
+        function spawnStageHazard() {
+            const p = gameState.player;
+            const st = gameState.stage;
 
-  // ==========================================================================
-  // 特殊第一人稱彈窗 UI：閱讀規則手冊 / 女蜘蛛怪抉擇 / 撕開第二頁 QTE / 破曉結算
-  // ==========================================================================
-  if (game.state === STATE.MANUAL_UI) {
-    ctx.fillStyle = 'rgba(0,0,0,0.82)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawPixelRect(140, 70, 680, 390, '#fcf3cf', '#000', 5);
-    ctx.fillStyle = '#111';
-    for (let i = 0; i < game.manualRevealedCount; i++) {
-      ctx.font = i === 0 ? 'bold 22px monospace' : 'bold 18px monospace';
-      ctx.fillStyle = i === 4 ? '#c0392b' : '#111';
-      ctx.fillText(game.manualLines[i], 175, 130 + i * 56);
-    }
-    // 右下角被黑血黏住的翻頁角標伏筆
-    drawPixelRect(640, 395, 160, 45, '#2c0b1e', '#000', 3);
-    ctx.fillStyle = '#ff5252';
-    ctx.font = '13px monospace';
-    ctx.fillText('🩸 第二頁被血漬黏住了', 650, 422);
+            if (st === 1) {
+                // Stage 1: 午夜超商 — 詭異監視紅眼光束 & 貨架暗影抓手
+                if (Math.random() < 0.55) {
+                    const fromLeft = Math.random() < 0.5;
+                    gameState.hazards.push({
+                        kind: 'WATCHER_EYE',
+                        name: '監視紅眼 (감시 눈동자)',
+                        x: fromLeft ? -20 : W + 20,
+                        y: 165 + Math.random() * 155,
+                        z: 8,
+                        vx: (fromLeft ? 1 : -1) * (2.2 + Math.random() * 1.4),
+                        vy: (Math.random() - 0.5) * 0.8,
+                        r: 13,
+                        anim: 0
+                    });
+                } else {
+                    // 地面暗影鬼手預警圈
+                    gameState.hazards.push({
+                        kind: 'SHADOW_HAND',
+                        name: '貨架暗影鬼手',
+                        x: Math.max(60, Math.min(W - 60, p.x + (Math.random() - 0.5) * 140)),
+                        y: Math.max(165, Math.min(325, p.y + (Math.random() - 0.5) * 90)),
+                        z: 0,
+                        r: 20,
+                        timer: 0,
+                        maxTimer: 95
+                    });
+                }
+            } else if (st === 2) {
+                // Stage 2: 巨型圍棋盤地獄 — 幕後黑手從上方彈出高速滾動/彈跳的黑白圍棋石 (바둑돌)
+                const isBlackStone = Math.random() < 0.55;
+                const targetX = p.x + (Math.random() - 0.5) * 180;
+                const startX = W / 2 + (Math.random() - 0.5) * 160;
+                const angle = Math.atan2(p.y - 135, targetX - startX);
+                const speed = 3.1 + Math.random() * 1.6;
+                gameState.hazards.push({
+                    kind: 'BADUK_STONE',
+                    name: isBlackStone ? '巨型黑棋石 (흑돌)' : '巨型白棋石 (백돌)',
+                    isBlack: isBlackStone,
+                    x: startX,
+                    y: 145,
+                    z: isBlackStone ? 0 : 28,
+                    vz: isBlackStone ? 0 : 3.5,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.max(1.4, Math.sin(angle) * speed),
+                    r: 16,
+                    bounces: 0
+                });
+            } else {
+                // Stage 3: 02號隔離走廊 — 防護服特工追擊 & 致命黑霧漩渦
+                if (Math.random() < 0.5) {
+                    const fromLeft = Math.random() < 0.5;
+                    gameState.hazards.push({
+                        kind: 'HAZMAT_AGENT',
+                        name: '02區防護服特工 (방호복 요원)',
+                        x: fromLeft ? -25 : W + 25,
+                        y: 165 + Math.random() * 155,
+                        z: 0,
+                        vx: (fromLeft ? 1 : -1) * 2.5,
+                        vy: 0,
+                        r: 15,
+                        anim: 0
+                    });
+                } else {
+                    gameState.hazards.push({
+                        kind: 'BLACK_SMOKE',
+                        name: '致命黑霧漩渦 (검은 연기)',
+                        x: 70 + Math.random() * (W - 140),
+                        y: 170 + Math.random() * 150,
+                        z: 0,
+                        vx: (Math.random() - 0.5) * 1.6,
+                        vy: (Math.random() - 0.5) * 1.2,
+                        r: 18,
+                        life: 260,
+                        anim: 0
+                    });
+                }
+            }
+        }
 
-    ctx.fillStyle = '#27ae60';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText(`👉 按 ${input.getPromptLabel('A')} 逐條浮現守則 (${game.manualRevealedCount}/${game.manualLines.length})`, 175, 425);
-  }
+        function spawnParticles(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                const ang = Math.random() * Math.PI * 2;
+                const spd = 1 + Math.random() * 4;
+                gameState.particles.push({
+                    x,
+                    y,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd - 1.2,
+                    color,
+                    size: 2 + Math.floor(Math.random() * 3),
+                    life: 20 + Math.floor(Math.random() * 20)
+                });
+            }
+        }
 
-  if (game.state === STATE.SPIDER_CHOICE) {
-    ctx.fillStyle = 'rgba(15, 0, 25, 0.88)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawPixelRect(120, 90, 720, 350, '#1a0924', '#ff0055', 4);
-    ctx.fillStyle = '#ff5252';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText('🕷️ 驚悚遭遇：容器裡的「蜘蛛變異女工讀生」！', 155, 145);
-    ctx.fillStyle = '#ecf0f1';
-    ctx.font = '17px monospace';
-    ctx.fillText('牆上掛著手冊寫的「十字架」，但眼前的女蜘蛛怪卻拼命對你發出悲鳴……', 155, 195);
+        function addFloatingText(x, y, text, color = '#fbbf24', scale = 1) {
+            gameState.floatingTexts.push({
+                x,
+                y,
+                text,
+                color,
+                scale,
+                life: 52
+            });
+        }
 
-    drawPixelRect(155, 235, 650, 65, '#1e8449', '#000', 3);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText(`${input.getPromptLabel('A')} 詢問女怪物：「這十字架能用來對付外面的崔熙東嗎？」`, 175, 274);
+        // --- 6. 主遊戲邏輯更新迴圈 ---
+        function updateGame() {
+            pollInputs();
 
-    drawPixelRect(155, 320, 650, 65, '#922b21', '#000', 3);
-    ctx.fillStyle = '#fff';
-    ctx.fillText(`${input.getPromptLabel('X')} 相信工作手冊，直接伸手去拿牆上的十字架！`, 175, 359);
-  }
+            // 【製作人核心需求】無論在標題或過勞陣亡畫面，按下良值手把 [ + ] 加號鍵立即重開/開局！
+            if (inputState.plusJustPressed) {
+                if (gameState.mode === 'GAMEOVER' || gameState.mode === 'TITLE') {
+                    startNewPartTimeJob();
+                    return;
+                } else if (gameState.mode === 'PLAYING') {
+                    // 遊戲進行中按 [+] 也可以立即重新開始新一輪兼職
+                    startNewPartTimeJob();
+                    return;
+                }
+            }
 
-  if (game.state === STATE.CUTIN_REVEAL) {
-    ctx.fillStyle = 'rgba(20, 0, 10, 0.9)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // 滿版漫畫特寫 Cut-in
-    drawPixelRect(110, 80, 740, 370, '#fff', '#000', 5);
-    ctx.fillStyle = '#c0392b';
-    ctx.font = 'bold 28px monospace';
-    ctx.fillText('❗ 崔熙東暴露了！他早就知道倉庫裡是「女人」！', 140, 145);
-    ctx.fillStyle = '#111';
-    ctx.font = 'bold 20px monospace';
-    ctx.fillText('快狂按確認鍵撕開《超商工作手冊》被血黏住的第二頁！', 140, 200);
+            if (gameState.mode === 'TITLE') {
+                // 在標題畫面按 A/B 鍵也可接案開始
+                if (inputState.jumpJustPressed || inputState.dashJustPressed) {
+                    startNewPartTimeJob();
+                }
+                return;
+            }
 
-    drawPixelRect(160, 245, 640, 54, '#222', '#000', 4);
-    drawPixelRect(164, 249, 6.32 * game.secondPageTornProgress, 46, '#e74c3c', null);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText(`狂按 ${input.getPromptLabel('A')} 撕開血漬頁面 (${Math.floor(game.secondPageTornProgress)}%)`, 260, 280);
-  }
+            if (gameState.mode === 'GAMEOVER') {
+                return;
+            }
 
-  if (game.state === STATE.VICTORY) {
-    ctx.fillStyle = 'rgba(255, 235, 150, 0.92)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawPixelRect(140, 80, 680, 380, '#111', '#f1c40f', 5);
-    ctx.fillStyle = '#f1c40f';
-    ctx.font = 'bold 30px monospace';
-    ctx.fillText('☀️ 06:00 破曉闖關成功！陽光消滅了巨大鼠怪！', 175, 150);
-    ctx.fillStyle = '#ecf0f1';
-    ctx.font = '18px monospace';
-    ctx.fillText('卞革浚滿身是血地癱坐在灑滿陽光的超商地板上，手機響起入帳通知：', 175, 205);
-    ctx.fillStyle = '#2ecc71';
-    ctx.font = 'bold 34px monospace';
-    ctx.fillText(`💰 實領 50 倍時薪：₩ ${game.salary.toLocaleString()}`, 175, 275);
-    ctx.fillStyle = '#a2ff00';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText(`👉 按 ${input.getPromptLabel('A')} 或點擊螢幕重新體驗 EP1 原型`, 175, 385);
-  }
+            // 遊戲進行中 (PLAYING)
+            gameState.timeAlive++;
+            gameState.stageTimer++;
+            if (gameState.stageBannerTimer > 0) gameState.stageBannerTimer--;
+            if (gameState.screenShake > 0) gameState.screenShake *= 0.85;
+            if (gameState.chromaticGlitch > 0) gameState.chromaticGlitch--;
 
-  // 底部打字機對話框
-  if (game.dialogue) {
-    drawPixelRect(60, 385, 840, 130, 'rgba(10, 8, 18, 0.94)', '#fff', 4);
-    ctx.fillStyle = '#f1c40f';
-    ctx.font = 'bold 19px monospace';
-    ctx.fillText(`【${game.dialogue.speaker}】`, 85, 420);
-    ctx.fillStyle = '#fff';
-    ctx.font = '17px monospace';
-    const sub = game.dialogue.text.slice(0, game.dialogue.charIndex);
-    ctx.fillText(sub.slice(0, 44), 85, 455);
-    if (sub.length > 44) {
-      ctx.fillText(sub.slice(44), 85, 482);
-    }
-    ctx.fillStyle = '#a2ff00';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText(`按 ${input.getPromptLabel('A')} 繼續 ▶`, 740, 498);
-  }
+            // 動態關卡推進 (每 20 秒切換至下一個片頭經典場景，循環加薪加速)
+            if (gameState.stageTimer >= 1100) {
+                gameState.stageTimer = 0;
+                gameState.stage = (gameState.stage % 3) + 1;
+                gameState.stageBannerTimer = 160;
+                gameState.hazards = [];
+                sound.playPhoneAccept();
+                // 換班獎勵津貼
+                const bonus = gameState.stage * 100000;
+                gameState.scoreWon += bonus;
+                addFloatingText(W / 2, 140, `換班津貼 +₩${bonus.toLocaleString()}!`, '#38bdf8', 1.3);
+                spawnParticles(gameState.player.x, gameState.player.y - 20, '#38bdf8', 24);
+            }
 
-  ctx.restore();
-}
+            const p = gameState.player;
+            if (p.invulnTimer > 0) p.invulnTimer--;
+            if (p.dashCooldown > 0) p.dashCooldown--;
+            if (p.comboTimer > 0) {
+                p.comboTimer--;
+                if (p.comboTimer === 0) p.combo = 0;
+            }
 
-function gameLoop() {
-  update();
-  render();
-  requestAnimationFrame(gameLoop);
-}
+            // 衝刺閃避 (X/Y/R/ZR 鍵)：賦予無敵幀與高速殘影
+            if (inputState.dashJustPressed && p.dashCooldown === 0) {
+                p.dashTimer = 12;
+                p.dashCooldown = 36;
+                p.invulnTimer = Math.max(p.invulnTimer, 16);
+                sound.playDash();
+                spawnParticles(p.x, p.y - 10, '#38bdf8', 10);
+                addFloatingText(p.x, p.y - 34, 'DASH!', '#7dd3fc', 0.9);
+            }
 
-requestAnimationFrame(gameLoop);
-</script>
+            // 跳躍 (A/B 鍵)：可躍過低空滾動的黑棋石與地面鬼手
+            if (inputState.jumpJustPressed && p.z === 0) {
+                p.vz = 7.6;
+                sound.playJump();
+                spawnParticles(p.x, p.y, '#94a3b8', 6);
+            }
+
+            // 角色移動與物理
+            const speedMult = p.dashTimer > 0 ? 7.2 : 3.5;
+            if (p.dashTimer > 0) p.dashTimer--;
+
+            p.vx = inputState.x * speedMult;
+            p.vy = inputState.y * (speedMult * 0.78);
+
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (Math.abs(p.vx) > 0.1) {
+                p.facing = p.vx > 0 ? 1 : -1;
+            }
+            if (Math.hypot(p.vx, p.vy) > 0.2) {
+                p.animFrame += 0.22;
+            } else {
+                p.animFrame += 0.05;
+            }
+
+            // Z軸跳躍重力
+            if (p.z > 0 || p.vz > 0) {
+                p.z += p.vz;
+                p.vz -= 0.48;
+                if (p.z <= 0) {
+                    p.z = 0;
+                    p.vz = 0;
+                }
+            }
+
+            // 限制舞台邊界
+            p.x = Math.max(34, Math.min(W - 34, p.x));
+            p.y = Math.max(155, Math.min(335, p.y));
+
+            // 更新背景眼球追蹤玩家
+            gameState.eyesBg.forEach((eye) => {
+                eye.blinkTimer = (eye.blinkTimer + 1) % 240;
+                const ang = Math.atan2(p.y - eye.y, p.x - eye.x);
+                eye.pupilX = Math.cos(ang) * 3.5;
+                eye.pupilY = Math.sin(ang) * 2.5;
+            });
+
+            // 定期生成打工金幣與怪物陷阱
+            if (gameState.timeAlive % 65 === 0 && gameState.coins.length < 7) {
+                spawnCoin();
+            }
+            const spawnRate = Math.max(28, 56 - gameState.stage * 8 - Math.floor(gameState.timeAlive / 450));
+            if (gameState.timeAlive % spawnRate === 0) {
+                spawnStageHazard();
+            }
+
+            // 檢查金幣收集
+            for (let i = gameState.coins.length - 1; i >= 0; i--) {
+                const c = gameState.coins[i];
+                c.life--;
+                const dist = Math.hypot(p.x - c.x, p.y - c.y);
+                const zDiff = Math.abs(p.z - c.z);
+                if (dist < 26 && zDiff < 28) {
+                    p.combo++;
+                    p.comboTimer = 180;
+                    const totalPay = c.value + (p.combo - 1) * 5000;
+                    gameState.scoreWon += totalPay;
+                    sound.playCoin();
+                    spawnParticles(c.x, c.y - c.z, '#fbbf24', 14);
+                    addFloatingText(
+                        c.x,
+                        c.y - c.z - 16,
+                        `+₩${totalPay.toLocaleString()}${p.combo > 1 ? ` (${p.combo}x連薪!)` : ''}`,
+                        c.type === 'BRIEFCASE' ? '#34d399' : '#fbbf24',
+                        c.type === 'BRIEFCASE' ? 1.15 : 0.95
+                    );
+                    gameState.coins.splice(i, 1);
+                } else if (c.life <= 0) {
+                    gameState.coins.splice(i, 1);
+                }
+            }
+
+            // 更新並檢查危險敵人碰撞
+            for (let i = gameState.hazards.length - 1; i >= 0; i--) {
+                const h = gameState.hazards[i];
+                let hitPlayer = false;
+
+                if (h.kind === 'WATCHER_EYE') {
+                    h.x += h.vx;
+                    h.y += h.vy;
+                    h.anim += 0.2;
+                    if (h.y < 155 || h.y > 335) h.vy *= -1;
+                    const dist = Math.hypot(p.x - h.x, p.y - h.y);
+                    if (dist < h.r + 10 && Math.abs(p.z - h.z) < 20) hitPlayer = true;
+                    if (h.x < -50 || h.x > W + 50) gameState.hazards.splice(i, 1);
+                } else if (h.kind === 'SHADOW_HAND') {
+                    h.timer++;
+                    // 在第 55~85 幀從地板竄出暗影巨手，若玩家沒跳起或移開則受傷
+                    if (h.timer >= 55 && h.timer <= 82) {
+                        const dist = Math.hypot(p.x - h.x, p.y - h.y);
+                        if (dist < h.r + 6 && p.z < 14) hitPlayer = true;
+                    }
+                    if (h.timer >= h.maxTimer) gameState.hazards.splice(i, 1);
+                } else if (h.kind === 'BADUK_STONE') {
+                    h.x += h.vx;
+                    h.y += h.vy;
+                    if (!h.isBlack) {
+                        // 白棋石會上下彈跳
+                        h.z += h.vz;
+                        h.vz -= 0.35;
+                        if (h.z <= 0) {
+                            h.z = 0;
+                            h.vz = 5.4;
+                            spawnParticles(h.x, h.y, '#e2e8f0', 4);
+                        }
+                    }
+                    const dist = Math.hypot(p.x - h.x, p.y - h.y);
+                    if (dist < h.r + 9 && Math.abs(p.z - h.z) < 18) hitPlayer = true;
+                    if (h.x < -40 || h.x > W + 40 || h.y > H + 40) gameState.hazards.splice(i, 1);
+                } else if (h.kind === 'HAZMAT_AGENT') {
+                    // 防護服人員會微幅追蹤玩家的 Y 軸
+                    h.x += h.vx;
+                    h.y += Math.sign(p.y - h.y) * 0.65;
+                    h.anim += 0.22;
+                    const dist = Math.hypot(p.x - h.x, p.y - h.y);
+                    if (dist < h.r + 10 && p.z < 22) hitPlayer = true;
+                    if (h.x < -50 || h.x > W + 50) gameState.hazards.splice(i, 1);
+                } else if (h.kind === 'BLACK_SMOKE') {
+                    h.x += h.vx + Math.sign(p.x - h.x) * 0.35;
+                    h.y += h.vy + Math.sign(p.y - h.y) * 0.35;
+                    h.anim += 0.15;
+                    h.life--;
+                    const dist = Math.hypot(p.x - h.x, p.y - h.y);
+                    if (dist < h.r + 8 && p.z < 18) hitPlayer = true;
+                    if (h.life <= 0) gameState.hazards.splice(i, 1);
+                }
+
+                if (hitPlayer && p.invulnTimer === 0) {
+                    p.hp--;
+                    p.invulnTimer = 65;
+                    gameState.screenShake = 14;
+                    gameState.chromaticGlitch = 18;
+                    sound.playHit();
+                    spawnParticles(p.x, p.y - 16, '#ef4444', 20);
+                    addFloatingText(p.x, p.y - 36, `遭${h.name}重創! HP -1`, '#f87171', 1.1);
+
+                    if (p.hp <= 0) {
+                        triggerGameOver(`死因：在【${STAGE_CONFIGS[gameState.stage].title}】遭「${h.name}」吞噬過勞陣亡！`);
+                        return;
+                    }
+                }
+            }
+
+            // 更新粒子與浮動文字
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const pt = gameState.particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life--;
+                if (pt.life <= 0) gameState.particles.splice(i, 1);
+            }
+            for (let i = gameState.floatingTexts.length - 1; i >= 0; i--) {
+                const ft = gameState.floatingTexts[i];
+                ft.y -= 0.75;
+                ft.life--;
+                if (ft.life <= 0) gameState.floatingTexts.splice(i, 1);
+            }
+        }
+
+        // --- 7. 高畫質復古像素藝術渲染器 (Procedural Pixel Art Sprites & Stages) ---
+
+        // 繪製主角：參考影片的「黑眼圈過勞青年、黑白條紋長袖、牛仔褲、紅球鞋」
+        function drawPixelProtagonist(x, y, z, facing, animFrame, isHurt, isDashing, isDead) {
+            ctx.save();
+            // 地面陰影
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 2, Math.max(6, 12 - z * 0.15), Math.max(3, 5 - z * 0.06), 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const drawY = Math.round(y - z);
+            const drawX = Math.round(x);
+
+            if (isHurt && Math.floor(Date.now() / 60) % 2 === 0) {
+                ctx.globalAlpha = 0.45;
+            }
+
+            ctx.translate(drawX, drawY);
+            ctx.scale(facing, 1);
+
+            // 衝刺殘影光暈
+            if (isDashing) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+                ctx.fillRect(-16, -34, 28, 34);
+            }
+
+            const legSwing = Math.sin(animFrame * 2) * 3;
+
+            // 1. 紅色運動鞋 (Red Sneakers)
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(-8, -4 + (z > 0 ? -2 : legSwing), 6, 4);
+            ctx.fillRect(2, -4 + (z > 0 ? 2 : -legSwing), 6, 4);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-7, -2 + (z > 0 ? -2 : legSwing), 5, 1);
+            ctx.fillRect(3, -2 + (z > 0 ? 2 : -legSwing), 5, 1);
+
+            // 2. 藍色牛仔褲 (Blue Jeans)
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(-7, -12, 5, 8);
+            ctx.fillRect(2, -12, 5, 8);
+
+            // 3. 經典黑白條紋長袖上衣 (Black & White Striped Shirt - 完美還原參考影片主角穿搭)
+            for (let row = 0; row < 5; row++) {
+                ctx.fillStyle = row % 2 === 0 ? '#0f172a' : '#f1f5f9';
+                ctx.fillRect(-8, -22 + row * 2, 16, 2);
+            }
+            // 手臂條紋
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-11, -21, 3, 8);
+            ctx.fillRect(8, -21, 3, 8);
+            ctx.fillStyle = '#f1f5f9';
+            ctx.fillRect(-11, -18, 3, 2);
+            ctx.fillRect(8, -18, 3, 2);
+
+            // 4. 臉部與重度過勞黑眼圈
+            ctx.fillStyle = '#fed7aa'; // 蒼白暖膚色
+            ctx.fillRect(-7, -33, 14, 11);
+
+            // 凌亂黑髮 (Messy Black Hair)
+            ctx.fillStyle = '#09090b';
+            ctx.fillRect(-8, -37, 16, 6);
+            ctx.fillRect(-9, -34, 3, 5);
+            ctx.fillRect(6, -35, 3, 4);
+            ctx.fillRect(-3, -39, 5, 2);
+
+            // 驚恐大眼 + 黑眼圈 (Dark Eye Circles & Shocked Eyes)
+            ctx.fillStyle = '#475569'; // 深灰紫黑眼圈
+            ctx.fillRect(-5, -27, 4, 2);
+            ctx.fillRect(2, -27, 4, 2);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-5, -30, 4, 3);
+            ctx.fillRect(2, -30, 4, 3);
+
+            ctx.fillStyle = isDead ? '#ef4444' : '#09090b';
+            ctx.fillRect(-3, -29, 2, 2);
+            ctx.fillRect(4, -29, 2, 2);
+
+            // 嘴部 (緊張咬牙或驚呼)
+            ctx.fillStyle = '#7f1d1d';
+            ctx.fillRect(-2, -24, 5, 2);
+
+            ctx.restore();
+        }
+
+        // 繪製三階段復古像素場景背景
+        function drawStageEnvironment() {
+            const st = gameState.stage;
+            const cfg = STAGE_CONFIGS[st];
+
+            // 遠景牆面與地板
+            ctx.fillStyle = cfg.bgTop;
+            ctx.fillRect(0, 0, W, 150);
+            ctx.fillStyle = cfg.bgFloor;
+            ctx.fillRect(0, 150, W, H - 150);
+
+            if (st === 1) {
+                // Stage 1: 午夜詭異超商 + 滿滿監視眼球牆 + 便利商店貨架
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(0, 138, W, 14);
+
+                // 背景監視紅眼矩陣
+                gameState.eyesBg.forEach((eye) => {
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(eye.x - 16, eye.y - 10, 32, 20);
+                    if (eye.blinkTimer < 225) {
+                        ctx.fillStyle = '#fecdd3';
+                        ctx.beginPath();
+                        ctx.ellipse(eye.x, eye.y, 13, 7, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#e11d48';
+                        ctx.beginPath();
+                        ctx.arc(eye.x + eye.pupilX, eye.y + eye.pupilY, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(eye.x + eye.pupilX - 1.5, eye.y + eye.pupilY - 1.5, 3, 3);
+                    } else {
+                        ctx.fillStyle = '#e11d48';
+                        ctx.fillRect(eye.x - 12, eye.y - 1, 24, 2);
+                    }
+                });
+
+                // 便利商店冰櫃與招牌
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(215, 92, 210, 48);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(215, 92, 210, 48);
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'bold 11px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('24H 거미편의점 (蜘蛛超商)', W / 2, 118);
+
+                // 超商地磚格線
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+                ctx.lineWidth = 1;
+                for (let gx = 0; gx < W; gx += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(gx, 150);
+                    ctx.lineTo((gx - W / 2) * 1.45 + W / 2, H);
+                    ctx.stroke();
+                }
+                for (let gy = 160; gy < H; gy += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, gy);
+                    ctx.lineTo(W, gy);
+                    ctx.stroke();
+                }
+            } else if (st === 2) {
+                // Stage 2: 巨型圍棋盤地獄 (致敬參考影片 0:38 幕後黑手在巨型圍棋盤彈棋子)
+                // 幕後黑手剪影與巨手
+                ctx.fillStyle = '#0c0a09';
+                ctx.fillRect(W / 2 - 48, 35, 96, 115);
+                // 詭異發光眼鏡
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(W / 2 - 22, 62, 16, 6);
+                ctx.fillRect(W / 2 + 6, 62, 16, 6);
+                // 領帶
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(W / 2 - 4, 92, 8, 36);
+
+                // 圍棋盤木紋格線與星位 (天元)
+                ctx.strokeStyle = '#291707';
+                ctx.lineWidth = 2;
+                for (let gx = 40; gx <= W - 40; gx += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(gx, 150);
+                    ctx.lineTo((gx - W / 2) * 1.35 + W / 2, H);
+                    ctx.stroke();
+                }
+                for (let gy = 155; gy < H; gy += 28) {
+                    ctx.beginPath();
+                    ctx.moveTo(20, gy);
+                    ctx.lineTo(W - 20, gy);
+                    ctx.stroke();
+                }
+                // 圍棋星位黑點
+                ctx.fillStyle = '#1c1008';
+                [[200, 211], [320, 211], [440, 211], [200, 295], [320, 295], [440, 295]].forEach(([sx, sy]) => {
+                    ctx.fillRect(sx - 3, sy - 3, 6, 6);
+                });
+            } else {
+                // Stage 3: 02號隔離走廊與黑霧 (致敬參考影片 0:20 醫院 02 號門與黑煙)
+                ctx.fillStyle = '#0f2922';
+                ctx.fillRect(0, 40, W, 110);
+
+                // 走廊雙開門與大大的「02」標誌
+                const doors = [130, 320, 510];
+                doors.forEach((dx) => {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(dx - 36, 56, 72, 94);
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(dx - 36, 56, 72, 94);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = 'bold 16px "Press Start 2P", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('02', dx, 48);
+                });
+
+                // 警戒條紋地坪
+                for (let x = 0; x < W; x += 24) {
+                    ctx.fillStyle = (x / 24) % 2 === 0 ? '#eab308' : '#090d16';
+                    ctx.fillRect(x, 146, 24, 6);
+                }
+            }
+        }
+
+        // 繪製金幣、包裹與敵人
+        function drawEntities() {
+            // 依 Y 座標進行深度排序 (2.5D 遮擋關係)
+            const renderList = [];
+
+            gameState.coins.forEach((c) => {
+                renderList.push({ y: c.y, type: 'COIN', obj: c });
+            });
+            gameState.hazards.forEach((h) => {
+                renderList.push({ y: h.y, type: 'HAZARD', obj: h });
+            });
+            renderList.push({ y: gameState.player.y, type: 'PLAYER', obj: gameState.player });
+
+            renderList.sort((a, b) => a.y - b.y);
+
+            renderList.forEach((item) => {
+                if (item.type === 'PLAYER') {
+                    const p = item.obj;
+                    drawPixelProtagonist(p.x, p.y, p.z, p.facing, p.animFrame, p.invulnTimer > 0, p.dashTimer > 0, false);
+                } else if (item.type === 'COIN') {
+                    const c = item.obj;
+                    const bob = Math.sin(gameState.timeAlive * 0.12 + c.bobOffset) * 4;
+                    const cy = Math.round(c.y - c.z + bob);
+                    // 陰影
+                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                    ctx.fillRect(c.x - 7, c.y - 2, 14, 4);
+
+                    if (c.type === 'BRIEFCASE') {
+                        // 高額日薪現金袋
+                        ctx.fillStyle = '#10b981';
+                        ctx.fillRect(c.x - 10, cy - 14, 20, 14);
+                        ctx.strokeStyle = '#ecfdf5';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(c.x - 10, cy - 14, 20, 14);
+                        ctx.fillStyle = '#fef08a';
+                        ctx.font = 'bold 9px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('₩₩', c.x, cy - 4);
+                    } else {
+                        // 經典旋轉像素金幣 (致敬片頭手機上的大金幣)
+                        ctx.fillStyle = '#f59e0b';
+                        ctx.fillRect(c.x - 8, cy - 16, 16, 16);
+                        ctx.fillStyle = '#fde047';
+                        ctx.fillRect(c.x - 6, cy - 14, 12, 12);
+                        ctx.fillStyle = '#b45309';
+                        ctx.fillRect(c.x - 2, cy - 11, 4, 6);
+                    }
+                } else if (item.type === 'HAZARD') {
+                    const h = item.obj;
+                    if (h.kind === 'WATCHER_EYE') {
+                        const hy = Math.round(h.y - h.z);
+                        ctx.fillStyle = 'rgba(225, 29, 72, 0.25)';
+                        ctx.beginPath();
+                        ctx.arc(h.x, hy - 8, 18, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#fff1f2';
+                        ctx.fillRect(h.x - 11, hy - 18, 22, 16);
+                        ctx.fillStyle = '#e11d48';
+                        ctx.fillRect(h.x - 6, hy - 14, 12, 10);
+                        ctx.fillStyle = '#09090b';
+                        ctx.fillRect(h.x - 2, hy - 11, 4, 4);
+                    } else if (h.kind === 'SHADOW_HAND') {
+                        // 地面預警紅圈 -> 竄出像素黑影鬼手
+                        const progress = h.timer / 55;
+                        ctx.strokeStyle = h.timer < 55 ? '#f43f5e' : '#a855f7';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.ellipse(h.x, h.y, h.r * Math.min(1, progress), h.r * 0.45 * Math.min(1, progress), 0, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        if (h.timer >= 55) {
+                            ctx.fillStyle = '#09090b';
+                            ctx.fillRect(h.x - 10, h.y - 34, 20, 34);
+                            ctx.fillStyle = '#a855f7';
+                            ctx.fillRect(h.x - 12, h.y - 38, 4, 10);
+                            ctx.fillRect(h.x - 4, h.y - 42, 4, 12);
+                            ctx.fillRect(h.x + 4, h.y - 40, 4, 11);
+                        }
+                    } else if (h.kind === 'BADUK_STONE') {
+                        // 巨型黑白圍棋石
+                        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                        ctx.beginPath();
+                        ctx.ellipse(h.x, h.y + 2, 15, 6, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        const sy = Math.round(h.y - h.z);
+                        ctx.fillStyle = h.isBlack ? '#0f172a' : '#f8fafc';
+                        ctx.beginPath();
+                        ctx.ellipse(h.x, sy - 8, 16, 12, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = h.isBlack ? '#38bdf8' : '#64748b';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        // 高光
+                        ctx.fillStyle = h.isBlack ? '#475569' : '#ffffff';
+                        ctx.fillRect(h.x - 7, sy - 14, 5, 3);
+                    } else if (h.kind === 'HAZMAT_AGENT') {
+                        // 黃色防護服特工 (致敬參考影片 0:23 防護服與面罩)
+                        const ay = Math.round(h.y);
+                        ctx.fillStyle = '#eab308';
+                        ctx.fillRect(h.x - 10, ay - 32, 20, 28);
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(h.x - 7, ay - 30, 14, 9);
+                        ctx.fillStyle = '#38bdf8';
+                        ctx.fillRect(h.x - 5, ay - 28, 10, 4);
+                    } else if (h.kind === 'BLACK_SMOKE') {
+                        // 致命黑霧漩渦
+                        ctx.fillStyle = 'rgba(9, 9, 11, 0.88)';
+                        for (let s = 0; s < 3; s++) {
+                            const ox = Math.cos(h.anim + s * 2) * 8;
+                            const oy = Math.sin(h.anim + s * 2) * 5;
+                            ctx.beginPath();
+                            ctx.arc(h.x + ox, h.y - 12 + oy, 13, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.fillStyle = '#10b981';
+                        ctx.fillRect(h.x - 5, h.y - 14, 3, 3);
+                        ctx.fillRect(h.x + 3, h.y - 14, 3, 3);
+                    }
+                }
+            });
+        }
+
+        // 繪製標題畫面：完美還原參考影片「거미인력 (蜘蛛人力仲介)」街頭 + 智慧型手機彈出「ACCEPT」接案畫面
+        function drawTitleScreen() {
+            // 詭異紫黑夜空與韓國復古街頭建築
+            ctx.fillStyle = '#090a14';
+            ctx.fillRect(0, 0, W, H);
+
+            // 後方建築群與霓虹招牌：「거미인력 (蜘蛛人力仲介)」&「가구백화점」
+            ctx.fillStyle = '#16192b';
+            ctx.fillRect(30, 30, 250, 210);
+            ctx.fillRect(300, 45, 310, 195);
+
+            // 招牌 1: 거미인력 (Spider Staffing)
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(48, 56, 210, 44);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(48, 56, 210, 44);
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 18px "Noto Sans TC", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('🕷 거미인력 (蜘蛛人力)', 58, 84);
+
+            // 招牌 2: 가구백화점 / 蜜糖兼職
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(320, 62, 265, 38);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.strokeRect(320, 62, 265, 38);
+            ctx.fillStyle = '#fde047';
+            ctx.font = 'bold 14px "Press Start 2P", "Noto Sans TC", monospace';
+            ctx.fillText('꿀알바 DEAD END JOB', 334, 86);
+
+            // 街道地面
+            ctx.fillStyle = '#1e2436';
+            ctx.fillRect(0, 240, W, 120);
+
+            // 主角站在左側街頭看著手機
+            drawPixelProtagonist(155, 295, 0, 1, Date.now() * 0.005, false, false, false);
+
+            // 右側彈出巨型像素智慧型手機 (致敬參考影片 0:08 金幣 + ACCEPT 綠色按鈕)
+            const phoneX = 335;
+            const phoneY = 108;
+            const phoneW = 240;
+            const phoneH = 228;
+
+            // 手機外框
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(phoneX, phoneY, phoneW, phoneH);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(phoneX, phoneY, phoneW, phoneH);
+
+            // 手機螢幕
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(phoneX + 10, phoneY + 14, phoneW - 20, phoneH - 28);
+
+            // 螢幕內大金幣圖示
+            const coinPulse = Math.sin(Date.now() * 0.008) * 3;
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(phoneX + 92, phoneY + 32 + coinPulse, 56, 56);
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(phoneX + 98, phoneY + 38 + coinPulse, 44, 44);
+            ctx.fillStyle = '#b45309';
+            ctx.font = 'bold 24px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('₩', phoneX + 120, phoneY + 70 + coinPulse);
+
+            // 案件標題文字
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 13px "Noto Sans TC", monospace';
+            ctx.fillText('【緊急高額日薪兼職】', phoneX + 120, phoneY + 112);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 11px "Noto Sans TC", monospace';
+            ctx.fillText('時薪 ₩1,000,000 / 當日現領', phoneX + 120, phoneY + 130);
+
+            // 閃爍綠色 [ ACCEPT / 接案 ] 按鈕 (完全還原影片)
+            const flash = Math.floor(Date.now() / 350) % 2 === 0;
+            ctx.fillStyle = flash ? '#10b981' : '#059669';
+            ctx.fillRect(phoneX + 24, phoneY + 146, phoneW - 48, 42);
+            ctx.strokeStyle = '#ecfdf5';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(phoneX + 24, phoneY + 146, phoneW - 48, 42);
+
+            ctx.fillStyle = '#022c22';
+            ctx.font = 'bold 13px "Press Start 2P", "Noto Sans TC", monospace';
+            ctx.fillText('ACCEPT (接案)', phoneX + 120, phoneY + 173);
+
+            // 手把操作提示
+            ctx.fillStyle = '#fde047';
+            ctx.font = 'bold 11px "Noto Sans TC", monospace';
+            ctx.fillText('按良值手把 [+] 加號鍵 或 [A/B] 鍵立即接案！', phoneX + 120, phoneY + 206);
+
+            // 左下角劇名與操作指南面板
+            ctx.fillStyle = 'rgba(9, 13, 22, 0.88)';
+            ctx.fillRect(22, 118, 275, 112);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(22, 118, 275, 112);
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 13px "Noto Sans TC", monospace';
+            ctx.fillText('《末路兼職 꿀알바》良值手把版', 34, 140);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '11px "Noto Sans TC", monospace';
+            ctx.fillText('• 移動：左搖桿 / 十字鍵 D-Pad', 34, 162);
+            ctx.fillText('• 跳躍 / 接案：A 或 B 鍵', 34, 180);
+            ctx.fillText('• 無敵衝刺閃避：X / Y / R / ZR 鍵', 34, 198);
+            ctx.fillStyle = '#34d399';
+            ctx.fillText('• 陣亡重開：按手把【 + 加號鍵 】！', 34, 216);
+        }
+
+        // 繪製遊戲進行中的頂部像素 HUD
+        function drawInGameHUD() {
+            const p = gameState.player;
+            const cfg = STAGE_CONFIGS[gameState.stage];
+
+            // 左上：體力愛心 (HP) 與衝刺能量條
+            ctx.fillStyle = 'rgba(9, 13, 22, 0.82)';
+            ctx.fillRect(12, 34, 190, 44);
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(12, 34, 190, 44);
+
+            ctx.font = 'bold 11px "Press Start 2P", "Noto Sans TC", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillText('HP:', 22, 53);
+
+            for (let i = 0; i < p.maxHp; i++) {
+                ctx.fillStyle = i < p.hp ? '#ef4444' : '#334155';
+                ctx.fillRect(62 + i * 22, 42, 16, 14);
+                ctx.fillStyle = '#fecdd3';
+                if (i < p.hp) ctx.fillRect(65 + i * 22, 44, 4, 4);
+            }
+
+            // 衝刺冷卻條
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '10px "Noto Sans TC", monospace';
+            ctx.fillText('衝刺(X/Y):', 22, 71);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(82, 63, 106, 8);
+            const dashReadyRatio = 1 - p.dashCooldown / 36;
+            ctx.fillStyle = dashReadyRatio >= 1 ? '#38bdf8' : '#f59e0b';
+            ctx.fillRect(82, 63, Math.floor(106 * dashReadyRatio), 8);
+
+            // 右上：累計韓元薪資 (₩ WON)
+            ctx.fillStyle = 'rgba(9, 13, 22, 0.82)';
+            ctx.fillRect(W - 222, 34, 210, 44);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.strokeRect(W - 222, 34, 210, 44);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'bold 13px "Press Start 2P", monospace';
+            ctx.fillText(`₩ ${gameState.scoreWon.toLocaleString()}`, W - 22, 55);
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 10px "Noto Sans TC", monospace';
+            ctx.fillText(`${cfg.hourlyWage} | 按[+]可重開`, W - 22, 71);
+
+            // 關卡切換橫幅 (Stage Transition Banner)
+            if (gameState.stageBannerTimer > 0) {
+                ctx.fillStyle = 'rgba(9, 13, 22, 0.92)';
+                ctx.fillRect(W / 2 - 210, 88, 420, 56);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(W / 2 - 210, 88, 420, 56);
+
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#fde047';
+                ctx.font = 'bold 13px "Noto Sans TC", monospace';
+                ctx.fillText(`${cfg.title} — ${cfg.korTitle}`, W / 2, 110);
+                ctx.fillStyle = '#e2e8f0';
+                ctx.font = '11px "Noto Sans TC", monospace';
+                ctx.fillText(cfg.desc, W / 2, 132);
+            }
+        }
+
+        // 主渲染入口
+        function renderGame() {
+            ctx.save();
+
+            // 畫面震動特效
+            if (gameState.screenShake > 0.5) {
+                const dx = (Math.random() - 0.5) * gameState.screenShake;
+                const dy = (Math.random() - 0.5) * gameState.screenShake;
+                ctx.translate(dx, dy);
+            }
+
+            if (gameState.mode === 'TITLE') {
+                drawTitleScreen();
+            } else {
+                drawStageEnvironment();
+                drawEntities();
+
+                // 繪製粒子
+                gameState.particles.forEach((pt) => {
+                    ctx.fillStyle = pt.color;
+                    ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+                });
+
+                // 繪製浮動薪資與傷害文字
+                gameState.floatingTexts.forEach((ft) => {
+                    ctx.save();
+                    ctx.font = `bold ${Math.round(11 * ft.scale)}px "Noto Sans TC", monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+                    ctx.fillStyle = ft.color;
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.restore();
+                });
+
+                drawInGameHUD();
+            }
+
+            // 受傷時的紅藍色彩分離駭客特效 (Chromatic Glitch)
+            if (gameState.chromaticGlitch > 0) {
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            ctx.restore();
+        }
+
+        // --- 8. UI 按鈕互動綁定與主迴圈啟動 ---
+        document.getElementById('btn-restart-click').addEventListener('click', () => {
+            startNewPartTimeJob();
+        });
+
+        // 點擊 Canvas 亦可接案或觸發音效初始化
+        canvas.addEventListener('pointerdown', () => {
+            sound.init();
+            if (gameState.mode === 'TITLE') {
+                startNewPartTimeJob();
+            }
+        });
+
+        document.getElementById('btn-audio-toggle').addEventListener('click', (e) => {
+            const on = sound.toggle();
+            e.currentTarget.textContent = on ? '🔊 BGM: ON' : '🔇 BGM: OFF';
+        });
+
+        document.getElementById('btn-crt-toggle').addEventListener('click', () => {
+            const crt = document.getElementById('crt-layer');
+            crt.classList.toggle('hidden');
+        });
+
+        function mainLoop() {
+            updateGame();
+            renderGame();
+            requestAnimationFrame(mainLoop);
+        }
+
+        window.onload = function () {
+            checkOrientationAndViewport();
+            mainLoop();
+        };
+    </script>
 </body>
 </html>
