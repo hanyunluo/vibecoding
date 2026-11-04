@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>《末路兼職》128-bit 精緻像素恐怖重製版</title>
+    <title>《末路兼職》128-bit 恐怖心跳共振重製版 (含重啟)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
         body {
@@ -63,9 +63,9 @@
 
     <div id="fullscreen-overlay">
         <h1 style="color: #ff3838; font-family: monospace; letter-spacing: 3px; margin-bottom: 5px;">《末路兼職》</h1>
-        <p style="color: #00d2d3; font-size: 14px; font-family: monospace; margin-bottom: 20px;">- 128-bit 精緻像素恐怖重製版 -</p>
+        <p style="color: #00d2d3; font-size: 14px; font-family: monospace; margin-bottom: 20px;">- 128-bit 恐怖心跳共振重製版 -</p>
         <p style="color: #a4b0be; font-size: 13px; max-width: 480px; line-height: 1.6;">
-            已修正所有程式排版與渲染錯位。超商內景全面升級為 128-bit 高細緻像素藝術，支援良值手把與心跳共振。
+            已完美修復 GAME OVER 無法重啟的 Bug。死亡後按下手把 A 鍵或 Enter 即可無縫復活再戰！
         </p>
         <button class="btn-enter" onclick="enterFullscreenGame()">💀 進入 128-bit 恐怖超商</button>
     </div>
@@ -86,7 +86,7 @@
     </div>
 
     <div id="footer-hint">
-        🎮 128-bit 操作指南：左搖桿移動 ｜ A 鍵互動（打卡/收銀/補貨） ｜ X 鍵倉庫躲藏（LT/RT 呼吸調節）
+        🎮 操作指南：左搖桿移動 ｜ A 鍵互動（打卡/收銀/補貨/復活） ｜ X 鍵倉庫躲藏（LT/RT 呼吸）
     </div>
 
 <script>
@@ -103,7 +103,6 @@ let activeGamepadIndex = null;
 const DEADZONE = 0.15;
 let heartbeatTimer = 0;
 
-// Web Audio 恐怖音效合成器
 let audioCtx = null;
 function initAudio() {
     if (!audioCtx) {
@@ -188,6 +187,19 @@ const gameState = {
     flashRed: 0
 };
 
+function resetGame() {
+    gameState.player.san_current = 100;
+    gameState.player.x = 100;
+    gameState.player.state = "IDLE";
+    gameState.gameOver = false;
+    sanValSpan.innerText = "100";
+    gameState.story.queue = [
+        { speaker: "主角", text: "「剛才那是... 夢魘嗎？得趕快把今晚的班上完。」" }
+    ];
+    showNextStory();
+    playBeep(600, 0.15);
+}
+
 function showNextStory() {
     if (gameState.story.queue.length > 0) {
         const next = gameState.story.queue.shift();
@@ -202,6 +214,12 @@ function showNextStory() {
 
 const keys = { left: false, right: false };
 window.addEventListener('keydown', (e) => {
+    if (gameState.gameOver) {
+        if (e.key === ' ' || e.key === 'Enter' || e.key === 'a' || e.key === 'A') {
+            resetGame();
+        }
+        return;
+    }
     if (gameState.story.active) {
         if (e.key === ' ' || e.key === 'Enter' || e.key === 'a') { showNextStory(); }
         return;
@@ -232,6 +250,7 @@ window.addEventListener("gamepaddisconnected", (e) => {
 let lastTime = performance.now();
 let prevBtnA = false;
 let prevBtnX = false;
+let prevBtnStart = false;
 
 function applyDeadzone(val) { return Math.abs(val) < DEADZONE ? 0 : val; }
 
@@ -250,7 +269,7 @@ function pollGamepad(dt) {
     for (let i = 0; i < gps.length; i++) { if (gps[i]) { activeGamepadIndex = i; break; } }
     const gp = gps[activeGamepadIndex];
     if (!gp) {
-        if (!gameState.story.active) {
+        if (!gameState.story.active && !gameState.gameOver) {
             let moveDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
             updatePlayerMovement(moveDir, dt);
         }
@@ -262,8 +281,19 @@ function pollGamepad(dt) {
         statusText.innerText = `已連線: ${gp.id.slice(0, 16)}`;
     }
 
-    const btnA = gp.buttons[1]?.pressed || false;
-    const btnX = gp.buttons[3]?.pressed || false;
+    const btnA = gp.buttons[1]?.pressed || false; // A 鍵
+    const btnX = gp.buttons[3]?.pressed || false; // X 鍵
+    const btnStart = gp.buttons[9]?.pressed || false; // Start 鍵
+
+    // 死亡狀態下按 A 鍵或 Start 鍵立即重啟
+    if (gameState.gameOver) {
+        if ((btnA && !prevBtnA) || (btnStart && !prevBtnStart)) {
+            resetGame();
+        }
+        prevBtnA = btnA;
+        prevBtnStart = btnStart;
+        return;
+    }
 
     if (gameState.story.active) {
         if (btnA && !prevBtnA) { showNextStory(); }
@@ -428,9 +458,7 @@ function updateBreathing(dt, gamepad) {
     }
 }
 
-// 128-bit 高精度像素超商場景渲染引擎
 function renderStoreInterior(ctx) {
-    // 地板磁磚與反光
     ctx.fillStyle = "#12121c";
     ctx.fillRect(0, 0, gameState.worldWidth, 540);
     
@@ -439,14 +467,12 @@ function renderStoreInterior(ctx) {
         ctx.fillRect(x, 440, 30, 100);
     }
 
-    // 天花板與螢光燈條
     ctx.fillStyle = "#0d0d14";
     ctx.fillRect(0, 0, gameState.worldWidth, 80);
     
     for (let x = 150; x < gameState.worldWidth; x += 300) {
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(x, 70, 120, 8);
-        // 燈光暈影
         const grad = ctx.createRadialGradient(x + 60, 74, 10, x + 60, 74, 180);
         grad.addColorStop(0, "rgba(255, 255, 220, 0.12)");
         grad.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -454,13 +480,11 @@ function renderStoreInterior(ctx) {
         ctx.fillRect(x - 100, 78, 320, 370);
     }
 
-    // 1. 冷藏飲料櫃 (左側背景)
     ctx.fillStyle = "#1e1e2f";
     ctx.fillRect(150, 120, 220, 320);
     ctx.strokeStyle = "#33334d";
     ctx.lineWidth = 3;
     ctx.strokeRect(150, 120, 220, 320);
-    // 飲料櫃玻璃門與內部商品色塊
     for(let gx = 170; gx < 350; gx += 60) {
         ctx.fillStyle = "rgba(100, 200, 255, 0.15)";
         ctx.fillRect(gx, 140, 50, 280);
@@ -469,35 +493,29 @@ function renderStoreInterior(ctx) {
         ctx.fillStyle = "#ffa502"; ctx.fillRect(gx + 10, 280, 15, 30);
     }
 
-    // 2. 中央零食/日用品貨架
     ctx.fillStyle = "#262638";
     ctx.fillRect(520, 160, 260, 280);
     ctx.strokeStyle = "#3f3f5f";
     ctx.lineWidth = 3;
     ctx.strokeRect(520, 160, 260, 280);
-    // 貨架層板
     for(let sy = 220; sy < 420; sy += 70) {
         ctx.fillStyle = "#15151f";
         ctx.fillRect(530, sy, 240, 10);
-        // 商品排列
         for(let itemX = 545; itemX < 750; itemX += 35) {
             ctx.fillStyle = ["#ff6b81", "#70a1ff", "#ffd32a", "#ff7f50"][Math.floor(itemX/35)%4];
             ctx.fillRect(itemX, sy - 25, 22, 25);
         }
     }
 
-    // 3. 窗外夜景與恐怖血手印
     ctx.fillStyle = "#080810";
     ctx.fillRect(30, 140, 90, 160);
     ctx.strokeStyle = "#444455"; ctx.lineWidth = 4;
     ctx.strokeRect(30, 140, 90, 160);
-    // 玻璃血手印
     ctx.fillStyle = "rgba(255, 50, 50, 0.4)";
     ctx.fillRect(55, 180, 12, 25);
     ctx.fillRect(72, 175, 8, 20);
 }
 
-// SAN 值三階段特效與心跳共振
 function renderSanEffects(dt, ctx) {
     const san = gameState.player.san_current;
 
@@ -513,7 +531,6 @@ function renderSanEffects(dt, ctx) {
         triggerRumble(gameState.san_system.current_tier === 2 ? 180 : 100, gameState.san_system.current_tier === 2 ? 0.7 : 0.2, 0.1);
     }
 
-    // Tier 1 (30 - 69)：心跳紅光脈衝
     if (gameState.san_system.current_tier === 1) {
         const pulseAlpha = Math.sin(Date.now() / 500) * 0.22 + 0.22;
         ctx.save();
@@ -523,7 +540,6 @@ function renderSanEffects(dt, ctx) {
         ctx.restore();
     }
 
-    // Tier 2 (1 - 29)：極度恐慌、CRT 掃描線與色彩剝離
     if (gameState.san_system.current_tier === 2) {
         ctx.save();
         ctx.globalAlpha = 0.45;
@@ -565,12 +581,12 @@ function mainLoop(timestamp) {
         ctx.fillStyle = "#020205";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#ff3838";
-        ctx.font = "bold 28px monospace";
+        ctx.font = "bold 26px monospace";
         ctx.textAlign = "center";
-        ctx.fillText("【 精神徹底崩潰 · GAME OVER 】", canvas.width / 2, canvas.height / 2 - 20);
-        ctx.fillStyle = "#8888a0";
-        ctx.font = "14px monospace";
-        ctx.fillText("理智歸零，你成為了大夜班永久的犧牲品。重新整理以再次值班。", canvas.width / 2, canvas.height / 2 + 30);
+        ctx.fillText("【 精神徹底崩潰 · GAME OVER 】", canvas.width / 2, canvas.height / 2 - 30);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 16px monospace";
+        ctx.fillText("▶ 按下良值手把【 A 鍵 】或鍵盤【 Enter 】立刻重新挑戰", canvas.width / 2, canvas.height / 2 + 25);
         requestAnimationFrame(mainLoop);
         return;
     }
@@ -578,10 +594,8 @@ function mainLoop(timestamp) {
     ctx.save();
     ctx.translate(-gameState.cameraX, 0);
 
-    // 渲染 128-bit 超商背景與場景
     renderStoreInterior(ctx);
 
-    // 渲染互動節點
     const activeNode = getActiveNode();
     gameState.nodes.forEach(node => {
         const isActive = (node === activeNode && gameState.player.state !== "HIDING" && !gameState.story.active);
@@ -608,33 +622,25 @@ function mainLoop(timestamp) {
         }
     });
 
-    // 渲染 128-bit 主角精靈圖 (兼職店員)
     const p = gameState.player;
     if (p.state !== "HIDING") {
         ctx.save();
         ctx.translate(p.x, p.y + p.height / 2);
-        
-        // 主角身體與工作服細節
         ctx.fillStyle = "#2e86de";
         ctx.fillRect(-p.width / 2, -p.height, p.width, p.height);
-        // 工作背心
         ctx.fillStyle = "#ff4757";
         ctx.fillRect(-p.width / 2 + 6, -p.height + 15, p.width - 12, p.height - 30);
-        // 頭部與頭髮
         ctx.fillStyle = "#ffda79";
         ctx.beginPath(); ctx.arc(0, -p.height - 12, 16, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = "#333333";
         ctx.fillRect(-14, -p.height - 24, 28, 10);
-        // 眼睛方向
         ctx.fillStyle = "#000000";
         ctx.fillRect(p.facing > 0 ? 4 : -10, -p.height - 15, 6, 6);
-
         ctx.restore();
     }
 
     ctx.restore();
 
-    // QTE 條碼 UI
     if (gameState.qte.active && !gameState.story.active) {
         ctx.save();
         ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
@@ -674,7 +680,6 @@ function mainLoop(timestamp) {
         ctx.restore();
     }
 
-    // 躲藏與呼吸條
     if (p.state === "HIDING") {
         ctx.save();
         ctx.fillStyle = "rgba(3, 3, 6, 0.96)";
@@ -713,7 +718,6 @@ function mainLoop(timestamp) {
         ctx.restore();
     }
 
-    // 劇情對話框
     if (gameState.story.active) {
         ctx.save();
         ctx.fillStyle = "rgba(0, 0, 0, 0.92)";
