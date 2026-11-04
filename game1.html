@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>《末路兼職》Stage 1 最小驗證模組 (Vertical Slice)</title>
+<style>
+* { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+body {
+margin: 0; padding: 0; background-color: #0b0b10; color: #ffffff;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+min-height: 100vh; overflow: hidden;
+}
+#hud-container {
+width: 960px; display: flex; justify-content: space-between; align-items: center;
+margin-bottom: 10px; padding: 0 10px;
+}
+.hud-panel {
+background: #181824; border: 1px solid #33334d; border-radius: 8px;
+padding: 8px 16px; font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 10px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4757; display: inline-block; }
+.dot.connected { background: #2ed573; box-shadow: 0 0 8px #2ed573; }
+.san-bar-bg { width: 140px; height: 14px; background: #2f3542; border-radius: 7px; overflow: hidden; border: 1px solid #57606f; }
+.san-bar-fill { width: 100%; height: 100%; background: #ff4757; transition: width 0.3s ease; }
+canvas {
+background: #12121c; border: 3px solid #33334d; border-radius: 12px;
+max-width: 95vw; max-height: 75vh; aspect-ratio: 16 / 9;
+box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+}
+.instructions {
+margin-top: 10px; font-size: 13px; color: #8888a0; text-align: center; max-width: 900px; line-height: 1.5;
+}
+</style>
+</head>
+<body>
+​<div id="hud-container">
+<div class="hud-panel">
+<span id="status-dot" class="dot"></span>
+<span id="status-text">手把未連線（請按良值手把任意鍵喚醒）</span>
+</div>
+<div class="hud-panel" style="gap: 15px;">
+<span>🧠 SAN 值：<span id="san-text">100</span> / 100</span>
+<div class="san-bar-bg"><div id="san-fill" class="san-bar-fill"></div></div>
+</div>
+</div>
+​<canvas id="gameCanvas" width="960" height="540"></canvas>
+​<div class="instructions">
+🎮 <b>操作指南</b>：左搖桿/十字鍵左右走位 ｜ 靠近收銀台（X:280）按下 <b>A 鍵</b>觸發 1.5 秒 QTE ｜ 靠近大門/貨架/倉庫門可互動
+</div>
+​<script>
+// ==========================================
+// 1. 資料模型與狀態初始化 (Stage 1 JSON Spec)
+// ==========================================
+const stageData = {
+stage_id: "stage_01_convenience_store",
+player: {
+id: "player_part_timer",
+move_speed: 180, // px/s
+san_current: 100,
+san_max: 100,
+state: "IDLE", // IDLE, WALK, INTERACTING
+x: 100,
+y: 420,
+width: 64,
+height: 96,
+facing: 1 // 1: 右, -1: 左
+},
+interactive_nodes: [
+{ id: "node_entrance_gate", x: 60, width: 80, interact_action: "ACTION_CLOCK_OUT", prompt_button: "BUTTON_A", description: "大門與打卡鐘區" },
+{ id: "node_cash_register", x: 280, width: 100, interact_action: "ACTION_CHECKOUT_QTE", prompt_button: "BUTTON_A", description: "收銀台區" },
+{ id: "node_shelf_area", x: 580, width: 140, interact_action: "ACTION_RESTOCK", prompt_button: "BUTTON_A", description: "商品貨架區" },
+{ id: "node_warehouse_door", x: 880, width: 90, interact_action: "ACTION_PEEK", prompt_button: "BUTTON_X", description: "倉庫門" }
+],
+current_qte: null
+};
+​const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+const sanText = document.getElementById('san-text');
+const sanFill = document.getElementById('san-fill');
+​let activeGamepadIndex = null;
+const DEADZONE = 0.15;
+let lastTime = performance.now();
+let bloodFlashTimer = 0; // 受傷紅光閃爍計時
+​// QTE 運行狀態變數
+let qteActive = false;
+let qteTimer = 0;
+let qteDuration = 1.5; // 秒
+let qteVibrationPlayed = false;
+​// ==========================================
+// 2. 藍牙手把管理與震動控制
+// ==========================================
+window.addEventListener("gamepadconnected", (e) => {
+activeGamepadIndex = e.gamepad.index;
+statusDot.classList.add('connected');
+statusText.innerText = 已連線：${e.gamepad.id};
+});
+​window.addEventListener("gamepaddisconnected", (e) => {
+if (activeGamepadIndex === e.gamepad.index) {
+activeGamepadIndex = null;
+statusDot.classList.remove('connected');
+statusText.innerText = "手把已斷線，請重新按下手把任意鍵";
+}
+});
+​function pollGamepads() {
+const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+for (let i = 0; i < gamepads.length; i++) {
+if (gamepads[i]) {
+activeGamepadIndex = i;
+if (!statusDot.classList.contains('connected')) {
+statusDot.classList.add('connected');
+statusText.innerText = 已連線：${gamepads[i].id};
+}
+break;
+}
+}
+return gamepads[activeGamepadIndex] || null;
+}
+​function triggerControllerRumble(duration, weak, strong) {
+const gp = pollGamepads();
+if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {
+gp.vibrationActuator.playEffect("dual-rumble", {
+startDelay: 0,
+duration: duration,
+weakMagnitude: weak,
+strongMagnitude: strong,
+}).catch(() => {});
+}
+}
+​// 邊緣按鍵觸發偵測輔助
+let prevButtonStates = {};
+function isButtonJustPressed(gp, btnIndex) {
+const pressed = gp.buttons[btnIndex]?.pressed || false;
+const wasPressed = prevButtonStates[btnIndex] || false;
+prevButtonStates[btnIndex] = pressed;
+return pressed && !wasPressed;
+}
+​// ==========================================
+// 3. 遊戲主迴圈與邏輯更新 (Game Loop)
+// ==========================================
+function update(dt) {
+const gp = pollGamepads();
+const p = stageData.player;
+​// 處理受傷紅光漸變
+if (bloodFlashTimer > 0) {
+bloodFlashTimer -= dt;
+}
+​// 若處於 QTE 互動狀態
+if (qteActive) {
+qteTimer -= dt;
+​// 模擬條碼機連鎖雜訊微震 (QTE 進行中)
+if (!qteVibrationPlayed) {
+triggerControllerRumble(1500, 0.3, 0.1);
+qteVibrationPlayed = true;
+}
+​// 檢測 A 鍵（Gamepad Button 0）是否在 1.5 秒內按下
+if (gp && isButtonJustPressed(gp, 0)) {
+// QTE 成功判定
+qteActive = false;
+p.state = "IDLE";
+triggerControllerRumble(120, 0.0, 0.8); // 成功紮實震動
+stageData.current_qte = null;
+}
+else if (qteTimer <= 0) {
+// QTE 失敗判定（超時 1.5 秒）
+qteActive = false;
+p.state = "IDLE";
+stageData.current_qte = null;
+​// 扣除 SAN 值並限制範圍
+p.san_current = Math.max(0, p.san_current - 15);
+sanText.innerText = p.san_current;
+sanFill.style.width = ${(p.san_current / p.san_max) * 100}%;
+​// 失敗強烈震動與全螢幕紅光
+triggerControllerRumble(350, 0.9, 0.9);
+bloodFlashTimer = 0.6;
+}
+return;
+}
+​// 一般狀態機處理 (IDLE / WALK)
+let axisX = 0;
+let btnAPressed = false;
+let btnXPressed = false;
+​if (gp) {
+let rawAxis = gp.axes[0] || 0;
+axisX = Math.abs(rawAxis) >= DEADZONE ? rawAxis : 0;
+​// 支援十字鍵作為方向替代
+if (axisX === 0) {
+if (gp.buttons[14]?.pressed) axisX = -1; // D-Pad Left
+if (gp.buttons[15]?.pressed) axisX = 1;  // D-Pad Right
+}
+​btnAPressed = isButtonJustPressed(gp, 0); // 實體 B 鍵 (W3C index 0)
+btnXPressed = isButtonJustPressed(gp, 3); // 實體 X 鍵 (W3C index 3)
+}
+​// 鍵盤備援控制 (方便桌機直接測試)
+if (window.isKeyDown) {
+if (window.isKeyDown('ArrowLeft') || window.isKeyDown('KeyA')) axisX = -1;
+if (window.isKeyDown('ArrowRight') || window.isKeyDown('KeyD')) axisX = 1;
+if (window.isKeyDown('KeySpace') && !btnAPressed) { btnAPressed = true; }
+}
+​// 移動與狀態切換
+if (axisX !== 0) {
+p.state = "WALK";
+p.x += axisX * p.move_speed * dt;
+p.facing = axisX > 0 ? 1 : -1;
+} else {
+p.state = "IDLE";
+}
+​// 限制主角活動邊界 (便利商店內部範圍: 60 ~ 900)
+p.x = Math.max(60, Math.min(900, p.x));
+​// AABB 節點碰撞與互動觸發判定
+let activeNode = null;
+for (let node of stageData.interactive_nodes) {
+let minX = node.x - node.width / 2;
+let maxX = node.x + node.width / 2;
+if (p.x >= minX && p.x <= maxX) {
+activeNode = node;
+break;
+}
+}
+​// 監聽互動按鍵
+if (activeNode && (btnAPressed || btnXPressed)) {
+if (activeNode.interact_action === "ACTION_CHECKOUT_QTE" && btnAPressed) {
+// 進入收銀 QTE 流程
+p.state = "INTERACTING";
+qteActive = true;
+qteTimer = qteDuration;
+qteVibrationPlayed = false;
+stageData.current_qte = {
+qte_id: "qte_checkout_normal",
+target_button: "BUTTON_A",
+time_limit_sec: 1.5,
+san_penalty: 15
+};
+} else if (activeNode.interact_action === "ACTION_PEEK" && btnXPressed) {
+// 倉庫門窺視互動
+triggerControllerRumble(100, 0.4, 0.4);
+} else if (btnAPressed && activeNode.prompt_button === "BUTTON_A") {
+// 一般 A 鍵節點互動
+triggerControllerRumble(80, 0.2, 0.2);
+}
+}
+}
+​// ==========================================
+// 4. 畫面渲染引擎 (Canvas 2D Rendering)
+// ==========================================
+function render() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+​// 1. 繪製便利商店背景與地板
+ctx.fillStyle = "#1a1a26";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+​// 地板線條
+ctx.strokeStyle = "#33334d";
+ctx.lineWidth = 4;
+ctx.beginPath();
+ctx.moveTo(0, 470);
+ctx.lineTo(960, 470);
+ctx.stroke();
+​// 2. 渲染互動節點 (Store Environment Objects)
+const p = stageData.player;
+let activeNode = null;
+​for (let node of stageData.interactive_nodes) {
+let minX = node.x - node.width / 2;
+let maxX = node.x + node.width / 2;
+let isOverlapping = (p.x >= minX && p.x <= maxX);
+if (isOverlapping) activeNode = node;
+​ctx.save();
+ctx.fillStyle = isOverlapping ? "#2f3542" : "#1e1e2f";
+ctx.strokeStyle = isOverlapping ? "#7bed9f" : "#57606f";
+ctx.lineWidth = isOverlapping ? 3 : 2;
+​// 根據節點繪製不同家具造型
+if (node.id === "node_entrance_gate") {
+ctx.fillRect(node.x - 40, 320, 80, 150);
+ctx.strokeRect(node.x - 40, 320, 80, 150);
+drawText("🚪 大門/打卡鐘", node.x, 305, "#a4b0be", 12);
+} else if (node.id === "node_cash_register") {
+ctx.fillRect(node.x - 50, 350, 100, 120);
+ctx.strokeRect(node.x - 50, 350, 100, 120);
+ctx.fillStyle = "#ff4757";
+ctx.fillRect(node.x - 20, 335, 40, 15); // 收銀機螢幕
+drawText("💻 收銀台", node.x, 330, "#ffffff", 13);
+} else if (node.id === "node_shelf_area") {
+ctx.fillRect(node.x - 70, 280, 140, 190);
+ctx.strokeRect(node.x - 70, 280, 140, 190);
+drawText("🥫 商品貨架", node.x, 265, "#a4b0be", 12);
+} else if (node.id === "node_warehouse_door") {
+ctx.fillRect(node.x - 45, 300, 90, 170);
+ctx.strokeRect(node.x - 45, 300, 90, 170);
+drawText("⛓️ 倉庫鐵門", node.x, 285, "#a4b0be", 12);
+}
+ctx.restore();
+​// 若玩家進入該節點範圍，在其頭頂渲染按鈕提示 UI
+if (isOverlapping && !qteActive) {
+drawPromptUI(node.x, 210, node.prompt_button);
+}
+}
+​// 3. 渲染主角白盒角色 (spr_player_idle / walk 佔位藍色方塊)
+ctx.save();
+ctx.translate(p.x, p.y);
+​// 主角身體
+ctx.fillStyle = p.state === "INTERACTING" ? "#ffa502" : "#3742fa";
+ctx.fillRect(-p.width / 2, -p.height, p.width, p.height);
+​// 主角眼睛（顯示朝向）
+ctx.fillStyle = "#ffffff";
+let eyeOffsetX = p.facing === 1 ? 14 : -22;
+ctx.fillRect(eyeOffsetX, -p.height + 22, 8, 8);
+​// 角色頭頂狀態文字
+drawText([${p.state}], 0, -p.height - 12, "#ffffff", 12);
+ctx.restore();
+​// 4. 渲染收銀 QTE 互動介面 (ui_qte_ring)
+if (qteActive) {
+renderQTEOverlay();
+}
+​// 5. 受傷紅光全螢幕暗角閃爍 (Vignette)
+if (bloodFlashTimer > 0) {
+ctx.save();
+let alpha = (bloodFlashTimer / 0.6) * 0.65;
+let grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 200, canvas.width/2, canvas.height/2, 550);
+grad.addColorStop(0, "rgba(255, 71, 87, 0)");
+grad.addColorStop(1, rgba(255, 71, 87, ${alpha}));
+ctx.fillStyle = grad;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+​ctx.fillStyle = "#ff4757";
+ctx.font = "bold 26px sans-serif";
+ctx.textAlign = "center";
+ctx.fillText("⚠️ SAN 值扣除！QTE 失敗！", canvas.width / 2, 80);
+ctx.restore();
+}
+}
+​// 繪製按鈕提示框
+function drawPromptUI(x, y, btnType) {
+ctx.save();
+ctx.beginPath();
+ctx.arc(x, y, 22, 0, Math.PI * 2);
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+ctx.strokeStyle = "#2f3542";
+ctx.lineWidth = 3;
+ctx.stroke();
+​ctx.fillStyle = "#12121c";
+ctx.font = "bold 15px sans-serif";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.fillText(btnType === "BUTTON_A" ? "A" : "X", x, y);
+ctx.restore();
+}
+​// 繪製收銀 QTE 圓環倒數進度
+function renderQTEOverlay() {
+ctx.save();
+let cx = canvas.width / 2;
+let cy = canvas.height / 2 - 30;
+​// 半透明遮罩背景
+ctx.fillStyle = "rgba(18, 18, 28, 0.75)";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+​// QTE 標題
+ctx.fillStyle = "#ffffff";
+ctx.font = "bold 22px sans-serif";
+ctx.textAlign = "center";
+ctx.fillText("⚡ 收銀掃碼 QTE 進行中！請狂按 A 鍵", cx, cy - 80);
+​// 倒數圓環外框
+let progressRatio = qteTimer / qteDuration;
+ctx.beginPath();
+ctx.arc(cx, cy, 50, 0, Math.PI * 2);
+ctx.strokeStyle = "#2f3542";
+ctx.lineWidth = 10;
+ctx.stroke();
+​// 動態倒數進度弧形
+ctx.beginPath();
+ctx.arc(cx, cy, 50, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progressRatio));
+ctx.strokeStyle = "#2ed573";
+ctx.lineWidth = 10;
+ctx.stroke();
+​// 中央按鈕提示
+drawPromptUI(cx, cy, "BUTTON_A");
+​// 剩餘時間文字
+ctx.fillStyle = "#a4b0be";
+ctx.font = "14px monospace";
+ctx.fillText(剩餘時間: ${qteTimer.toFixed(2)}s, cx, cy + 75);
+ctx.restore();
+}
+​function drawText(text, x, y, color, size) {
+ctx.fillStyle = color;
+ctx.font = bold ${size}px sans-serif;
+ctx.textAlign = "center";
+ctx.fillText(text, x, y);
+ctx.textAlign = "start";
+}
+​// ==========================================
+// 5. 遊戲主核心迴圈觸發
+// ==========================================
+function mainLoop(timestamp) {
+let dt = (timestamp - lastTime) / 1000;
+if (dt > 0.1) dt = 0.016; // 防止分頁切換導致時間差過大
+lastTime = timestamp;
+​update(dt);
+render();
+​requestAnimationFrame(mainLoop);
+}
+​// 鍵盤備援事件監聽
+window.addEventListener('keydown', (e) => {
+if (!window.keys) window.keys = {};
+window.keys[e.code] = true;
+});
+window.addEventListener('keyup', (e) => {
+if (window.keys) window.keys[e.code] = false;
+});
+window.isKeyDown = (code) => window.keys && window.keys[code];
+​// 啟動遊戲
+requestAnimationFrame(mainLoop);
+</script>
+</body>
+</html>
