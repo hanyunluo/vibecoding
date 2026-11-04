@@ -1,888 +1,762 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>《末路兼職》128-bit 心理恐怖精緻視覺版</title>
-<style>
-* { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
-body {
-margin: 0; padding: 0; background-color: #030306; color: #ffffff;
-font-family: "Courier New", Courier, monospace;
-display: flex; flex-direction: column; align-items: center; justify-content: center;
-width: 100vw; height: 100vh; overflow: hidden; position: fixed;
-}
-​#fullscreen-overlay {
-position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-background: rgba(3, 3, 6, 0.98); z-index: 9999;
-display: flex; flex-direction: column; align-items: center; justify-content: center;
-text-align: center; padding: 25px; transition: opacity 0.4s ease;
-}
-#fullscreen-overlay.hidden { opacity: 0; pointer-events: none; }
-​.title-glitch {
-color: #ff4757; font-size: 42px; font-weight: bold; letter-spacing: 5px; margin-bottom: 8px;
-text-shadow: 3px 3px #3d1466, -3px -3px #ff6b6b;
-animation: glitch-anim 2.5s infinite linear alternate-reverse;
-}
-@keyframes glitch-anim {
-0% { text-shadow: 3px 3px #3d1466, -3px -3px #ff6b6b; }
-30% { text-shadow: -3px 2px #ff4757, 3px -2px #00d2d3; }
-60% { text-shadow: 2px -3px #3d1466, -2px 3px #ff6b6b; }
-100% { text-shadow: 3px 3px #3d1466, -3px -3px #ff6b6b; }
-}
-​.btn-enter {
-background: #ff4757; color: #ffffff; border: none; padding: 16px 38px;
-font-size: 19px; font-weight: bold; font-family: monospace; border-radius: 35px; cursor: pointer;
-box-shadow: 0 0 30px rgba(255, 71, 87, 0.7); margin-top: 25px;
-animation: pulse-btn 1.5s infinite; transition: transform 0.1s;
-}
-.btn-enter:active { transform: scale(0.95); }
-@keyframes pulse-btn {
-0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 71, 87, 0.5); }
-50% { transform: scale(1.06); box-shadow: 0 0 35px rgba(255, 71, 87, 0.9); }
-100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 71, 87, 0.5); }
-}
-​#ui-header {
-width: 98vw; max-width: 960px; display: flex; justify-content: space-between; align-items: center;
-background: #0d0d14; padding: 9px 18px; border-radius: 10px; margin-bottom: 6px;
-border: 1px solid #ff475744; font-size: 13px; font-weight: bold; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-}
-.status-group { display: flex; align-items: center; gap: 10px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4757; display: inline-block; }
-.dot.connected { background: #2ed573; box-shadow: 0 0 10px #2ed573; }
-​#san-bar-container {
-width: 130px; height: 12px; background: #161622; border-radius: 6px;
-overflow: hidden; border: 1px solid #ff475766; display: inline-block; vertical-align: middle; margin-left: 6px;
-}
-#san-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4757, #ff6b81); transition: width 0.2s ease; }
-​#canvas-container {
-width: 98vw; max-width: 960px; aspect-ratio: 16 / 9;
-background: #050508; border: 2px solid #2a2a40; border-radius: 10px;
-overflow: hidden; position: relative; box-shadow: 0 12px 40px rgba(0,0,0,0.95);
-}
-​canvas {
-width: 100%; height: 100%; display: block;
-image-rendering: optimizeSpeed;
-image-rendering: -moz-crisp-edges;
-image-rendering: -o-crisp-edges;
-image-rendering: -webkit-optimize-contrast;
-image-rendering: pixelated;
--ms-interpolation-mode: nearest-neighbor;
-}
-​#footer-hint {
-width: 98vw; max-width: 960px; font-size: 11px; color: #787898;
-margin-top: 6px; text-align: center; line-height: 1.3; z-index: 10;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>《末路兼職》128-bit 精緻像素恐怖重製版</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
+        body {
+            margin: 0; padding: 0; background-color: #030306; color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100vw; height: 100vh; overflow: hidden; position: fixed;
+        }
+
+        #fullscreen-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 3, 6, 0.98); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 20px; transition: opacity 0.4s ease;
+        }
+        #fullscreen-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .btn-enter {
+            background: #ff3838; color: #ffffff; border: none; padding: 16px 38px;
+            font-size: 20px; font-weight: bold; border-radius: 35px; cursor: pointer;
+            box-shadow: 0 0 25px rgba(255, 56, 56, 0.6); margin-top: 25px;
+            animation: pulse-btn 1.5s infinite;
+        }
+        @keyframes pulse-btn {
+            0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 56, 56, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 56, 56, 0.9); }
+            100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 56, 56, 0.5); }
+        }
+
+        #ui-header {
+            width: 98vw; max-width: 960px; display: flex; justify-content: space-between; align-items: center;
+            background: #0d0d15; padding: 10px 18px; border-radius: 10px; margin-bottom: 6px;
+            border: 1px solid #ff383833; font-size: 13px; font-weight: bold; z-index: 10;
+        }
+        .status-group { display: flex; align-items: center; gap: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff3838; display: inline-block; }
+        .dot.connected { background: #2ed573; box-shadow: 0 0 10px #2ed573; }
+        
+        #canvas-container {
+            width: 98vw; max-width: 960px; aspect-ratio: 16 / 9;
+            background: #08080c; border: 2px solid #222233; border-radius: 10px;
+            overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+        }
+        
+        canvas {
+            width: 100%; height: 100%; display: block;
+            image-rendering: pixelated;
+        }
+
+        #footer-hint {
+            width: 98vw; max-width: 960px; font-size: 11px; color: #777790;
+            margin-top: 6px; text-align: center; line-height: 1.3; z-index: 10;
+        }
+    </style>
 </head>
 <body>
-​<div id="fullscreen-overlay">
-<div class="title-glitch">《末路兼職》</div>
-<p style="color: #00d2d3; font-size: 14px; margin-bottom: 18px;">- 128-bit 心理恐怖與精緻超商場景版 -</p>
-<div style="background: #0b0b12; border: 1px solid #3d1466; padding: 18px; border-radius: 10px; max-width: 520px; text-align: left; font-size: 12px; color: #a4b0be; line-height: 1.7;">
-🌙 <b style="color:#ff4757;">深夜大夜班守則：</b>
 
-• <b>場景升級</b>：128-bit 精緻超商內景（冷飲櫃、零食架、櫃檯收銀機與恐怖光影）。
+    <div id="fullscreen-overlay">
+        <h1 style="color: #ff3838; font-family: monospace; letter-spacing: 3px; margin-bottom: 5px;">《末路兼職》</h1>
+        <p style="color: #00d2d3; font-size: 14px; font-family: monospace; margin-bottom: 20px;">- 128-bit 精緻像素恐怖重製版 -</p>
+        <p style="color: #a4b0be; font-size: 13px; max-width: 480px; line-height: 1.6;">
+            已修正所有程式排版與渲染錯位。超商內景全面升級為 128-bit 高細緻像素藝術，支援良值手把與心跳共振。
+        </p>
+        <button class="btn-enter" onclick="enterFullscreenGame()">💀 進入 128-bit 恐怖超商</button>
+    </div>
 
-• <b>良值手把與鍵盤</b>：左搖桿/左右鍵移動 ｜ A鍵/空白鍵互動 ｜ X鍵倉庫躲藏（LT/RT 調節呼吸）。
+    <div id="ui-header">
+        <div class="status-group">
+            <span id="status-dot" class="dot"></span>
+            <span id="status-text">良值手把等待連線...</span>
+        </div>
+        <div class="status-group">
+            <span>🧠 SAN 值: <span id="san-val" style="color:#ff3838;">100</span> / 100</span>
+            <button onclick="enterFullscreenGame()" style="background:#1a1a26; color:#fff; border:1px solid #444; padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; margin-left: 10px;">全螢幕</button>
+        </div>
+    </div>
 
-• <b>心理恐怖</b>：當 SAN 值下降時，超商日光燈將開始瘋狂閃爍，黑暗中會浮現駭人異象。
-</div>
-<button class="btn-enter" onclick="enterFullscreenGame()">💀 簽到打卡 · 進入恐怖夜班</button>
-</div>
-​<div id="ui-header">
-<div class="status-group">
-<span id="status-dot" class="dot"></span>
-<span id="status-text">手把等待連線...</span>
-</div>
-<div class="status-group">
-<span>當前任務：<span id="task-text" style="color: #00d2d3;">前往大門打卡</span></span>
-</div>
-<div class="status-group">
-<span>🧠 SAN: <span id="san-val" style="color:#ff4757;">100</span> / 100</span>
-<div id="san-bar-container"><div id="san-bar-fill"></div></div>
-<button onclick="toggleAudioMute()" id="mute-btn" style="background:#161624; color:#fff; border:1px solid #444; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer; margin-left:8px;">🔊 音效開啟</button>
-</div>
-</div>
-​<div id="canvas-container">
-<canvas id="gameCanvas" width="960" height="540"></canvas>
-</div>
-​<div id="footer-hint">
-🎮 128-bit 像素操作：左搖桿/AD走位 ｜ A 鍵互動（打卡/收銀/補貨） ｜ X 鍵倉庫躲藏（LT/RT 呼吸調節）
-</div>
-​<script>
+    <div id="canvas-container">
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
+    </div>
+
+    <div id="footer-hint">
+        🎮 128-bit 操作指南：左搖桿移動 ｜ A 鍵互動（打卡/收銀/補貨） ｜ X 鍵倉庫躲藏（LT/RT 呼吸調節）
+    </div>
+
+<script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-​const statusDot = document.getElementById('status-dot');
+
+const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const sanValSpan = document.getElementById('san-val');
-const sanBarFill = document.getElementById('san-bar-fill');
-const taskText = document.getElementById('task-text');
 const overlay = document.getElementById('fullscreen-overlay');
-const muteBtn = document.getElementById('mute-btn');
-​let activeGamepadIndex = null;
+
+let activeGamepadIndex = null;
 const DEADZONE = 0.15;
 let heartbeatTimer = 0;
-let isAudioMuted = false;
+
+// Web Audio 恐怖音效合成器
 let audioCtx = null;
-​// Web Audio API 沉浸聲效合成器
 function initAudio() {
-if (!audioCtx) {
-audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
 }
-if (audioCtx.state === 'suspended') {
-audioCtx.resume();
+function playBeep(freq = 580, duration = 0.08) {
+    if (!audioCtx) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
 }
+
+function enterFullscreenGame() {
+    initAudio();
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) { elem.requestFullscreen().catch(() => {}); }
+    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+    }
+    overlay.classList.add('hidden');
+    if (!gameState.story.active && gameState.story.queue.length > 0) {
+        showNextStory();
+    }
 }
-​function toggleAudioMute() {
-isAudioMuted = !isAudioMuted;
-muteBtn.innerText = isAudioMuted ? "🔇 靜音" : "🔊 音效開啟";
-}
-​function playSynthBeep(freq, type, duration, vol = 0.1) {
-if (isAudioMuted || !audioCtx) return;
-try {
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = type;
-osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime + duration);
-} catch (e) {}
-}
-​function playHeartbeatSound(isHighSan) {
-if (isAudioMuted || !audioCtx) return;
-try {
-const now = audioCtx.currentTime;
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = 'sine';
-osc.frequency.setValueAtTime(50, now);
-osc.frequency.exponentialRampToValueAtTime(25, now + 0.15);
-gain.gain.setValueAtTime(isHighSan ? 0.18 : 0.45, now);
-gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start(now);
-osc.stop(now + 0.18);
-​setTimeout(() => {
-if (isAudioMuted || !audioCtx) return;
-const now2 = audioCtx.currentTime;
-const osc2 = audioCtx.createOscillator();
-const gain2 = audioCtx.createGain();
-osc2.type = 'sine';
-osc2.frequency.setValueAtTime(40, now2);
-osc2.frequency.exponentialRampToValueAtTime(20, now2 + 0.18);
-gain2.gain.setValueAtTime(isHighSan ? 0.12 : 0.38, now2);
-gain2.gain.exponentialRampToValueAtTime(0.001, now2 + 0.2);
-osc2.connect(gain2);
-gain2.connect(audioCtx.destination);
-osc2.start(now2);
-osc2.stop(now2 + 0.2);
-}, 150);
-} catch (e) {}
-}
-​function playFootstepSound() {
-if (isAudioMuted || !audioCtx) return;
-playSynthBeep(100 + Math.random() * 50, 'triangle', 0.04, 0.025);
-}
-​function playGlitchNoise() {
-if (isAudioMuted || !audioCtx) return;
-playSynthBeep(70 + Math.random() * 400, 'sawtooth', 0.15, 0.25);
-}
-​function enterFullscreenGame() {
-initAudio();
-const elem = document.documentElement;
-if (elem.requestFullscreen) { elem.requestFullscreen().catch(() => {}); }
-else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
-if (screen.orientation && screen.orientation.lock) {
-screen.orientation.lock('landscape').catch(() => {});
-}
-overlay.classList.add('hidden');
-if (!gameState.story.active && gameState.story.queue.length > 0) {
-showNextStory();
-}
-}
-​const gameState = {
-stage_id: "stage_01_convenience_store",
-current_task_idx: 0,
-tasks: [
-"前往大門打卡鐘簽到",
-"前往商品貨架補充熱食",
-"前往收銀台為詭異顧客結帳",
-"躲入倉庫避開異象追逐",
-"撐過大夜班直到天明"
-],
-player: {
-move_speed: 195,
-san_current: 100,
-san_max: 100,
-state: "IDLE",
-x: 120,
-y: 410,
-width: 46,
-height: 74,
-facing: 1,
-animFrame: 0,
-animTimer: 0,
-footstepTimer: 0
-},
-san_system: { current_tier: 0 },
-hiding_mechanic: {
-breathe_current: 50.0,
-base_decay_rate: 6.5,
-lt_gain: 15.0,
-rt_loss: 15.0,
-safe_zone: { min: 35.0, max: 65.0 },
-overload_timer_sec: 0.0,
-overload_threshold_sec: 1.5,
-penalty_san: 25
-},
-nodes: [
-{ id: "node_entrance_gate", x: 90, width: 80, action: "ACTION_CLOCK_OUT", btn: "A", name: "大門打卡鐘", task_req: 0 },
-{ id: "node_shelf_area", x: 450, width: 140, action: "ACTION_RESTOCK", btn: "A", name: "商品貨架", task_req: 1 },
-{ id: "node_cash_register", x: 750, width: 110, action: "ACTION_CHECKOUT_QTE", btn: "A", name: "收銀台", task_req: 2 },
-{ id: "node_warehouse_door", x: 1080, width: 90, action: "ACTION_HIDE_TOGGLE", btn: "X", name: "倉庫鐵門(躲藏)", task_req: 3 }
-],
-qte: { active: false, timer: 0, duration: 1.5, success: false },
-story: {
-active: false,
-speaker: "",
-text: "",
-queue: [
-{ speaker: "主角（大夜班兼職）", text: "「今晚的便利商店空氣中瀰漫著濃烈的鐵鏽與消毒水味... 按照班表，先到大門打卡。」" },
-{ speaker: "系統提示", text: "【大夜班指令】：請操作搖桿移動至大門打卡鐘，按下 A 鍵辦理簽到。注意維持理智值！" }
-]
-},
-gameOver: false,
-cameraX: 0,
-worldWidth: 1200,
-flashRed: 0,
-flickerLight: 1.0,
-anomalyEntity: { x: 750, active: false, opacity: 0 }
+
+const gameState = {
+    stage_id: "stage_01_convenience_store",
+    player: {
+        move_speed: 180,
+        san_current: 100,
+        san_max: 100,
+        state: "IDLE",
+        x: 100,
+        y: 420,
+        width: 52,
+        height: 72,
+        facing: 1,
+        animFrame: 0,
+        animTimer: 0
+    },
+    san_system: { current_tier: 0 },
+    hiding_mechanic: {
+        breathe_current: 50.0,
+        base_decay_rate: 6.0,
+        lt_gain: 15.0,
+        rt_loss: 15.0,
+        safe_zone: { min: 35.0, max: 65.0 },
+        overload_timer_sec: 0.0,
+        overload_threshold_sec: 1.5,
+        penalty_san: 30
+    },
+    nodes: [
+        { id: "node_entrance_gate", x: 60, width: 80, action: "ACTION_CLOCK_OUT", btn: "A", name: "大門打卡" },
+        { id: "node_cash_register", x: 280, width: 100, action: "ACTION_CHECKOUT_QTE", btn: "A", name: "收銀台" },
+        { id: "node_shelf_area", x: 580, width: 140, action: "ACTION_RESTOCK", btn: "A", name: "商品貨架" },
+        { id: "node_warehouse_door", x: 880, width: 90, action: "ACTION_HIDE_TOGGLE", btn: "X", name: "倉庫門(躲藏)" }
+    ],
+    qte: { active: false, timer: 0, duration: 1.5, success: false },
+    story: {
+        active: false,
+        speaker: "",
+        text: "",
+        queue: [
+            { speaker: "主角（大夜班兼職）", text: "「128-bit 像素超商的燈光在閃爍... 門外似乎有甚麼東西正貼在玻璃上冷笑。」" },
+            { speaker: "守則提示", text: "【大夜班生存守則】：請隨時注意 SAN 值。低於 70 將引發心跳共振，低於 30 世界會徹底異變。" }
+        ]
+    },
+    gameOver: false,
+    cameraX: 0,
+    worldWidth: 1200,
+    flashRed: 0
 };
-​function updateTaskHUD() {
-taskText.innerText = gameState.tasks[gameState.current_task_idx] || "守護便利商店";
+
+function showNextStory() {
+    if (gameState.story.queue.length > 0) {
+        const next = gameState.story.queue.shift();
+        gameState.story.active = true;
+        gameState.story.speaker = next.speaker;
+        gameState.story.text = next.text;
+        playBeep(700, 0.05);
+    } else {
+        gameState.story.active = false;
+    }
 }
-​function showNextStory() {
-if (gameState.story.queue.length > 0) {
-const next = gameState.story.queue.shift();
-gameState.story.active = true;
-gameState.story.speaker = next.speaker;
-gameState.story.text = next.text;
-playSynthBeep(650, 'sine', 0.07, 0.08);
-} else {
-gameState.story.active = false;
-}
-}
-​const keys = { left: false, right: false };
+
+const keys = { left: false, right: false };
 window.addEventListener('keydown', (e) => {
-initAudio();
-if (gameState.story.active) {
-if (e.key === ' ' || e.key === 'Enter' || e.key === 'a' || e.key === 'A') { showNextStory(); }
-return;
-}
-if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
-if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
-if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); triggerAction("A"); }
-if (e.key === 'x' || e.key === 'X') { triggerAction("X"); }
+    if (gameState.story.active) {
+        if (e.key === ' ' || e.key === 'Enter' || e.key === 'a') { showNextStory(); }
+        return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); triggerAction("A"); }
+    if (e.key === 'x' || e.key === 'X') { triggerAction("X"); }
 });
 window.addEventListener('keyup', (e) => {
-if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
-if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
 });
-​window.addEventListener("gamepadconnected", (e) => {
-activeGamepadIndex = e.gamepad.index;
-statusDot.classList.add('connected');
-statusText.innerText = 已連線: ${e.gamepad.id.slice(0, 16)};
-playSynthBeep(880, 'sine', 0.1, 0.1);
+
+window.addEventListener("gamepadconnected", (e) => {
+    activeGamepadIndex = e.gamepad.index;
+    statusDot.classList.add('connected');
+    statusText.innerText = `已連線: ${e.gamepad.id.slice(0, 16)}`;
 });
 window.addEventListener("gamepaddisconnected", (e) => {
-if (activeGamepadIndex === e.gamepad.index) {
-activeGamepadIndex = null;
-statusDot.classList.remove('connected');
-statusText.innerText = "手把已斷線";
-}
+    if (activeGamepadIndex === e.gamepad.index) {
+        activeGamepadIndex = null;
+        statusDot.classList.remove('connected');
+        statusText.innerText = "手把已斷線";
+    }
 });
-​let lastTime = performance.now();
+
+let lastTime = performance.now();
 let prevBtnA = false;
 let prevBtnX = false;
-​function applyDeadzone(val) { return Math.abs(val) < DEADZONE ? 0 : val; }
-​function triggerRumble(duration, weak, strong) {
-const gps = navigator.getGamepads ? navigator.getGamepads() : [];
-const gp = gps[activeGamepadIndex];
-if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {
-gp.vibrationActuator.playEffect("dual-rumble", {
-startDelay: 0, duration: duration, weakMagnitude: weak, strongMagnitude: strong
-}).catch(() => {});
+
+function applyDeadzone(val) { return Math.abs(val) < DEADZONE ? 0 : val; }
+
+function triggerRumble(duration, weak, strong) {
+    const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = gps[activeGamepadIndex];
+    if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {
+        gp.vibrationActuator.playEffect("dual-rumble", {
+            startDelay: 0, duration: duration, weakMagnitude: weak, strongMagnitude: strong
+        }).catch(() => {});
+    }
 }
+
+function pollGamepad(dt) {
+    const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (let i = 0; i < gps.length; i++) { if (gps[i]) { activeGamepadIndex = i; break; } }
+    const gp = gps[activeGamepadIndex];
+    if (!gp) {
+        if (!gameState.story.active) {
+            let moveDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+            updatePlayerMovement(moveDir, dt);
+        }
+        return;
+    }
+
+    if (!statusDot.classList.contains('connected')) {
+        statusDot.classList.add('connected');
+        statusText.innerText = `已連線: ${gp.id.slice(0, 16)}`;
+    }
+
+    const btnA = gp.buttons[1]?.pressed || false;
+    const btnX = gp.buttons[3]?.pressed || false;
+
+    if (gameState.story.active) {
+        if (btnA && !prevBtnA) { showNextStory(); }
+        prevBtnA = btnA;
+        return;
+    }
+
+    const lx = applyDeadzone(gp.axes[0] || 0);
+    const dpadLeft = gp.buttons[14]?.pressed || false;
+    const dpadRight = gp.buttons[15]?.pressed || false;
+    let moveDir = lx;
+    if (dpadLeft) moveDir = -1;
+    if (dpadRight) moveDir = 1;
+
+    updatePlayerMovement(moveDir, dt);
+
+    if (btnA && !prevBtnA) { triggerAction("A"); }
+    prevBtnA = btnA;
+
+    if (btnX && !prevBtnX) { triggerAction("X"); }
+    prevBtnX = btnX;
+
+    if (gameState.player.state === "HIDING") {
+        updateBreathing(dt, gp);
+    }
 }
-​function pollGamepad(dt) {
-const gps = navigator.getGamepads ? navigator.getGamepads() : [];
-for (let i = 0; i < gps.length; i++) { if (gps[i]) { activeGamepadIndex = i; break; } }
-const gp = gps[activeGamepadIndex];
-if (!gp) {
-if (!gameState.story.active) {
-let moveDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-updatePlayerMovement(moveDir, dt);
+
+function updatePlayerMovement(dir, dt) {
+    const p = gameState.player;
+    if (gameState.qte.active || p.state === "HIDING" || gameState.gameOver) return;
+
+    if (Math.abs(dir) > 0.05) {
+        p.state = "WALK";
+        p.x += dir * p.move_speed * dt;
+        p.facing = dir > 0 ? 1 : -1;
+        p.animTimer += dt * 10;
+        if (p.animTimer >= 0.15) {
+            p.animFrame = (p.animFrame + 1) % 4;
+            p.animTimer = 0;
+        }
+    } else {
+        p.state = "IDLE";
+    }
+    p.x = Math.max(30, Math.min(gameState.worldWidth - 30, p.x));
 }
-return;
+
+function getActiveNode() {
+    const p = gameState.player;
+    for (let node of gameState.nodes) {
+        if (p.x >= node.x - node.width/2 && p.x <= node.x + node.width/2) { return node; }
+    }
+    return null;
 }
-​if (!statusDot.classList.contains('connected')) {
-statusDot.classList.add('connected');
-statusText.innerText = 已連線: ${gp.id.slice(0, 16)};
+
+function triggerAction(btnName) {
+    const p = gameState.player;
+    const node = getActiveNode();
+
+    if (p.state === "HIDING") {
+        if (btnName === "X") {
+            p.state = "IDLE";
+            playBeep(400, 0.1);
+            triggerRumble(100, 0.2, 0.2);
+        }
+        return;
+    }
+
+    if (!node) return;
+
+    if (gameState.qte.active) {
+        if (node.action === "ACTION_CHECKOUT_QTE" && btnName === node.btn) {
+            gameState.qte.success = true;
+            playBeep(880, 0.1);
+            triggerRumble(150, 0.8, 0.2);
+            endQTE(true);
+        }
+        return;
+    }
+
+    if (node.btn === btnName) {
+        if (node.action === "ACTION_CHECKOUT_QTE") {
+            startQTE();
+        } else if (node.action === "ACTION_HIDE_TOGGLE") {
+            p.state = "HIDING";
+            gameState.hiding_mechanic.breathe_current = 50.0;
+            playBeep(250, 0.15);
+            triggerRumble(200, 0.4, 0.6);
+        } else if (node.action === "ACTION_CLOCK_OUT") {
+            gameState.story.queue.push({ speaker: "系統警告", text: "【大門卡死】：打卡鐘螢幕滲出黑色黏液。外頭的影子對你笑了笑。" });
+            showNextStory();
+            playBeep(300, 0.2);
+            triggerRumble(200, 0.4, 0.4);
+        } else if (node.action === "ACTION_RESTOCK") {
+            applySanGain(15);
+            gameState.story.queue.push({ speaker: "主角", text: "「將泡麵與罐頭排整齊... 看著工整的貨架，恐懼稍微被理智壓制住了 (+15 SAN)。」" });
+            showNextStory();
+            playBeep(650, 0.1);
+            triggerRumble(150, 0.1, 0.6);
+        }
+    }
 }
-​const btnA = gp.buttons[1]?.pressed || false;
-const btnX = gp.buttons[3]?.pressed || false;
-​if (gameState.story.active) {
-if (btnA && !prevBtnA) { showNextStory(); }
-prevBtnA = btnA;
-return;
+
+function startQTE() {
+    gameState.qte.active = true;
+    gameState.qte.timer = gameState.qte.duration;
+    gameState.qte.success = false;
+    playBeep(520, 0.08);
+    triggerRumble(100, 0.2, 0.0);
 }
-​const lx = applyDeadzone(gp.axes[0] || 0);
-const dpadLeft = gp.buttons[14]?.pressed || false;
-const dpadRight = gp.buttons[15]?.pressed || false;
-let moveDir = lx;
-if (dpadLeft) moveDir = -1;
-if (dpadRight) moveDir = 1;
-​updatePlayerMovement(moveDir, dt);
-​if (btnA && !prevBtnA) { triggerAction("A"); }
-prevBtnA = btnA;
-​if (btnX && !prevBtnX) { triggerAction("X"); }
-prevBtnX = btnX;
-​if (gameState.player.state === "HIDING") {
-updateBreathing(dt, gp);
+
+function endQTE(success) {
+    gameState.qte.active = false;
+    if (!success) {
+        applySanDamage(20);
+        gameState.flashRed = 0.7;
+        playBeep(180, 0.3);
+        triggerRumble(600, 1.0, 1.0);
+    } else {
+        gameState.story.queue.push({ speaker: "系統提示", text: "【掃碼完成】：客人的臉在掃描器藍光下顯得無比扭曲：「謝謝妳，小姐...」" });
+        showNextStory();
+    }
 }
+
+function applySanDamage(amount) {
+    gameState.player.san_current = Math.max(0, gameState.player.san_current - amount);
+    sanValSpan.innerText = gameState.player.san_current;
+    if (gameState.player.san_current <= 0) {
+        gameState.gameOver = true;
+        playBeep(120, 0.8);
+        triggerRumble(1000, 1.0, 1.0);
+    }
 }
-​function updatePlayerMovement(dir, dt) {
-const p = gameState.player;
-if (gameState.qte.active || p.state === "HIDING" || gameState.gameOver) return;
-​if (Math.abs(dir) > 0.05) {
-p.state = "WALK";
-p.x += dir * p.move_speed * dt;
-p.facing = dir > 0 ? 1 : -1;
-p.animTimer += dt * 10;
-if (p.animTimer >= 0.12) {
-p.animFrame = (p.animFrame + 1) % 4;
-p.animTimer = 0;
+
+function applySanGain(amount) {
+    gameState.player.san_current = Math.min(gameState.player.san_max, gameState.player.san_current + amount);
+    sanValSpan.innerText = gameState.player.san_current;
 }
-​p.footstepTimer += dt;
-if (p.footstepTimer >= 0.3) {
-playFootstepSound();
-p.footstepTimer = 0;
+
+function updateBreathing(dt, gamepad) {
+    const h = gameState.hiding_mechanic;
+    h.breathe_current -= h.base_decay_rate * dt;
+
+    const ltValue = gamepad.buttons[6] ? gamepad.buttons[6].value : 0;
+    const rtValue = gamepad.buttons[7] ? gamepad.buttons[7].value : 0;
+
+    h.breathe_current += ltValue * h.lt_gain * dt * 3;
+    h.breathe_current -= rtValue * h.rt_loss * dt * 3;
+    h.breathe_current = Math.max(0, Math.min(100, h.breathe_current));
+
+    const inSafeZone = h.breathe_current >= h.safe_zone.min && h.breathe_current <= h.safe_zone.max;
+    if (!inSafeZone) {
+        h.overload_timer_sec += dt;
+        if (h.overload_timer_sec >= h.overload_threshold_sec) {
+            applySanDamage(h.penalty_san);
+            playBeep(150, 0.2);
+            triggerRumble(500, 0.9, 0.9);
+            gameState.player.state = "IDLE";
+            h.overload_timer_sec = 0.0;
+        }
+    } else {
+        h.overload_timer_sec = Math.max(0, h.overload_timer_sec - dt * 2);
+    }
 }
-} else {
-p.state = "IDLE";
-p.animTimer += dt * 5;
-if (p.animTimer >= 0.25) {
-p.animFrame = (p.animFrame + 1) % 4;
-p.animTimer = 0;
+
+// 128-bit 高精度像素超商場景渲染引擎
+function renderStoreInterior(ctx) {
+    // 地板磁磚與反光
+    ctx.fillStyle = "#12121c";
+    ctx.fillRect(0, 0, gameState.worldWidth, 540);
+    
+    ctx.fillStyle = "#1a1a26";
+    for (let x = 0; x < gameState.worldWidth; x += 60) {
+        ctx.fillRect(x, 440, 30, 100);
+    }
+
+    // 天花板與螢光燈條
+    ctx.fillStyle = "#0d0d14";
+    ctx.fillRect(0, 0, gameState.worldWidth, 80);
+    
+    for (let x = 150; x < gameState.worldWidth; x += 300) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x, 70, 120, 8);
+        // 燈光暈影
+        const grad = ctx.createRadialGradient(x + 60, 74, 10, x + 60, 74, 180);
+        grad.addColorStop(0, "rgba(255, 255, 220, 0.12)");
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(x - 100, 78, 320, 370);
+    }
+
+    // 1. 冷藏飲料櫃 (左側背景)
+    ctx.fillStyle = "#1e1e2f";
+    ctx.fillRect(150, 120, 220, 320);
+    ctx.strokeStyle = "#33334d";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(150, 120, 220, 320);
+    // 飲料櫃玻璃門與內部商品色塊
+    for(let gx = 170; gx < 350; gx += 60) {
+        ctx.fillStyle = "rgba(100, 200, 255, 0.15)";
+        ctx.fillRect(gx, 140, 50, 280);
+        ctx.fillStyle = "#ff4757"; ctx.fillRect(gx + 10, 160, 15, 30);
+        ctx.fillStyle = "#2ed573"; ctx.fillRect(gx + 10, 220, 15, 30);
+        ctx.fillStyle = "#ffa502"; ctx.fillRect(gx + 10, 280, 15, 30);
+    }
+
+    // 2. 中央零食/日用品貨架
+    ctx.fillStyle = "#262638";
+    ctx.fillRect(520, 160, 260, 280);
+    ctx.strokeStyle = "#3f3f5f";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(520, 160, 260, 280);
+    // 貨架層板
+    for(let sy = 220; sy < 420; sy += 70) {
+        ctx.fillStyle = "#15151f";
+        ctx.fillRect(530, sy, 240, 10);
+        // 商品排列
+        for(let itemX = 545; itemX < 750; itemX += 35) {
+            ctx.fillStyle = ["#ff6b81", "#70a1ff", "#ffd32a", "#ff7f50"][Math.floor(itemX/35)%4];
+            ctx.fillRect(itemX, sy - 25, 22, 25);
+        }
+    }
+
+    // 3. 窗外夜景與恐怖血手印
+    ctx.fillStyle = "#080810";
+    ctx.fillRect(30, 140, 90, 160);
+    ctx.strokeStyle = "#444455"; ctx.lineWidth = 4;
+    ctx.strokeRect(30, 140, 90, 160);
+    // 玻璃血手印
+    ctx.fillStyle = "rgba(255, 50, 50, 0.4)";
+    ctx.fillRect(55, 180, 12, 25);
+    ctx.fillRect(72, 175, 8, 20);
 }
-}
-p.x = Math.max(40, Math.min(gameState.worldWidth - 40, p.x));
-}
-​function getActiveNode() {
-const p = gameState.player;
-for (let node of gameState.nodes) {
-if (p.x >= node.x - node.width/2 && p.x <= node.x + node.width/2) { return node; }
-}
-return null;
-}
-​function triggerAction(btnName) {
-const p = gameState.player;
-const node = getActiveNode();
-​if (p.state === "HIDING") {
-if (btnName === "X") {
-p.state = "IDLE";
-playSynthBeep(320, 'triangle', 0.1, 0.1);
-triggerRumble(100, 0.2, 0.2);
-if (gameState.current_task_idx === 3) {
-gameState.current_task_idx = 4;
-updateTaskHUD();
-gameState.story.queue.push({ speaker: "主角", text: "「外面的腳步聲消失了... 天色漸漸泛白，我終於撐過這個地獄班了。」" });
-showNextStory();
-}
-}
-return;
-}
-​if (!node) return;
-​if (gameState.qte.active) {
-if (node.action === "ACTION_CHECKOUT_QTE" && btnName === node.btn) {
-gameState.qte.success = true;
-playSynthBeep(1250, 'sine', 0.1, 0.2);
-triggerRumble(150, 0.8, 0.2);
-endQTE(true);
-}
-return;
-}
-​if (node.btn === btnName) {
-if (node.action === "ACTION_CLOCK_OUT") {
-playSynthBeep(850, 'square', 0.15, 0.1);
-if (gameState.current_task_idx === 0) {
-gameState.current_task_idx = 1;
-updateTaskHUD();
-}
-gameState.story.queue.push({ speaker: "系統廣播", text: "【大門已打卡】：大門自動上鎖。玻璃窗外浮現無數張模糊的像素臉孔... 請前往貨架補貨。」" });
-showNextStory();
-triggerRumble(200, 0.4, 0.4);
-} else if (node.action === "ACTION_RESTOCK") {
-playSynthBeep(550, 'sine', 0.15, 0.1);
-applySanGain(15);
-if (gameState.current_task_idx === 1) {
-gameState.current_task_idx = 2;
-updateTaskHUD();
-}
-gameState.story.queue.push({ speaker: "主角", text: "「將冷飲櫃與微波便當排整齊了 (+15 SAN)。但收銀台前突然站著一位沒有面孔的怪客...」" });
-showNextStory();
-gameState.anomalyEntity.active = true;
-triggerRumble(150, 0.1, 0.6);
-} else if (node.action === "ACTION_CHECKOUT_QTE") {
-startQTE();
-} else if (node.action === "ACTION_HIDE_TOGGLE") {
-p.state = "HIDING";
-gameState.hiding_mechanic.breathe_current = 50.0;
-playSynthBeep(240, 'sawtooth', 0.15, 0.15);
-triggerRumble(200, 0.4, 0.6);
-if (gameState.current_task_idx === 3) {
-gameState.story.queue.push({ speaker: "主角", text: "「躲進堆滿紙箱的倉庫了... 透過門縫盯著外面。用 LT / RT 控制心跳與呼吸！」" });
-showNextStory();
-}
-}
-}
-}
-​function startQTE() {
-gameState.qte.active = true;
-gameState.qte.timer = gameState.qte.duration;
-gameState.qte.success = false;
-playGlitchNoise();
-triggerRumble(100, 0.2, 0.0);
-}
-​function endQTE(success) {
-gameState.qte.active = false;
-if (!success) {
-applySanDamage(25);
-gameState.flashRed = 0.7;
-playGlitchNoise();
-triggerRumble(600, 1.0, 1.0);
-gameState.story.queue.push({ speaker: "系統警告", text: "【掃碼崩潰】：條碼掃描失敗，無面顧客發出刺耳尖叫！SAN 值暴跌！" });
-showNextStory();
-} else {
-if (gameState.current_task_idx === 2) {
-gameState.current_task_idx = 3;
-updateTaskHUD();
-}
-gameState.anomalyEntity.active = false;
-gameState.story.queue.push({ speaker: "系統提示", text: "【結帳完成】：嗶！怪客緩緩轉身步入黑暗走廊... 快跟隨並躲進倉庫裡！" });
-showNextStory();
-}
-}
-​function applySanDamage(amount) {
-gameState.player.san_current = Math.max(0, gameState.player.san_current - amount);
-sanValSpan.innerText = gameState.player.san_current;
-sanBarFill.style.width = ${gameState.player.san_current}%;
-if (gameState.player.san_current <= 0) {
-gameState.gameOver = true;
-playGlitchNoise();
-triggerRumble(1000, 1.0, 1.0);
-}
-}
-​function applySanGain(amount) {
-gameState.player.san_current = Math.min(gameState.player.san_max, gameState.player.san_current + amount);
-sanValSpan.innerText = gameState.player.san_current;
-sanBarFill.style.width = ${gameState.player.san_current}%;
-}
-​function updateBreathing(dt, gamepad) {
-const h = gameState.hiding_mechanic;
-h.breathe_current -= h.base_decay_rate * dt;
-​let ltValue = 0, rtValue = 0;
-if (gamepad) {
-ltValue = gamepad.buttons[6] ? gamepad.buttons[6].value : 0;
-rtValue = gamepad.buttons[7] ? gamepad.buttons[7].value : 0;
-}
-​if (keys.left) ltValue = 0.8;
-if (keys.right) rtValue = 0.8;
-​h.breathe_current += ltValue * h.lt_gain * dt * 3.5;
-h.breathe_current -= rtValue * h.rt_loss * dt * 3.5;
-h.breathe_current = Math.max(0, Math.min(100, h.breathe_current));
-​const inSafeZone = h.breathe_current >= h.safe_zone.min && h.breathe_current <= h.safe_zone.max;
-if (!inSafeZone) {
-h.overload_timer_sec += dt;
-if (h.overload_timer_sec >= h.overload_threshold_sec) {
-applySanDamage(h.penalty_san);
-playGlitchNoise();
-triggerRumble(500, 0.9, 0.9);
-gameState.player.state = "IDLE";
-h.overload_timer_sec = 0.0;
-gameState.story.queue.push({ speaker: "心靈重創", text: "【呼吸失控】：急促的喘息聲驚動了門外的異象！" });
-showNextStory();
-}
-} else {
-h.overload_timer_sec = Math.max(0, h.overload_timer_sec - dt * 2);
-}
-}
-​// 128-bit 精緻超商場景渲染引擎 (超擬真像素內景)
-function draw128BitStoreBackground(ctx, width, height) {
-// 牆面深色背景
-ctx.fillStyle = "#080910";
-ctx.fillRect(0, 0, width, height);
-​// 精緻 128-bit 磁磚地板
-const tileSize = 32;
-for (let x = 0; x < width; x += tileSize) {
-for (let y = 380; y < height; y += tileSize) {
-ctx.fillStyle = ((x / tileSize + y / tileSize) % 2 === 0) ? "#12131c" : "#1a1b26";
-ctx.fillRect(x, y, tileSize, tileSize);
-ctx.strokeStyle = "#06070b";
-ctx.lineWidth = 1;
-ctx.strokeRect(x, y, tileSize, tileSize);
-}
-}
-​// 天花板鐵架與日光燈閃爍
-gameState.flickerLight = 0.85 + Math.sin(Date.now() / 150) * 0.15 * (gameState.player.san_current < 50 ? 2.5 : 1.0);
-ctx.fillStyle = rgba(220, 230, 255, ${gameState.flickerLight});
-ctx.fillRect(80, 15, 220, 12);
-ctx.fillRect(460, 15, 220, 12);
-ctx.fillRect(840, 15, 220, 12);
-​// 燈管光暈投射
-ctx.fillStyle = rgba(200, 220, 255, ${0.04 * gameState.flickerLight});
-ctx.fillRect(50, 25, 280, 150);
-ctx.fillRect(430, 25, 280, 150);
-ctx.fillRect(810, 25, 280, 150);
-​// 1. 大門打卡區 (X: 90)
-ctx.fillStyle = "#111218";
-ctx.fillRect(40, 140, 100, 240);
-ctx.strokeStyle = "#252636";
-ctx.lineWidth = 3;
-ctx.strokeRect(40, 140, 100, 240);
-// 玻璃自動門標誌
-ctx.fillStyle = "rgba(0, 210, 211, 0.08)";
-ctx.fillRect(50, 150, 80, 220);
-// 打卡鐘機台
-ctx.fillStyle = "#2c2d3c";
-ctx.fillRect(75, 220, 30, 45);
-ctx.fillStyle = "#ff4757";
-ctx.fillRect(85, 230, 10, 6);
-​// 2. 商品貨架區 (X: 450)
-ctx.fillStyle = "#181a26";
-ctx.fillRect(360, 120, 180, 260);
-ctx.strokeStyle = "#2e3147";
-ctx.lineWidth = 4;
-ctx.strokeRect(360, 120, 180, 260);
-// 貨架層板與商品細節
-for (let r = 0; r < 4; r++) {
-ctx.fillStyle = "#222536";
-ctx.fillRect(370, 140 + r * 60, 160, 8);
-// 各色商品包裝
-for (let c = 0; c < 5; c++) {
-ctx.fillStyle = (r + c) % 3 === 0 ? "#ff6b81" : ((r + c) % 2 === 0 ? "#2ed573" : "#ffa502");
-ctx.fillRect(385 + c * 28, 110 + r * 60, 20, 30);
-}
-}
-​// 3. 收銀台區 (X: 750)
-ctx.fillStyle = "#1e132c";
-ctx.fillRect(690, 220, 120, 160);
-ctx.strokeStyle = "#4834d4";
-ctx.lineWidth = 3;
-ctx.strokeRect(690, 220, 120, 160);
-// 收銀機螢幕亮光
-ctx.fillStyle = "#00d2d3";
-ctx.fillRect(730, 200, 40, 30);
-ctx.fillStyle = "#030306";
-ctx.fillRect(735, 205, 30, 20);
-​// 4. 倉庫鐵門區 (X: 1080)
-ctx.fillStyle = "#101118";
-ctx.fillRect(1030, 100, 100, 280);
-ctx.strokeStyle = "#3d1466";
-ctx.lineWidth = 4;
-ctx.strokeRect(1030, 100, 100, 280);
-// 鐵門橫條紋與警告標誌
-for (let y = 120; y < 360; y += 25) {
-ctx.fillStyle = "#1b1c28";
-ctx.fillRect(1038, y, 84, 12);
-}
-ctx.fillStyle = "#ff4757";
-ctx.fillRect(1065, 220, 30, 15);
-}
-​// 128-bit 角色精緻精靈繪製器
-function draw128BitPlayerSprite(ctx, p) {
-ctx.save();
-ctx.translate(p.x, p.y + p.height / 2);
-ctx.scale(p.facing, 1);
-​const legOffset = p.state === "WALK" ? Math.sin(Date.now() / 70) * 9 : 0;
-​// 陰影
-ctx.fillStyle = "rgba(0,0,0,0.5)";
-ctx.beginPath();
-ctx.ellipse(0, 12, 18, 6, 0, 0, Math.PI * 2);
-ctx.fill();
-​// 雙腳
-ctx.fillStyle = "#1e272e";
-ctx.fillRect(-12 + legOffset, -18, 10, 18);
-ctx.fillRect(2 - legOffset, -18, 10, 18);
-​// 軀幹 (超商制服綠背心與名牌)
-ctx.fillStyle = "#00b894";
-ctx.fillRect(-18, -56, 36, 40);
-ctx.fillStyle = "#f1f2f6";
-ctx.fillRect(-6, -56, 12, 40); // 內裡白襯衫
-ctx.fillStyle = "#ff4757"; // 員工名牌
-ctx.fillRect(-12, -42, 10, 6);
-​// 雙臂
-ctx.fillStyle = "#00b894";
-ctx.fillRect(-24, -54, 8, 30);
-ctx.fillRect(16, -54, 8, 30);
-​// 頭部與精緻髮型
-ctx.fillStyle = "#ffdd59";
-ctx.fillRect(-15, -78, 30, 24);
-ctx.fillStyle = "#2d3436"; // 黑色微亂頭髮
-ctx.fillRect(-17, -84, 34, 12);
-ctx.fillRect(p.facing > 0 ? 8 : -16, -78, 10, 16);
-​// 眼睛
-ctx.fillStyle = "#09090e";
-ctx.fillRect(p.facing > 0 ? 5 : -9, -70, 5, 7);
-​ctx.restore();
-}
-​// 128-bit 無面異變顧客實體
-function draw128BitAnomalyEntity(ctx, x, y) {
-ctx.save();
-ctx.fillStyle = "rgba(10, 3, 18, 0.95)";
-ctx.fillRect(x - 22, y - 95, 44, 95);
-​// 無面頭部（慘白無五官）
-ctx.fillStyle = "#dfe6e9";
-ctx.fillRect(x - 16, y - 115, 32, 28);
-​// 散發紫色恐怖靈光
-ctx.fillStyle = "rgba(131, 52, 206, 0.35)";
-ctx.beginPath();
-ctx.arc(x, y - 85, 18, 0, Math.PI * 2);
-ctx.fill();
-​ctx.fillStyle = "#ff4757";
-ctx.font = "bold 12px monospace";
-ctx.textAlign = "center";
-ctx.fillText("【...】", x, y - 125);
-ctx.restore();
-}
-​// SAN 值心跳共振與三階段視覺濾鏡 (Z: 110)
+
+// SAN 值三階段特效與心跳共振
 function renderSanEffects(dt, ctx) {
-const san = gameState.player.san_current;
-​if (san >= 70) gameState.san_system.current_tier = 0;
-else if (san >= 30) gameState.san_system.current_tier = 1;
-else gameState.san_system.current_tier = 2;
-​heartbeatTimer += dt;
-const heartbeatInterval = gameState.san_system.current_tier === 2 ? 0.5 : (gameState.san_system.current_tier === 1 ? 0.95 : 0);
-if (heartbeatInterval > 0 && heartbeatTimer >= heartbeatInterval) {
-heartbeatTimer = 0;
-playHeartbeatSound(gameState.san_system.current_tier === 1);
-triggerRumble(gameState.san_system.current_tier === 2 ? 200 : 110, gameState.san_system.current_tier === 2 ? 0.8 : 0.25, 0.12);
+    const san = gameState.player.san_current;
+
+    if (san >= 70) gameState.san_system.current_tier = 0;
+    else if (san >= 30) gameState.san_system.current_tier = 1;
+    else gameState.san_system.current_tier = 2;
+
+    heartbeatTimer += dt;
+    const heartbeatInterval = gameState.san_system.current_tier === 2 ? 0.55 : (gameState.san_system.current_tier === 1 ? 1.1 : 0);
+    if (heartbeatInterval > 0 && heartbeatTimer >= heartbeatInterval) {
+        heartbeatTimer = 0;
+        playBeep(gameState.san_system.current_tier === 2 ? 220 : 350, 0.05);
+        triggerRumble(gameState.san_system.current_tier === 2 ? 180 : 100, gameState.san_system.current_tier === 2 ? 0.7 : 0.2, 0.1);
+    }
+
+    // Tier 1 (30 - 69)：心跳紅光脈衝
+    if (gameState.san_system.current_tier === 1) {
+        const pulseAlpha = Math.sin(Date.now() / 500) * 0.22 + 0.22;
+        ctx.save();
+        ctx.globalAlpha = pulseAlpha;
+        ctx.fillStyle = "rgba(190, 0, 0, 0.38)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
+
+    // Tier 2 (1 - 29)：極度恐慌、CRT 掃描線與色彩剝離
+    if (gameState.san_system.current_tier === 2) {
+        ctx.save();
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+        for (let y = 0; y < canvas.height; y += 3) {
+            ctx.fillRect(0, y, canvas.width, 1);
+        }
+        ctx.restore();
+
+        if (Math.random() < 0.35) {
+            ctx.save();
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = Math.random() > 0.5 ? "rgba(255, 0, 0, 0.3)" : "rgba(0, 255, 255, 0.3)";
+            ctx.fillRect((Math.random() - 0.5) * 25, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+    }
 }
-​// Tier 1 (30 - 69)：心跳紅光脈衝
-if (gameState.san_system.current_tier === 1) {
-const pulseAlpha = Math.sin(Date.now() / 450) * 0.18 + 0.22;
-ctx.save();
-ctx.globalAlpha = pulseAlpha;
-const grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 100, canvas.width/2, canvas.height/2, 550);
-grad.addColorStop(0, "rgba(255,0,0,0)");
-grad.addColorStop(1, "rgba(210,0,0,0.5)");
-ctx.fillStyle = grad;
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-ctx.restore();
-}
-​// Tier 2 (1 - 29)：強烈 CRT 掃描線與色彩剝離 / Glitch
-if (gameState.san_system.current_tier === 2) {
-ctx.save();
-ctx.globalAlpha = 0.45;
-ctx.fillStyle = "#000000";
-for (let y = 0; y < canvas.height; y += 3) {
-ctx.fillRect(0, y, canvas.width, 1);
-}
-ctx.restore();
-​if (Math.random() < 0.3) {
-ctx.save();
-ctx.globalAlpha = 0.3;
-ctx.fillStyle = Math.random() > 0.5 ? "rgba(255, 0, 0, 0.4)" : "rgba(131, 52, 206, 0.4)";
-const glitchY = Math.random() * canvas.height;
-ctx.fillRect(0, glitchY, canvas.width, 20 + Math.random() * 25);
-ctx.restore();
-}
-}
-}
-​// 主渲染迴圈：10 層 Z-Index 精準管線
+
 function mainLoop(timestamp) {
-let dt = (timestamp - lastTime) / 1000;
-if (dt > 0.1) dt = 0.1;
-lastTime = timestamp;
-​pollGamepad(dt);
-​if (gameState.qte.active && !gameState.story.active) {
-gameState.qte.timer -= dt;
-if (gameState.qte.timer <= 0) { endQTE(false); }
+    let dt = (timestamp - lastTime) / 1000;
+    if (dt > 0.1) dt = 0.1;
+    lastTime = timestamp;
+
+    pollGamepad(dt);
+
+    if (gameState.qte.active && !gameState.story.active) {
+        gameState.qte.timer -= dt;
+        if (gameState.qte.timer <= 0) { endQTE(false); }
+    }
+
+    const targetCamX = gameState.player.x - canvas.width / 2;
+    gameState.cameraX += (targetCamX - gameState.cameraX) * 0.1;
+    gameState.cameraX = Math.max(0, Math.min(gameState.worldWidth - canvas.width, gameState.cameraX));
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState.gameOver) {
+        ctx.fillStyle = "#020205";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ff3838";
+        ctx.font = "bold 28px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("【 精神徹底崩潰 · GAME OVER 】", canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillStyle = "#8888a0";
+        ctx.font = "14px monospace";
+        ctx.fillText("理智歸零，你成為了大夜班永久的犧牲品。重新整理以再次值班。", canvas.width / 2, canvas.height / 2 + 30);
+        requestAnimationFrame(mainLoop);
+        return;
+    }
+
+    ctx.save();
+    ctx.translate(-gameState.cameraX, 0);
+
+    // 渲染 128-bit 超商背景與場景
+    renderStoreInterior(ctx);
+
+    // 渲染互動節點
+    const activeNode = getActiveNode();
+    gameState.nodes.forEach(node => {
+        const isActive = (node === activeNode && gameState.player.state !== "HIDING" && !gameState.story.active);
+        
+        ctx.fillStyle = isActive ? "#3a3a5c" : "#1e1e2d";
+        ctx.fillRect(node.x - node.width/2, 390, node.width, 90);
+        ctx.strokeStyle = isActive ? "#ff3838" : "#33334d";
+        ctx.lineWidth = isActive ? 2 : 1;
+        ctx.strokeRect(node.x - node.width/2, 390, node.width, 90);
+
+        ctx.fillStyle = "#a4b0be";
+        ctx.font = "12px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(node.name, node.x, 375);
+
+        if (isActive) {
+            ctx.fillStyle = "#ff3838";
+            ctx.beginPath();
+            ctx.arc(node.x, 320, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 13px monospace";
+            ctx.fillText(node.btn, node.x, 324);
+        }
+    });
+
+    // 渲染 128-bit 主角精靈圖 (兼職店員)
+    const p = gameState.player;
+    if (p.state !== "HIDING") {
+        ctx.save();
+        ctx.translate(p.x, p.y + p.height / 2);
+        
+        // 主角身體與工作服細節
+        ctx.fillStyle = "#2e86de";
+        ctx.fillRect(-p.width / 2, -p.height, p.width, p.height);
+        // 工作背心
+        ctx.fillStyle = "#ff4757";
+        ctx.fillRect(-p.width / 2 + 6, -p.height + 15, p.width - 12, p.height - 30);
+        // 頭部與頭髮
+        ctx.fillStyle = "#ffda79";
+        ctx.beginPath(); ctx.arc(0, -p.height - 12, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#333333";
+        ctx.fillRect(-14, -p.height - 24, 28, 10);
+        // 眼睛方向
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(p.facing > 0 ? 4 : -10, -p.height - 15, 6, 6);
+
+        ctx.restore();
+    }
+
+    ctx.restore();
+
+    // QTE 條碼 UI
+    if (gameState.qte.active && !gameState.story.active) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const cx = canvas.width / 2, cy = canvas.height / 2 - 30;
+        
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(cx - 120, cy - 45, 240, 65);
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 15px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(gameState.san_system.current_tier >= 1 ? "||||| [BLOODY ERROR] |||||" : "||| | |||| || | || |||", cx, cy - 10);
+
+        const radius = 50;
+        const progress = gameState.qte.timer / gameState.qte.duration;
+        ctx.beginPath();
+        ctx.arc(cx, cy + 65, radius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress));
+        ctx.strokeStyle = "#ff3838";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.fillStyle = "#ff3838";
+        ctx.beginPath();
+        ctx.arc(cx, cy + 65, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 15px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("A", cx, cy + 65);
+
+        ctx.font = "bold 14px monospace";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.fillText("【收銀急迫 QTE】快速按下 A 鍵！", cx, cy + 135);
+        ctx.restore();
+    }
+
+    // 躲藏與呼吸條
+    if (p.state === "HIDING") {
+        ctx.save();
+        ctx.fillStyle = "rgba(3, 3, 6, 0.96)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0d0d14";
+        ctx.fillRect(canvas.width/2 - 200, 60, 400, 190);
+        ctx.strokeStyle = "#ff3838";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(canvas.width/2 - 200, 60, 400, 190);
+
+        const bx = canvas.width / 2 - 130;
+        const by = 340;
+        const bw = 260;
+        const bh = 22;
+
+        ctx.fillStyle = "#161622";
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeStyle = "#444466";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bx, by, bw, bh);
+
+        ctx.fillStyle = "rgba(46, 213, 115, 0.45)";
+        ctx.fillRect(bx + bw * 0.35, by, bw * 0.30, bh);
+
+        const pointerX = bx + (gameState.hiding_mechanic.breathe_current / 100) * bw;
+        ctx.fillStyle = "#ff3838";
+        ctx.fillRect(pointerX - 3, by - 5, 6, bh + 10);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("【黑暗躲藏】使用 LT (加速) / RT (平緩) 調整心跳與呼吸", canvas.width / 2, by + 45);
+        ctx.font = "11px monospace";
+        ctx.fillStyle = "#8888a0";
+        ctx.fillText("按 X 鍵離開倉庫", canvas.width / 2, by + 70);
+        ctx.restore();
+    }
+
+    // 劇情對話框
+    if (gameState.story.active) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.92)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const boxW = 740, boxH = 135;
+        const boxX = (canvas.width - boxW) / 2;
+        const boxY = canvas.height - boxH - 25;
+
+        ctx.fillStyle = "#0d0d14";
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = "#ff3838";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        ctx.fillStyle = "#ff3838";
+        ctx.font = "bold 15px monospace";
+        ctx.textAlign = "left";
+        ctx.fillText(gameState.story.speaker, boxX + 20, boxY + 28);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "14px monospace";
+        ctx.fillText(gameState.story.text, boxX + 20, boxY + 65);
+
+        ctx.fillStyle = "#8888a0";
+        ctx.font = "11px monospace";
+        ctx.textAlign = "right";
+        ctx.fillText("▶ 按 A 鍵或空白鍵繼續", boxX + boxW - 20, boxY + boxH - 12);
+        ctx.restore();
+    }
+
+    renderSanEffects(dt, ctx);
+
+    if (gameState.flashRed > 0) {
+        gameState.flashRed -= dt;
+        ctx.fillStyle = `rgba(255, 56, 56, ${gameState.flashRed})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    requestAnimationFrame(mainLoop);
 }
-​const targetCamX = gameState.player.x - canvas.width / 2;
-gameState.cameraX += (targetCamX - gameState.cameraX) * 0.1;
-gameState.cameraX = Math.max(0, Math.min(gameState.worldWidth - canvas.width, gameState.cameraX));
-​ctx.clearRect(0, 0, canvas.width, canvas.height);
-​if (gameState.gameOver) {
-ctx.fillStyle = "#020205";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-ctx.fillStyle = "#ff4757";
-ctx.font = "bold 30px monospace";
-ctx.textAlign = "center";
-ctx.fillText("【 精神崩潰 · GAME OVER 】", canvas.width / 2, canvas.height / 2 - 25);
-ctx.fillStyle = "#8888a0";
-ctx.font = "14px monospace";
-ctx.fillText("理智歸零，你被超商黑暗角落的怪物吞噬。請重新整理網頁再試。", canvas.width / 2, canvas.height / 2 + 25);
+
 requestAnimationFrame(mainLoop);
-return;
-}
-​ctx.save();
-ctx.translate(-gameState.cameraX, 0);
-​// Z: 0 128-bit 超商背景原畫
-if (images.bg_store_interior && images.bg_store_interior.complete && images.bg_store_interior.naturalWidth > 0) {
-ctx.drawImage(images.bg_store_interior, 0, 0, gameState.worldWidth, 540);
-} else {
-draw128BitStoreBackground(ctx, gameState.worldWidth, 540);
-}
-​// Z: 10 ~ 50 互動節點與設施
-const activeNode = getActiveNode();
-gameState.nodes.forEach(node => {
-const isActive = (node === activeNode && gameState.player.state !== "HIDING" && !gameState.story.active);
-​ctx.fillStyle = isActive ? "#2c2c44" : "#12131c";
-ctx.fillRect(node.x - node.width/2, 370, node.width, 110);
-ctx.strokeStyle = isActive ? "#ff4757" : "#252638";
-ctx.lineWidth = isActive ? 2 : 1;
-ctx.strokeRect(node.x - node.width/2, 370, node.width, 110);
-​ctx.fillStyle = isActive ? "#ffffff" : "#8888a0";
-ctx.font = "bold 12px monospace";
-ctx.textAlign = "center";
-ctx.fillText(node.name, node.x, 355);
-​// Z: 80 互動提示 UI
-if (isActive) {
-ctx.fillStyle = "#ff4757";
-ctx.beginPath();
-ctx.arc(node.x, 300, 16, 0, Math.PI * 2);
-ctx.fill();
-ctx.fillStyle = "#ffffff";
-ctx.font = "bold 14px monospace";
-ctx.fillText(node.btn, node.x, 305);
-}
-});
-​// Z: 40 無面異變顧客
-if (gameState.anomalyEntity.active) {
-draw128BitAnomalyEntity(ctx, gameState.anomalyEntity.x, 480);
-}
-​// Z: 30 玩家角色本體
-const p = gameState.player;
-if (p.state !== "HIDING") {
-draw128BitPlayerSprite(ctx, p);
-}
-​ctx.restore();
-​// Z: 90 收銀 QTE 條碼與圓環 UI
-if (gameState.qte.active && !gameState.story.active) {
-ctx.save();
-ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-​const cx = canvas.width / 2, cy = canvas.height / 2 - 30;
-​ctx.fillStyle = "#ffffff";
-ctx.fillRect(cx - 120, cy - 55, 240, 70);
-ctx.fillStyle = "#000000";
-ctx.font = "bold 16px monospace";
-ctx.textAlign = "center";
-ctx.fillText(gameState.san_system.current_tier >= 1 ? "||||| [BLOODY BARCODE] |||||" : "||| | |||| || | || |||", cx, cy - 18);
-​const radius = 48;
-const progress = gameState.qte.timer / gameState.qte.duration;
-ctx.beginPath();
-ctx.arc(cx, cy + 65, radius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress));
-ctx.strokeStyle = "#ff4757";
-ctx.lineWidth = 6;
-ctx.stroke();
-​ctx.fillStyle = "#ff4757";
-ctx.beginPath();
-ctx.arc(cx, cy + 65, 20, 0, Math.PI * 2);
-ctx.fill();
-ctx.fillStyle = "#ffffff";
-ctx.font = "bold 16px monospace";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.fillText("A", cx, cy + 65);
-​ctx.font = "bold 14px monospace";
-ctx.fillStyle = "#ffffff";
-ctx.textAlign = "center";
-ctx.fillText("【收銀急迫 QTE】快速按下 A 鍵或空白鍵！", cx, cy + 135);
-ctx.restore();
-}
-​// Z: 100 第一人稱倉庫躲藏與呼吸檢定 UI
-if (p.state === "HIDING") {
-ctx.save();
-ctx.fillStyle = "rgba(2, 2, 5, 0.97)";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-​// 倉庫門木縫觀看框
-ctx.fillStyle = "#000000";
-ctx.fillRect(canvas.width/2 - 210, 45, 420, 230);
-ctx.strokeStyle = "#3d1466";
-ctx.lineWidth = 4;
-ctx.strokeRect(canvas.width/2 - 210, 45, 420, 230);
-​ctx.fillStyle = "#a4b0be";
-ctx.font = "13px monospace";
-ctx.textAlign = "center";
-ctx.fillText("👀 屏息凝神，透過鐵門縫隙觀察外面的異象腳步...", canvas.width / 2, 160);
-​const bx = canvas.width / 2 - 140;
-const by = 350;
-const bw = 280;
-const bh = 22;
-​ctx.fillStyle = "#161622";
-ctx.fillRect(bx, by, bw, bh);
-ctx.strokeStyle = "#444466";
-ctx.lineWidth = 2;
-ctx.strokeRect(bx, by, bw, bh);
-​ctx.fillStyle = "rgba(46, 213, 115, 0.45)";
-ctx.fillRect(bx + bw * 0.35, by, bw * 0.30, bh);
-​const pointerX = bx + (gameState.hiding_mechanic.breathe_current / 100) * bw;
-ctx.fillStyle = "#ff4757";
-ctx.fillRect(pointerX - 3, by - 5, 6, bh + 10);
-​ctx.fillStyle = "#ffffff";
-ctx.font = "bold 13px monospace";
-ctx.textAlign = "center";
-ctx.fillText("【黑暗躲藏】按 LT / A (吸氣) ｜ RT / D (呼氣) 維持綠色安全區", canvas.width / 2, by + 48);
-ctx.font = "11px monospace";
-ctx.fillStyle = "#8888a0";
-ctx.fillText("按 X 鍵離開倉庫", canvas.width / 2, by + 72);
-ctx.restore();
-}
-​// 劇情對話框 UI
-if (gameState.story.active) {
-ctx.save();
-ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-​const boxW = 760, boxH = 135;
-const boxX = (canvas.width - boxW) / 2;
-const boxY = canvas.height - boxH - 25;
-​ctx.fillStyle = "#0d0d14";
-ctx.fillRect(boxX, boxY, boxW, boxH);
-ctx.strokeStyle = "#ff4757";
-ctx.lineWidth = 2;
-ctx.strokeRect(boxX, boxY, boxW, boxH);
-​ctx.fillStyle = "#ff4757";
-ctx.font = "bold 15px monospace";
-ctx.textAlign = "left";
-ctx.fillText(gameState.story.speaker, boxX + 22, boxY + 30);
-​ctx.fillStyle = "#ffffff";
-ctx.font = "14px monospace";
-ctx.fillText(gameState.story.text, boxX + 22, boxY + 70);
-​ctx.fillStyle = "#8888a0";
-ctx.font = "11px monospace";
-ctx.textAlign = "right";
-ctx.fillText("▶ 按 A 鍵或空白鍵繼續", boxX + boxW - 22, boxY + boxH - 14);
-ctx.restore();
-}
-​// Z: 110 全螢幕 SAN 值後製濾鏡層
-renderSanEffects(dt, ctx);
-​if (gameState.flashRed > 0) {
-gameState.flashRed -= dt;
-ctx.fillStyle = rgba(255, 71, 87, ${gameState.flashRed});
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-​requestAnimationFrame(mainLoop);
-}
-​requestAnimationFrame(mainLoop);
 </script>
 </body>
 </html>
