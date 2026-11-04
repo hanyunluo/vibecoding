@@ -1,2109 +1,766 @@
+```html
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>末路兼職 DEAD END JOB | 꿀알바 Retro Pixel Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>末路兼職 - EP1：深夜超商</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --pixel-font: 'DotGothic16', 'Press Start 2P', monospace;
-            --neon-gold: #ffd700;
-            --neon-red: #ff2a55;
-            --neon-cyan: #00f0ff;
-            --iine-green: #00ff66;
-        }
-
-        * {
-            box-sizing: border-box;
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #050508;
+            color: #f3f4f6;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
+            overflow: hidden;
+            touch-action: none;
         }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            background-color: #07070c;
-            color: #f0f0f5;
-            font-family: var(--pixel-font);
-            overflow-x: hidden;
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
         }
-
-        /* Landscape Console Fullscreen Mode (Eliminates URL Bar & locks viewport) */
-        @media (orientation: landscape) {
-            html, body {
-                width: 100vw;
-                height: 100dvh;
-                overflow: hidden;
-                position: fixed;
-                inset: 0;
-            }
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
         }
-
-        /* Portrait Mode allows natural vertical scroll so browser URL bar stays accessible */
-        @media (orientation: portrait) {
-            html, body {
-                min-height: 125vh;
-                overflow-y: auto;
-            }
+        .crt-glow {
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(16, 185, 129, 0.2);
         }
-
-        /* Crisp High-Res Retro Pixel Art Rendering */
-        canvas {
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-crisp-edges;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            display: block;
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; text-shadow: 0 0 10px #ef4444; }
+            50% { opacity: 1; text-shadow: 0 0 25px #ef4444, 0 0 10px #f87171; }
         }
-
-        /* CRT Scanline & RGB Vignette Overlay */
-        .crt-overlay {
-            background: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.38) 50%), 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.015), rgba(0, 0, 255, 0.04));
-            background-size: 100% 3px, 6px 100%;
-            box-shadow: inset 0 0 70px rgba(0,0,0,0.85);
-            pointer-events: none;
+        .danger-pulse {
+            animation: pulseGlow 1.5s infinite;
         }
-
-        /* Retro Pixel Box Styling */
-        .pixel-box {
-            background: rgba(12, 12, 22, 0.94);
-            border: 3px solid #f0f0f5;
-            box-shadow: 
-                0 0 0 3px #07070c,
-                6px 6px 0px #ff2a55,
-                -3px -3px 0px #00f0ff;
-        }
-
-        .pixel-btn {
-            position: relative;
-            background: #181828;
-            border: 2px solid #787898;
-            color: #e2e8f0;
-            transition: transform 0.08s steps(2), background-color 0.08s, border-color 0.08s;
-            text-shadow: 2px 2px 0px #000;
-        }
-
-        .pixel-btn:hover, .pixel-btn.selected {
-            background: #2c1638;
-            border-color: #ffd700;
-            color: #ffd700;
-            transform: translate(-2px, -2px);
-            box-shadow: 4px 4px 0px #ff2a55, -2px -2px 0px #00f0ff;
-        }
-
-        .pixel-btn:active {
-            transform: translate(1px, 1px);
-            box-shadow: 1px 1px 0px #ff2a55;
-        }
-
-        /* 4 Green LEDs matching the user's IINE Controller */
-        .iine-led {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #1f2937;
-            border: 1px solid #000;
-            transition: all 0.15s ease;
-        }
-        .iine-led.on {
-            background-color: #00ff66;
-            box-shadow: 0 0 8px #00ff66, 0 0 14px #00ff66;
-        }
-
-        /* Glitch Text Animation */
-        @keyframes glitch-anim {
-            0%, 100% { text-shadow: 3px 0 #ff2a55, -3px 0 #00f0ff; transform: translate(0, 0); }
-            20% { text-shadow: -3px 0 #ff2a55, 3px 0 #00f0ff; transform: translate(-1px, 1px); }
-            40% { text-shadow: 3px 2px #ff2a55, -3px -2px #00f0ff; transform: translate(1px, -1px); }
-            60% { text-shadow: -4px 0 #ff2a55, 4px 0 #00f0ff; transform: translate(0, 1px); }
-            80% { text-shadow: 2px -1px #ff2a55, -2px 1px #00f0ff; transform: translate(-1px, 0); }
-        }
-
-        .glitch-title {
-            animation: glitch-anim 2.5s infinite steps(2);
-        }
-
-        /* Virtual Touch Button Styling */
-        .v-btn {
-            background: rgba(20, 22, 36, 0.72);
-            border: 2px solid rgba(255, 255, 255, 0.45);
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.6), 0 4px 10px rgba(0,0,0,0.6);
-            backdrop-filter: blur(2px);
-            active:scale-95;
-        }
-        .v-btn.pressed {
-            background: rgba(255, 215, 0, 0.45);
-            border-color: #ffd700;
-            transform: translateY(2px);
-            box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+        /* 隱藏滾動條 */
+        ::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </head>
-<body class="bg-[#07070c] text-white select-none">
+<body class="w-screen h-screen flex items-center justify-center relative overflow-hidden bg-black">
 
-    <!-- PORTRAIT MODE TOP BANNER (Visible only when device is vertical so URL bar is accessible) -->
-    <div id="portrait-banner" class="hidden w-full bg-gradient-to-r from-amber-950 via-red-950 to-amber-950 border-b-2 border-amber-400 px-3 py-2 text-xs sm:text-sm flex items-center justify-between z-50">
-        <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-            <span class="text-amber-200 font-bold">📱 直式瀏覽模式：已自動退出全螢幕並顯示上方網址列（轉為橫式即自動消除網址列進入全螢幕主機模式！）</span>
-        </div>
-        <button id="btn-force-fs-portrait" class="px-2 py-1 bg-amber-500 text-black font-bold rounded text-xs shrink-0 hover:bg-amber-400">
-            手動全螢幕
-        </button>
+    <!-- 手機直式提示層 (當處於直式時提醒轉為橫式以獲得最佳沉浸體驗) -->
+    <div id="orientation-warning" class="hidden absolute inset-0 z-50 bg-black/95 flex-col items-center justify-center p-6 text-center">
+        <div class="text-red-500 text-4xl mb-4 animate-bounce">📱 ⟳</div>
+        <h2 class="text-xl font-bold text-white mb-2 pixel-font">請將手機轉為橫向</h2>
+        <p class="text-sm text-gray-400 max-w-xs">為了體驗《末路兼職》極致的深夜超商沉浸感與手把完整連動，請將裝置轉為橫向顯示全螢幕。</p>
+        <button onclick="dismissOrientationWarning()" class="mt-6 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-sm pixel-font">強制繼續直式遊玩</button>
     </div>
 
-    <!-- MAIN GAME VIEWPORT CONTAINER -->
-    <div id="app-root" class="relative w-full h-[100dvh] flex flex-col items-center justify-center bg-[#050509] overflow-hidden">
+    <!-- 遊戲主容器 (維持 16:9 比例或滿版自適應) -->
+    <div id="game-container" class="relative w-full h-full max-w-[1280px] max-h-[720px] bg-gray-950 flex flex-col justify-between shadow-2xl crt-glow overflow-hidden">
+        
+        <!-- CRT 掃描線特效遮罩 -->
+        <div class="absolute inset-0 scanlines pointer-events-none z-30"></div>
 
-        <!-- TOP HUD BAR: Controller Status (IINE 4 Green LEDs), Stage Info, Fullscreen & Quick Menu -->
-        <div class="absolute top-2 left-2 right-2 z-30 flex items-center justify-between pointer-events-none gap-2">
-            <!-- Left: IINE Gamepad Status Badge with 4 Green LEDs -->
-            <div id="gamepad-badge" class="pointer-events-auto cursor-pointer flex items-center gap-2.5 bg-black/85 border-2 border-slate-600 hover:border-emerald-400 px-3 py-1.5 rounded shadow-lg transition-all" title="點擊開啟良值手把測試器">
-                <!-- Mini SVG of Black Pro Controller -->
-                <svg class="w-6 h-6 text-slate-200 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.5 6H6.5C3.5 6 1.5 8.5 1.5 12c0 2.8 1.4 5.5 3.4 5.9 1.2.2 2.2-.6 3.1-1.9l.8-1h6.4l.8 1c.9 1.3 1.9 2.1 3.1 1.9 2-.4 3.4-3.1 3.4-5.9 0-3.5-2-6-5-6zm-10 6.5H6v1.5H4.5v-1.5H3v-1.5h1.5V9.5H6V11h1.5v1.5zm8.5.5c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm2-2c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm0 4c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm2-2c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1z"/>
-                </svg>
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-1.5">
-                        <span id="gamepad-name" class="text-[11px] sm:text-xs font-bold text-emerald-400 tracking-wide">偵測良值手把中 (按任意鍵連線)</span>
-                    </div>
-                    <!-- 4 Green LEDs exactly like the user's photo -->
-                    <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-[9px] text-slate-400">LED:</span>
-                        <div id="led-1" class="iine-led on"></div>
-                        <div id="led-2" class="iine-led on"></div>
-                        <div id="led-3" class="iine-led on"></div>
-                        <div id="led-4" class="iine-led on"></div>
-                        <span id="gamepad-last-btn" class="text-[10px] text-amber-300 ml-1 font-mono">READY</span>
-                    </div>
+        <!-- 畫面 0：封面標題與主選單 -->
+        <div id="screen-menu" class="absolute inset-0 z-20 bg-neutral-950 flex flex-col items-center justify-between p-8 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black">
+            <!-- 裝飾背景動態光影 -->
+            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+            
+            <div class="z-10 text-center mt-6">
+                <div class="inline-block px-3 py-1 mb-2 bg-red-950/80 border border-red-600 text-red-400 text-xs tracking-widest pixel-font rounded">EP1：深夜超商</div>
+                <h1 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-emerald-400 to-white tracking-wider pixel-font drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">末路兼職</h1>
+                <p class="text-xs md:text-sm text-gray-400 mt-2 tracking-widest">THE TERMINAL PART-TIME JOB</p>
+            </div>
+
+            <!-- 主選單按鈕列 -->
+            <div class="z-10 flex flex-col gap-4 w-72 max-w-full">
+                <button onclick="startGameSequence()" class="py-3 px-6 bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white font-bold rounded-lg shadow-lg border border-emerald-500 transition-all pixel-font text-sm flex items-center justify-center gap-2">
+                    <span>▶ 從頭開始</span>
+                </button>
+                <button onclick="openLoadModal()" class="py-3 px-6 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-gray-200 font-bold rounded-lg shadow-lg border border-neutral-600 transition-all pixel-font text-sm flex items-center justify-center gap-2">
+                    <span>💾 讀取紀錄</span>
+                </button>
+                <button onclick="openSettingsModal()" class="py-3 px-6 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-gray-200 font-bold rounded-lg shadow-lg border border-neutral-600 transition-all pixel-font text-sm flex items-center justify-center gap-2">
+                    <span>⚙️ 設定</span>
+                </button>
+            </div>
+
+            <div class="z-10 text-xs text-gray-500 text-center flex flex-col gap-1">
+                <p>支援鍵盤 / 滑鼠 / 完整 Gamepad 手把連動</p>
+                <p id="gamepad-status-text" class="text-emerald-500 font-bold">手把狀態：未連動 (請按任意手把按鈕啟用)</p>
+            </div>
+        </div>
+
+        <!-- 畫面 1：像素片頭動畫與劇情交替 -->
+        <div id="screen-intro" class="absolute inset-0 z-20 bg-black hidden flex flex-col justify-between p-8">
+            <div class="flex justify-between items-center text-xs text-emerald-500 pixel-font">
+                <span>SCENE 01: 絕路與派遣</span>
+                <button onclick="skipIntro()" class="text-gray-400 hover:text-white underline">跳過劇情 [ESC/START]</button>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-center text-center px-4 max-w-3xl mx-auto">
+                <div id="intro-pixel-art" class="w-32 h-32 mb-6 bg-neutral-900 border-2 border-emerald-500/50 rounded-lg flex items-center justify-center text-4xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                    🏙️
+                </div>
+                <div id="intro-dialogue" class="text-lg md:text-xl text-gray-200 leading-relaxed font-medium min-h-[100px] bg-neutral-900/80 p-6 rounded-xl border border-neutral-700 shadow-inner">
+                    載入中...
                 </div>
             </div>
 
-            <!-- Center: Hardware [-] and [+] Buttons for Mobile/Quick Access -->
-            <div class="pointer-events-auto flex items-center gap-2 bg-black/80 border border-slate-700 px-2.5 py-1 rounded-full">
-                <button id="top-btn-minus" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 active:bg-amber-500 active:text-black border border-slate-500 rounded-full text-[11px] font-bold flex items-center gap-1" title="[-] 設定選單">
-                    <span class="inline-block w-3.5 h-3.5 rounded-full bg-slate-950 text-white text-center leading-3">-</span>
-                    <span class="hidden sm:inline">設定</span>
-                </button>
-                <span class="text-[10px] text-amber-400 font-bold tracking-widest hidden md:inline">꿀알바 // 末路兼職</span>
-                <button id="top-btn-plus" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 active:bg-emerald-500 active:text-black border border-slate-500 rounded-full text-[11px] font-bold flex items-center gap-1" title="[+] 暫停 / 死亡時重新開始">
-                    <span class="inline-block w-3.5 h-3.5 rounded-full bg-slate-950 text-amber-400 text-center leading-3">+</span>
-                    <span class="hidden sm:inline">重開/暫停</span>
-                </button>
+            <div class="flex justify-between items-center text-sm text-gray-400">
+                <span class="pixel-font text-xs">卞革浚 (李宰旭 飾)</span>
+                <span class="animate-pulse text-emerald-400 pixel-font text-xs">點擊畫面或按 A 鍵繼續 ➔</span>
+            </div>
+        </div>
+
+        <!-- 畫面 2：規則怪談手冊 (第一人稱視角) -->
+        <div id="screen-manual" class="absolute inset-0 z-20 bg-neutral-950 hidden flex flex-col justify-between p-8 border-4 border-amber-900/60">
+            <div class="flex justify-between items-center border-b border-amber-900/50 pb-4">
+                <h2 class="text-xl font-bold text-amber-500 pixel-font">📖 員工守則工作手冊</h2>
+                <span class="text-xs text-amber-400/80 pixel-font">請詳閱以下怪談規則</span>
             </div>
 
-            <!-- Right: Fullscreen & Audio Quick Toggle -->
-            <div class="pointer-events-auto flex items-center gap-1.5">
-                <button id="btn-quick-mute" class="bg-black/85 border-2 border-slate-600 hover:border-amber-400 px-2.5 py-1.5 rounded text-xs font-bold text-amber-300" title="音效開關">
-                    🔊 BGM
-                </button>
-                <button id="btn-fullscreen" class="bg-black/85 border-2 border-cyan-500 hover:bg-cyan-950 px-2.5 py-1.5 rounded text-xs font-bold text-cyan-300 flex items-center gap-1 shadow-[0_0_10px_rgba(0,240,255,0.3)]" title="橫式全螢幕消除網址列">
-                    <span>⛶</span>
-                    <span class="hidden sm:inline">全螢幕</span>
+            <div class="flex-1 my-6 overflow-y-auto space-y-4 px-2">
+                <div class="p-4 bg-amber-950/30 border-l-4 border-amber-500 rounded text-amber-200 text-sm md:text-base leading-relaxed">
+                    1. 大夜班兼職人員為<strong>兩人一組</strong>。
+                </div>
+                <div class="p-4 bg-amber-950/30 border-l-4 border-amber-500 rounded text-amber-200 text-sm md:text-base leading-relaxed">
+                    2. 絕對<strong>不能擅自離開超商</strong>半步。
+                </div>
+                <div class="p-4 bg-amber-950/30 border-l-4 border-amber-500 rounded text-amber-200 text-sm md:text-base leading-relaxed">
+                    3. 聽到倉庫傳來怪聲，<strong>絕對不要進去</strong>。
+                </div>
+                <div class="p-4 bg-amber-950/30 border-l-4 border-amber-500 rounded text-amber-200 text-sm md:text-base leading-relaxed">
+                    4. 如果遇到妖魔鬼怪，倉庫裡有<strong>十字架</strong>可以對付。
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="closeManual()" class="px-8 py-3 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded shadow-lg pixel-font text-sm">
+                    確認並開始值班 ➔
                 </button>
             </div>
         </div>
 
-        <!-- PIXEL ART CANVAS WRAPPER (16:9 Aspect Ratio Automatic Letterbox Scaling) -->
-        <div id="canvas-container" class="relative w-full h-full flex items-center justify-center overflow-hidden">
-            <canvas id="game-canvas" width="640" height="360" class="w-full h-full object-contain bg-[#08070d] shadow-2xl"></canvas>
+        <!-- 畫面 3：超商探索與倉庫調查 (AVG 互動模式) -->
+        <div id="screen-store" class="absolute inset-0 z-20 bg-neutral-900 hidden flex flex-col justify-between p-6">
+            <!-- 頂部狀態列 -->
+            <div class="flex justify-between items-center bg-black/60 p-3 rounded-lg border border-neutral-800 text-sm pixel-font">
+                <div class="flex items-center gap-4">
+                    <span class="text-emerald-400">🕒 <span id="game-clock">22:00</span></span>
+                    <span class="text-red-400">❤️ <span id="player-hp">100</span>/100</span>
+                </div>
+                <div class="text-yellow-400 font-bold" id="store-objective">任務：與第二兼職生崔熙東對話</div>
+            </div>
 
-            <!-- CRT Scanline Shader Overlay -->
-            <div id="crt-layer" class="crt-overlay absolute inset-0 z-10"></div>
-
-            <!-- ========================================================= -->
-            <!-- 1. TITLE SCREEN MENU OVERLAY (末路兼職 主視覺選單) -->
-            <!-- ========================================================= -->
-            <div id="title-overlay" class="absolute inset-0 z-20 flex flex-col justify-between p-4 sm:p-7 pointer-events-none">
-                <!-- Top Title Logo -->
-                <div class="mt-8 sm:mt-6 flex flex-col items-start">
-                    <div class="inline-flex items-center gap-2 px-2.5 py-0.5 bg-red-600/90 text-white text-[10px] sm:text-xs font-bold tracking-widest border border-red-300 mb-1 shadow">
-                        <span>⚠️ HIGH-RISK PART-TIME JOB // 蜘蛛人力仲介</span>
-                    </div>
-                    <h1 class="text-4xl sm:text-6xl font-black tracking-wider text-white glitch-title select-none leading-none">
-                        末路兼職
-                    </h1>
-                    <div class="flex items-center gap-3 mt-1">
-                        <span class="text-sm sm:text-xl text-amber-400 font-bold tracking-widest drop-shadow">DEAD END JOB // 꿀알바</span>
-                        <span class="text-[10px] sm:text-xs bg-amber-400/20 border border-amber-400 text-amber-300 px-2 py-0.5 rounded">
-                            VER 1.0 IINE-PRO
-                        </span>
+            <!-- 主互動視窗 -->
+            <div class="flex-1 flex flex-col md:flex-row gap-4 my-4 overflow-hidden">
+                <!-- 左側場景畫面 -->
+                <div class="flex-1 bg-black/80 border border-neutral-700 rounded-xl relative flex items-center justify-center overflow-hidden">
+                    <div id="store-scene-art" class="text-6xl animate-pulse">🏪</div>
+                    <div class="absolute bottom-3 left-3 bg-black/80 px-3 py-1 rounded text-xs text-emerald-400 pixel-font border border-emerald-900" id="location-name">
+                        便利商店 - 櫃台區
                     </div>
                 </div>
 
-                <!-- Bottom Right Interactive Menu & High Score Badge -->
-                <div class="w-full flex flex-col sm:flex-row items-end justify-between gap-4 mb-2 sm:mb-1">
-                    <!-- Left Story / Save Info Box -->
-                    <div class="hidden sm:flex flex-col bg-black/80 border-l-4 border-amber-400 p-3 max-w-xs text-xs text-slate-300 backdrop-blur-sm">
-                        <div class="text-amber-400 font-bold mb-1">📱 深夜簡訊通知：</div>
-                        <p class="leading-relaxed text-[11px]">
-                            「急徵深夜高薪兼職！日薪 ₩1,000,000 金幣，不問經歷，立即前往『蜘蛛人力仲介』報到⋯⋯」
-                        </p>
-                        <div id="saved-summary" class="mt-2 pt-1.5 border-t border-slate-700 text-[11px] text-emerald-400 font-mono">
-                            目前紀錄：Stage 1 | 最高金幣：0 枚
-                        </div>
+                <!-- 右側行動選單 -->
+                <div class="w-full md:w-80 bg-neutral-950/90 border border-neutral-800 rounded-xl p-4 flex flex-col justify-between">
+                    <div class="space-y-2" id="action-buttons-list">
+                        <!-- 動態動作按鈕 -->
                     </div>
-
-                    <!-- Right Main 4 Menu Buttons -->
-                    <div id="main-menu-list" class="pointer-events-auto w-full sm:w-72 flex flex-col gap-2 bg-black/85 p-3 border-2 border-slate-500 shadow-[6px_6px_0px_#ff2a55]">
-                        <button data-menu-idx="0" class="menu-item pixel-btn selected w-full py-2 px-3 text-left text-sm sm:text-base font-bold flex items-center justify-between">
-                            <span>▶ 從頭開始 <span class="text-[11px] text-slate-400 font-normal">(NEW GAME)</span></span>
-                            <span class="text-xs text-amber-400">[A]</span>
-                        </button>
-                        <button data-menu-idx="1" class="menu-item pixel-btn w-full py-2 px-3 text-left text-sm sm:text-base font-bold flex items-center justify-between">
-                            <span>📂 讀取紀錄 <span class="text-[11px] text-slate-400 font-normal">(LOAD SAVE)</span></span>
-                            <span id="load-badge" class="text-[10px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.5 rounded">STAGE 1</span>
-                        </button>
-                        <button data-menu-idx="2" class="menu-item pixel-btn w-full py-2 px-3 text-left text-sm sm:text-base font-bold flex items-center justify-between">
-                            <span>⚙️ 設定 <span class="text-[11px] text-slate-400 font-normal">(音效/虛擬按鍵)</span></span>
-                            <span class="text-xs text-cyan-400">[-]</span>
-                        </button>
-                        <button data-menu-idx="3" class="menu-item pixel-btn w-full py-2 px-3 text-left text-sm sm:text-base font-bold flex items-center justify-between">
-                            <span>🎮 選單 <span class="text-[11px] text-slate-400 font-normal">(良值手把測試/圖鑑)</span></span>
-                            <span class="text-xs text-emerald-400">[Y]</span>
-                        </button>
+                    <div class="mt-4 p-3 bg-neutral-900 rounded border border-neutral-800 text-xs text-gray-400">
+                        <p class="font-bold text-gray-300 mb-1">💡 提示：</p>
+                        <p id="store-hint">觀察周遭環境，小心崔熙東的異常舉動。</p>
                     </div>
                 </div>
             </div>
 
-            <!-- ========================================================= -->
-            <!-- 2. SMARTPHONE "ACCEPT JOB" CUTSCENE MODAL (片頭手機接單) -->
-            <!-- ========================================================= -->
-            <div id="phone-cutscene-modal" class="hidden absolute inset-0 z-30 bg-black/80 flex items-center justify-center p-4">
-                <div class="pointer-events-auto w-72 sm:w-80 bg-[#111322] border-4 border-slate-300 rounded-3xl p-4 shadow-[0_0_40px_rgba(255,215,0,0.4)] flex flex-col items-center relative animate-bounce">
-                    <!-- Phone Speaker Bar -->
-                    <div class="w-16 h-1.5 bg-slate-600 rounded-full mb-3"></div>
-                    <!-- Screen -->
-                    <div class="w-full bg-[#1a162b] border-2 border-amber-400/70 rounded-xl p-4 flex flex-col items-center text-center">
-                        <div class="text-[10px] text-cyan-400 tracking-widest mb-1">SPIDER STAFFING // 거미인력</div>
-                        <div class="text-sm font-bold text-white mb-2">【緊急高薪兼職通知】</div>
-                        <!-- Pixel Coin Icon -->
-                        <div class="w-16 h-16 rounded-full bg-amber-400 border-4 border-amber-200 shadow-[0_0_20px_#ffd700] flex items-center justify-center text-3xl font-black text-amber-950 my-2">
-                            ₩
-                        </div>
-                        <p class="text-xs text-slate-300 leading-relaxed mt-1 mb-3">
-                            工作地點：<br>
-                            <span id="cutscene-stage-title" class="text-amber-300 font-bold">STAGE 1：深夜詭異超商</span><br>
-                            時薪：<span class="text-emerald-400 font-bold">100,000 兼職金幣</span>
-                        </p>
-                        <button id="btn-accept-job" class="w-full py-2.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-black text-base rounded-lg border-2 border-white shadow-[0_0_15px_#ffd700] hover:scale-105 transition-transform">
-                            ✔ ACCEPT 立即接單 [按 A / 點擊]
-                        </button>
-                    </div>
-                    <div class="w-8 h-8 rounded-full border-2 border-slate-600 mt-3"></div>
-                </div>
+            <!-- 底部對話框 -->
+            <div class="bg-black/90 border-2 border-neutral-700 p-4 rounded-xl min-h-[100px] flex flex-col justify-between">
+                <div id="store-dialogue-speaker" class="text-xs text-emerald-400 pixel-font mb-1">卞革浚</div>
+                <div id="store-dialogue-text" class="text-sm md:text-base text-gray-200">「時薪高達 50 倍...希望這夜班能順利度過。」</div>
             </div>
+        </div>
 
-            <!-- ========================================================= -->
-            <!-- 3. DEATH / GAME OVER SCREEN (死亡畫面 - 按 [+] 加號鍵重新開始) -->
-            <!-- ========================================================= -->
-            <div id="death-overlay" class="hidden absolute inset-0 z-30 bg-red-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
-                <div class="pointer-events-auto pixel-box max-w-md w-full p-6 flex flex-col items-center border-red-500">
-                    <div class="text-xs text-red-400 tracking-widest font-bold mb-1">CONTRACT TERMINATED // 兼職契約終止</div>
-                    <h2 class="text-4xl sm:text-5xl font-black text-red-500 glitch-title mb-2">兼職失敗</h2>
-                    <p id="death-reason" class="text-sm text-slate-200 mb-4">你被詭異的黑霧與怪物吞噬了⋯⋯</p>
-
-                    <!-- Score Summary -->
-                    <div class="w-full bg-black/70 border border-red-800 p-3 rounded mb-5 flex justify-around text-xs">
-                        <div>
-                            <div class="text-slate-400">抵達關卡</div>
-                            <div id="death-stage" class="text-amber-400 font-bold text-base">STAGE 1</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-400">本局兼職金幣</div>
-                            <div id="death-coins" class="text-emerald-400 font-bold text-base">0 枚</div>
-                        </div>
+        <!-- 畫面 4：動作對決模式 (與巨大鼠怪血戰) -->
+        <div id="screen-combat" class="absolute inset-0 z-25 bg-black hidden flex flex-col justify-between p-4">
+            <!-- 戰鬥頂部血條 -->
+            <div class="flex justify-between items-center bg-neutral-900/80 p-3 rounded-lg border border-neutral-800 pixel-font text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="text-red-400">革浚 HP:</span>
+                    <div class="w-32 bg-neutral-800 h-4 rounded overflow-hidden border border-red-900">
+                        <div id="combat-player-hp-bar" class="bg-red-600 h-full w-full transition-all"></div>
                     </div>
-
-                    <!-- Prominent [+] Plus Button Prompt (Mandatory Requirement!) -->
-                    <div class="w-full bg-amber-500/20 border-2 border-amber-400 rounded-lg p-3 mb-4 animate-pulse">
-                        <div class="flex items-center justify-center gap-2 text-amber-300 font-black text-sm sm:text-base">
-                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-400 text-black font-black text-lg shadow">+</span>
-                            <span>按下手把 [+] 加號鍵 立即重新遊戲！</span>
-                        </div>
-                        <div class="text-[11px] text-amber-200/80 mt-1">
-                            (支援良值手把 [+] Start 鍵 / 鍵盤 Enter 或 + 鍵 / 點擊下方按鈕)
-                        </div>
-                    </div>
-
-                    <div class="flex w-full gap-3">
-                        <button id="btn-death-restart" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded border-2 border-white shadow-lg text-sm flex items-center justify-center gap-1.5">
-                            <span class="inline-block w-5 h-5 rounded-full bg-black text-amber-400 text-center leading-5">+</span>
-                            <span>立即重新開始</span>
-                        </button>
-                        <button id="btn-death-title" class="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded border border-slate-500 text-sm">
-                            返回標題 [-]
-                        </button>
+                </div>
+                <div class="text-yellow-400 font-bold">🕒 <span id="combat-clock">05:45</span> / 06:00 (曙光)</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-purple-400">巨大鼠怪:</span>
+                    <div class="w-32 bg-neutral-800 h-4 rounded overflow-hidden border border-purple-900">
+                        <div id="combat-boss-hp-bar" class="bg-purple-600 h-full w-full transition-all"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- ========================================================= -->
-            <!-- 4. VICTORY / STAGE CLEAR OVERLAY -->
-            <!-- ========================================================= -->
-            <div id="victory-overlay" class="hidden absolute inset-0 z-30 bg-emerald-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
-                <div class="pointer-events-auto pixel-box max-w-md w-full p-6 flex flex-col items-center border-amber-400">
-                    <div class="text-xs text-amber-300 tracking-widest font-bold mb-1">PAYDAY // 薪資結算完成</div>
-                    <h2 class="text-3xl sm:text-4xl font-black text-amber-400 glitch-title mb-2">成功倖存領薪！</h2>
-                    <p class="text-xs sm:text-sm text-slate-200 mb-4">你成功逃出所有的詭異打工現場，拿到了高額血汗金幣！</p>
-                    <div class="w-full bg-black/70 border border-amber-500/50 p-3 rounded mb-5 flex justify-around text-xs">
-                        <div>
-                            <div class="text-slate-400">累積總金幣</div>
-                            <div id="victory-coins" class="text-amber-400 font-bold text-lg">0 枚</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-400">最高紀錄</div>
-                            <div id="victory-best" class="text-emerald-400 font-bold text-lg">0 枚</div>
-                        </div>
-                    </div>
-                    <div class="flex w-full gap-3">
-                        <button id="btn-victory-replay" class="flex-1 py-2.5 bg-amber-400 hover:bg-amber-300 text-black font-black rounded border-2 border-white text-sm">
-                            [+] 挑戰更高難度兼職
-                        </button>
-                        <button id="btn-victory-title" class="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded border border-slate-500 text-sm">
-                            返回主畫面
-                        </button>
-                    </div>
+            <!-- 戰鬥畫布實體區域 -->
+            <div class="flex-1 relative bg-neutral-950 border-2 border-red-900/50 rounded-xl overflow-hidden shadow-[inset_0_0_50px_rgba(239,68,68,0.2)]">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+                <div id="combat-msg" class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-950/90 text-red-300 px-4 py-2 rounded-full border border-red-600 pixel-font text-xs shadow-lg animate-pulse">
+                    ⚠️ 崔熙東化身為巨大鼠怪！撐到 06:00 陽光照射！
                 </div>
             </div>
 
-            <!-- ========================================================= -->
-            <!-- 5. SETTINGS MODAL (設定：調整音效、開關手機虛擬控制與按鈕) -->
-            <!-- ========================================================= -->
-            <div id="settings-modal" class="hidden absolute inset-0 z-40 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-                <div class="pointer-events-auto pixel-box max-w-md w-full p-5 text-sm">
-                    <div class="flex items-center justify-between border-b-2 border-slate-700 pb-2 mb-4">
-                        <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2">
-                            <span>⚙️ 系統設定 (SETTINGS)</span>
-                        </h3>
-                        <button id="btn-close-settings" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-xs">
-                            ✕ 關閉 [B]
-                        </button>
-                    </div>
-
-                    <div class="space-y-3.5">
-                        <!-- Sound Master Toggle -->
-                        <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded border border-slate-700">
-                            <div>
-                                <div class="font-bold text-white">🎵 遊戲配樂與音效 (Audio)</div>
-                                <div class="text-[11px] text-slate-400">開啟復古 Synthwave 緊張配樂與像素音效</div>
-                            </div>
-                            <button id="toggle-sound" class="px-3 py-1.5 rounded font-bold text-xs bg-emerald-500 text-black border border-white">
-                                開啟 ON
-                            </button>
-                        </div>
-
-                        <!-- Volume Slider -->
-                        <div class="flex flex-col bg-slate-900/90 p-2.5 rounded border border-slate-700">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-300 font-bold">🔊 音量大小 (Volume)</span>
-                                <span id="vol-label" class="text-amber-400 font-mono">80%</span>
-                            </div>
-                            <input id="slider-volume" type="range" min="0" max="100" value="80" class="w-full accent-amber-400 cursor-pointer">
-                        </div>
-
-                        <!-- Mobile Virtual Controls Toggle (Mandatory Requirement!) -->
-                        <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded border border-slate-700">
-                            <div>
-                                <div class="font-bold text-cyan-300">📱 手機虛擬控制與按鈕</div>
-                                <div class="text-[11px] text-slate-400">在畫面下方顯示虛擬方向鍵與 A/X/+/- 按鈕</div>
-                            </div>
-                            <button id="toggle-virtual-pad" class="px-3 py-1.5 rounded font-bold text-xs bg-emerald-500 text-black border border-white">
-                                開啟 ON
-                            </button>
-                        </div>
-
-                        <!-- CRT Retro Filter Toggle -->
-                        <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded border border-slate-700">
-                            <div>
-                                <div class="font-bold text-white">📺 CRT 映像管掃描線濾鏡</div>
-                                <div class="text-[11px] text-slate-400">復古街機螢幕掃描線與暗角效果</div>
-                            </div>
-                            <button id="toggle-crt" class="px-3 py-1.5 rounded font-bold text-xs bg-emerald-500 text-black border border-white">
-                                開啟 ON
-                            </button>
-                        </div>
-
-                        <!-- Gamepad Rumble Toggle -->
-                        <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded border border-slate-700">
-                            <div>
-                                <div class="font-bold text-emerald-300">📳 良值手把震動回饋 (Rumble)</div>
-                                <div class="text-[11px] text-slate-400">受傷、閃光驅魔與死亡時觸發雙馬達震動</div>
-                            </div>
-                            <button id="toggle-rumble" class="px-3 py-1.5 rounded font-bold text-xs bg-emerald-500 text-black border border-white">
-                                開啟 ON
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between gap-2">
-                        <button id="btn-reset-save" class="px-3 py-1.5 bg-red-950 hover:bg-red-900 text-red-300 border border-red-700 rounded text-xs">
-                            清除存檔紀錄
-                        </button>
-                        <button id="btn-return-title-from-settings" class="px-4 py-1.5 bg-amber-400 hover:bg-amber-300 text-black font-bold rounded text-xs">
-                            返回標題主選單
-                        </button>
-                    </div>
+            <!-- 手機虛擬控制按鈕列 (根據設定顯示/隱關) -->
+            <div id="virtual-controls" class="hidden flex justify-between items-center px-4 py-2 bg-neutral-900/90 rounded-xl border border-neutral-800">
+                <div class="flex gap-2">
+                    <button id="v-btn-left" class="w-14 h-14 bg-neutral-800 active:bg-neutral-600 rounded-full border border-neutral-600 text-white font-bold text-xl flex items-center justify-center shadow">⬅️</button>
+                    <button id="v-btn-right" class="w-14 h-14 bg-neutral-800 active:bg-neutral-600 rounded-full border border-neutral-600 text-white font-bold text-xl flex items-center justify-center shadow">➡️</button>
                 </div>
-            </div>
-
-            <!-- ========================================================= -->
-            <!-- 6. CONTROLLER INSPECTOR & MENU MODAL (選單：良值手把即時檢測與打工指南) -->
-            <!-- ========================================================= -->
-            <div id="inspector-modal" class="hidden absolute inset-0 z-40 bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-                <div class="pointer-events-auto pixel-box max-w-2xl w-full p-4 sm:p-5 text-xs sm:text-sm max-h-[92dvh] overflow-y-auto">
-                    <div class="flex items-center justify-between border-b-2 border-slate-700 pb-2 mb-3">
-                        <h3 class="text-base sm:text-lg font-bold text-emerald-400 flex items-center gap-2">
-                            <span>🎮 良值手把連線檢測 & 末路兼職指南</span>
-                        </h3>
-                        <button id="btn-close-inspector" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-xs">
-                            ✕ 關閉 [B]
-                        </button>
-                    </div>
-
-                    <!-- Live Visual Diagram of User's IINE Pro Controller -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div class="bg-slate-900/90 border border-slate-700 rounded p-3 flex flex-col items-center">
-                            <div class="text-xs font-bold text-amber-300 mb-2">【良值 IINE / Switch Pro 手把即時映射】</div>
-                            <!-- Interactive Controller Status Grid -->
-                            <div class="w-full grid grid-cols-3 gap-2 text-center text-[11px] mb-2">
-                                <div id="insp-dpad" class="bg-black/70 border border-slate-700 p-1.5 rounded">十字鍵/左蘑菇頭<br><span class="text-emerald-400 font-mono">移動 / 選單</span></div>
-                                <div id="insp-plus" class="bg-black/70 border border-amber-500/60 p-1.5 rounded">[+] 加號鍵<br><span class="text-amber-400 font-bold">死亡重開 / 暫停</span></div>
-                                <div id="insp-minus" class="bg-black/70 border border-slate-700 p-1.5 rounded">[-] 減號鍵<br><span class="text-cyan-400 font-mono">開啟設定</span></div>
-                                <div id="insp-ab" class="bg-black/70 border border-slate-700 p-1.5 rounded">[A / B] 鍵<br><span class="text-emerald-400 font-mono">跳躍 / 確認</span></div>
-                                <div id="insp-xy" class="bg-black/70 border border-slate-700 p-1.5 rounded">[X / Y] 鍵<br><span class="text-cyan-400 font-mono">衝刺 / 手機閃光</span></div>
-                                <div id="insp-lr" class="bg-black/70 border border-slate-700 p-1.5 rounded">[L / R / ZR]<br><span class="text-purple-400 font-mono">快速閃避</span></div>
-                            </div>
-                            <div id="insp-live-log" class="w-full bg-black px-2.5 py-1.5 rounded border border-emerald-500/40 text-emerald-400 font-mono text-[11px] text-center">
-                                等待手把輸入中... 請推動搖桿或按任意鍵
-                            </div>
-                        </div>
-
-                        <!-- 3 Stages Guide (Inspired by Reference Video) -->
-                        <div class="bg-slate-900/90 border border-slate-700 rounded p-3 flex flex-col justify-between space-y-2 text-[11px]">
-                            <div class="text-xs font-bold text-amber-300">【三大詭異兼職關卡選擇 (可直接跳關練習)】</div>
-                            <div class="flex items-center justify-between bg-black/60 p-1.5 rounded border border-slate-800">
-                                <span>🏪 <b>Stage 1：深夜詭異超商</b><br><span class="text-slate-400">躲避貨架黑影與紅藍訊號異常區</span></span>
-                                <button data-jump-stage="1" class="btn-jump-stage px-2 py-1 bg-amber-500 text-black font-bold rounded">出勤</button>
-                            </div>
-                            <div class="flex items-center justify-between bg-black/60 p-1.5 rounded border border-slate-800">
-                                <span>⚫ <b>Stage 2：黑白圍棋走廊與黑霧</b><br><span class="text-slate-400">閃避天降巨型黑白棋子與致命黑霧</span></span>
-                                <button data-jump-stage="2" class="btn-jump-stage px-2 py-1 bg-amber-500 text-black font-bold rounded">出勤</button>
-                            </div>
-                            <div class="flex items-center justify-between bg-black/60 p-1.5 rounded border border-slate-800">
-                                <span>☣️ <b>Stage 3：生化走廊與廢棄樂園</b><br><span class="text-slate-400">用手機閃光擊退防護衣人員與詭異豬頭</span></span>
-                                <button data-jump-stage="3" class="btn-jump-stage px-2 py-1 bg-amber-500 text-black font-bold rounded">出勤</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-[11px] text-slate-400 bg-black/60 p-2 rounded border border-slate-800">
-                        💡 <b>跨平台連線提示：</b> 良值手把可透過藍牙直接配對 PC、Mac、iPad、iPhone (iOS) 與 Android 手機。進入網頁後按手把任意鍵即可自動喚醒 Web Gamepad API 並點亮左上角四顆綠燈！
-                    </div>
+                <div class="flex gap-3">
+                    <button id="v-btn-attack" class="px-6 py-3 bg-red-700 active:bg-red-600 text-white font-bold rounded-xl border border-red-500 shadow-lg pixel-font text-xs">攻擊 (X)</button>
+                    <button id="v-btn-dodge" class="px-6 py-3 bg-blue-700 active:bg-blue-600 text-white font-bold rounded-xl border border-blue-500 shadow-lg pixel-font text-xs">閃避 (A)</button>
                 </div>
             </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- MOBILE VIRTUAL CONTROLLER OVERLAY (手機虛擬控制與按鈕) -->
-        <!-- ========================================================= -->
-        <div id="virtual-controls" class="absolute inset-x-0 bottom-2 z-30 flex items-end justify-between px-4 sm:px-8 pointer-events-none">
-            <!-- Left: Virtual D-Pad -->
-            <div class="pointer-events-auto relative w-36 h-36 sm:w-40 sm:h-40">
-                <!-- UP -->
-                <button data-vkey="up" class="v-btn absolute top-0 left-12 w-12 h-12 rounded-t-lg flex items-center justify-center text-lg font-bold text-white">▲</button>
-                <!-- DOWN -->
-                <button data-vkey="down" class="v-btn absolute bottom-0 left-12 w-12 h-12 rounded-b-lg flex items-center justify-center text-lg font-bold text-white">▼</button>
-                <!-- LEFT -->
-                <button data-vkey="left" class="v-btn absolute top-12 left-0 w-12 h-12 rounded-l-lg flex items-center justify-center text-lg font-bold text-white">◀</button>
-                <!-- RIGHT -->
-                <button data-vkey="right" class="v-btn absolute top-12 right-0 w-12 h-12 rounded-r-lg flex items-center justify-center text-lg font-bold text-white">▶</button>
-                <!-- Center Pivot -->
-                <div class="absolute top-12 left-12 w-12 h-12 bg-slate-900/90 border border-slate-700 flex items-center justify-center">
-                    <div class="w-4 h-4 rounded-full bg-slate-700"></div>
-                </div>
-            </div>
-
-            <!-- Right: Action Buttons (X/Y Flash & Dash + A/B Jump/Confirm) -->
-            <div class="pointer-events-auto relative w-40 h-36 sm:w-44 sm:h-40 flex items-center justify-center">
-                <!-- X Button (Smartphone Flash / Dash) -->
-                <button data-vkey="action" class="v-btn absolute left-1 bottom-8 w-16 h-16 rounded-full border-cyan-400/80 flex flex-col items-center justify-center text-cyan-300 shadow-lg">
-                    <span class="text-base font-black leading-none">X / Y</span>
-                    <span class="text-[9px] text-cyan-200 mt-0.5">閃光/衝刺</span>
+        <!-- 畫面 5：遊戲結束 / 死亡畫面 -->
+        <div id="screen-gameover" class="absolute inset-0 z-30 bg-black/95 hidden flex flex-col items-center justify-center p-8 text-center">
+            <h2 class="text-4xl md:text-6xl font-black text-red-600 pixel-font mb-4 danger-pulse">GAME OVER</h2>
+            <p class="text-gray-300 text-base md:text-lg mb-6">你在深夜超商中被巨大鼠怪吞噬，沒能撐過黎明...</p>
+            <div class="flex flex-col gap-3 w-64">
+                <button onclick="restartGame()" class="py-3 px-6 bg-red-700 hover:bg-red-600 text-white font-bold rounded-lg shadow-lg border border-red-500 pixel-font text-sm flex items-center justify-center gap-2">
+                    <span>🔄 重新挑戰 (按手把 [+] 鍵)</span>
                 </button>
-                <!-- A Button (Jump / Confirm) -->
-                <button data-vkey="jump" class="v-btn absolute right-1 top-4 w-16 h-16 rounded-full border-amber-400/80 flex flex-col items-center justify-center text-amber-300 shadow-lg">
-                    <span class="text-base font-black leading-none">A / B</span>
-                    <span class="text-[9px] text-amber-200 mt-0.5">跳躍/確認</span>
+                <button onclick="returnToMenu()" class="py-3 px-6 bg-neutral-800 hover:bg-neutral-700 text-gray-300 font-bold rounded-lg shadow-lg border border-neutral-600 pixel-font text-sm">
+                    返回主標題
                 </button>
             </div>
         </div>
+
+        <!-- 畫面 6：通關勝利畫面 -->
+        <div id="screen-victory" class="absolute inset-0 z-30 bg-emerald-950/95 hidden flex flex-col items-center justify-center p-8 text-center">
+            <div class="text-5xl mb-4 animate-bounce">🏆</div>
+            <h2 class="text-3xl md:text-5xl font-black text-emerald-400 pixel-font mb-2">EP1 任務通關！</h2>
+            <p class="text-gray-200 text-base md:text-lg mb-4">清晨 06:00 陽光穿透玻璃，巨大鼠怪在光芒中徹底消散！</p>
+            <div class="bg-black/60 p-4 rounded-xl border border-emerald-600/50 mb-6 text-sm text-emerald-300 pixel-font">
+                獲得報酬：時薪 50 倍鉅額獎金 (已匯入)
+            </div>
+            <button onclick="returnToMenu()" class="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg border border-emerald-400 pixel-font text-sm">
+                返回主選單
+            </button>
+        </div>
+
+        <!-- 設定選單 Modal -->
+        <div id="modal-settings" class="absolute inset-0 z-40 bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="bg-neutral-900 border-2 border-neutral-700 p-6 rounded-2xl w-96 max-w-full shadow-2xl">
+                <h3 class="text-xl font-bold text-white pixel-font mb-4 flex items-center justify-between">
+                    <span>⚙️ 遊戲設定</span>
+                    <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white text-sm">✕</button>
+                </h3>
+                <div class="space-y-4 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">音效開關 (BGM/SFX)</span>
+                        <input type="checkbox" id="setting-sound" checked onchange="updateSettings()" class="w-5 h-5 accent-emerald-600 cursor-pointer">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">手機虛擬控制按鈕</span>
+                        <input type="checkbox" id="setting-virtual-ctrl" onchange="updateSettings()" class="w-5 h-5 accent-emerald-600 cursor-pointer">
+                    </div>
+                    <div class="p-3 bg-neutral-800 rounded text-xs text-gray-400">
+                        <p class="font-bold text-emerald-400 mb-1">🎮 良值手把快速鍵對應：</p>
+                        <p>左搖桿 / 十字鍵：移動</p>
+                        <p>A 鍵：閃避 / 確認</p>
+                        <p>X 鍵：攻擊 / 互動</p>
+                        <p>+ 鍵 (Start)：重新挑戰 / 跳過</p>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeSettingsModal()" class="px-6 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded pixel-font text-xs">儲存並返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 讀取紀錄 Modal -->
+        <div id="modal-load" class="absolute inset-0 z-40 bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="bg-neutral-900 border-2 border-neutral-700 p-6 rounded-2xl w-96 max-w-full shadow-2xl text-center">
+                <h3 class="text-xl font-bold text-white pixel-font mb-4">💾 讀取存檔紀錄</h3>
+                <div class="p-4 bg-neutral-800 rounded-lg mb-4 text-left text-xs text-gray-300 space-y-1">
+                    <p class="font-bold text-emerald-400">存檔 01：EP1 深夜超商</p>
+                    <p>進度：尚未有自動存檔記錄</p>
+                </div>
+                <button onclick="closeLoadModal()" class="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 text-white font-bold rounded pixel-font text-xs">關閉</button>
+            </div>
+        </div>
+
     </div>
 
-    <!-- PORTRAIT EXTRA FOOTER (Allows scrolling in Portrait Mode so browser URL bar never gets stuck hidden) -->
-    <div id="portrait-footer" class="hidden w-full bg-[#090912] border-t border-slate-800 p-4 text-xs text-slate-400">
-        <div class="max-w-xl mx-auto flex flex-col gap-1">
-            <div class="text-amber-400 font-bold">🕹️ 《末路兼職 DEAD END JOB》良值手把跨平台製作人專屬版</div>
-            <p>目前為<b>直式畫面模式</b>，上方瀏覽器網址列已保持顯示方便您複製或分享網址。當您將手機或平板<b>旋轉為橫式（Landscape）</b>時，系統將自動鎖定全螢幕並消除網址列！</p>
-        </div>
-    </div>
-
+    <!-- 遊戲音效與前端邏輯引擎 -->
     <script>
-        /********************************************************************
-         * 《末路兼職 DEAD END JOB (꿀알바)》
-         * High-Resolution Retro Pixel Art Engine + Full Gamepad API + WebAudio Synth
-         ********************************************************************/
-
-        // ============================================================================
-        // 1. PERSISTENT SETTINGS & SAVE SYSTEM
-        // ============================================================================
-        const STORAGE_KEY = 'DEAD_END_JOB_SAVE_V1';
-        const appConfig = {
+        // --- 遊戲全域狀態 ---
+        const gameState = {
             soundEnabled: true,
-            volume: 0.8,
-            virtualPadEnabled: true,
-            crtEnabled: true,
-            rumbleEnabled: true,
-            savedStage: 1,
-            highScoreCoins: 0,
-            totalCoins: 0
+            virtualControl: false,
+            currentScreen: 'menu', // menu, intro, manual, store, combat, gameover, victory
+            playerHp: 100,
+            bossHp: 100,
+            gameTimeMinutes: 22 * 60, // 22:00
+            storeStep: 0,
+            gamepadIndex: null,
+            lastGamepadState: {}
         };
 
-        function loadSaveData() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    Object.assign(appConfig, parsed);
-                }
-            } catch (e) {
-                console.warn('Save load fallback:', e);
+        // --- Web Audio API 沉浸式音效與 BGM 引擎 ---
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            syncSettingsUI();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
-        function saveGameData() {
+        // 播放懸疑超商電子音效 / 打擊音效
+        function playSound(type) {
+            if (!gameState.soundEnabled || !audioCtx) return;
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appConfig));
-            } catch (e) {
-                console.warn('Save write error:', e);
-            }
-            syncSettingsUI();
-        }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
 
-        // ============================================================================
-        // 2. RETRO SYNTHWAVE & CHIPTUNE AUDIO ENGINE (Web Audio API - No external MP3s)
-        // ============================================================================
-        class RetroAudioEngine {
-            constructor() {
-                this.ctx = null;
-                this.isPlayingBGM = false;
-                this.step = 0;
-                this.bgmTimer = null;
-            }
-
-            init() {
-                if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) {
-                        this.ctx = new AudioCtx();
-                    }
-                }
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            }
-
-            playTone(freq, type = 'square', duration = 0.12, vol = 0.18, slideFreq = null) {
-                if (!appConfig.soundEnabled || !this.ctx) return;
-                try {
-                    const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, now);
-                    if (slideFreq) {
-                        osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
-                    }
-
-                    const finalVol = Math.max(0.0001, vol * appConfig.volume);
-                    gain.gain.setValueAtTime(finalVol, now);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+                const now = audioCtx.currentTime;
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
                     osc.start(now);
-                    osc.stop(now + duration);
-                } catch (e) {}
-            }
-
-            sfxSelect() { this.init(); this.playTone(520, 'square', 0.06, 0.15, 680); }
-            sfxAcceptJob() {
-                this.init();
-                this.playTone(587.33, 'square', 0.09, 0.22);
-                setTimeout(() => this.playTone(880, 'square', 0.18, 0.25), 85);
-                setTimeout(() => this.playTone(1174.66, 'triangle', 0.28, 0.25), 170);
-            }
-            sfxCoin() {
-                this.init();
-                this.playTone(987.77, 'square', 0.07, 0.2);
-                setTimeout(() => this.playTone(1318.51, 'square', 0.18, 0.22), 65);
-            }
-            sfxJump() { this.init(); this.playTone(210, 'square', 0.14, 0.18, 540); }
-            sfxDash() { this.init(); this.playTone(620, 'sawtooth', 0.16, 0.22, 140); }
-            sfxHurt() {
-                this.init();
-                this.playTone(150, 'sawtooth', 0.22, 0.3, 55);
-                setTimeout(() => this.playTone(95, 'square', 0.2, 0.3, 45), 80);
-            }
-            sfxDeath() {
-                this.init();
-                [300, 260, 210, 140, 80].forEach((f, idx) => {
-                    setTimeout(() => this.playTone(f, 'sawtooth', 0.22, 0.28, f * 0.7), idx * 110);
-                });
-            }
-
-            startBGM() {
-                this.init();
-                if (this.bgmTimer) return;
-                // Groovy, tense Korean cyber-pixel bassline inspired by Dead End Job (꿀알바) OST
-                const bassNotes = [
-                    110, 110, 130.81, 110,  146.83, 110, 164.81, 146.83,
-                    98,  98,  110,    98,   130.81, 123.47, 110, 98
-                ];
-                const leadNotes = [
-                    440, 0, 523.25, 0,  587.33, 523.25, 440, 0,
-                    392, 0, 440,    0,  523.25, 493.88, 440, 0
-                ];
-
-                this.bgmTimer = setInterval(() => {
-                    if (!appConfig.soundEnabled || !this.ctx || gameState.mode === 'DEAD') return;
-                    const idx = this.step % bassNotes.length;
-                    const stagePitch = gameState.stage === 2 ? 1.08 : (gameState.stage === 3 ? 1.15 : 1.0);
-
-                    // Bass synth pulse
-                    this.playTone(bassNotes[idx] * stagePitch, 'sawtooth', 0.13, 0.11);
-
-                    // Chiptune lead melody during gameplay or title
-                    if (leadNotes[idx] > 0 && (this.step % 2 === 0 || gameState.mode === 'PLAYING')) {
-                        this.playTone(leadNotes[idx] * stagePitch, 'square', 0.11, 0.07);
-                    }
-                    this.step++;
-                }, 155);
-            }
-        }
-
-        const audio = new RetroAudioEngine();
-
-        // ============================================================================
-        // 3. ORIENTATION & FULLSCREEN MANAGER (橫式自動全螢幕消除網址列 / 直式顯示網址列)
-        // ============================================================================
-        const portraitBanner = document.getElementById('portrait-banner');
-        const portraitFooter = document.getElementById('portrait-footer');
-
-        function isLandscapeMode() {
-            return window.innerWidth >= window.innerHeight;
-        }
-
-        function requestConsoleFullscreen() {
-            const docEl = document.documentElement;
-            try {
-                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                    if (docEl.requestFullscreen) {
-                        docEl.requestFullscreen().catch(() => {});
-                    } else if (docEl.webkitRequestFullscreen) {
-                        docEl.webkitRequestFullscreen();
-                    }
+                    osc.stop(now + 0.08);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(40, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'monster') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(80, now);
+                    osc.frequency.linearRampToValueAtTime(200, now + 0.3);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
                 }
-                // Mobile Safari / Chrome scroll bar hiding trick
-                window.scrollTo(0, 1);
-            } catch (e) {}
+            } catch(e) {}
         }
 
-        function exitConsoleFullscreenForPortrait() {
-            try {
-                if (document.fullscreenElement && document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            } catch (e) {}
-        }
-
-        function handleOrientationChange() {
-            const landscape = isLandscapeMode();
-            if (landscape) {
-                portraitBanner.classList.add('hidden');
-                portraitFooter.classList.add('hidden');
-                window.scrollTo(0, 1);
+        // --- 手機直橫式動態偵測與全螢幕自動鎖定 ---
+        function checkOrientation() {
+            const warning = document.getElementById('orientation-warning');
+            // 當手機直式時顯示提示，橫式自動沉浸全螢幕
+            if (window.innerHeight > window.innerWidth && window.innerWidth <= 768) {
+                warning.classList.remove('hidden');
+                warning.classList.add('flex');
             } else {
-                // In Portrait mode, exit fullscreen so the browser URL bar appears naturally
-                portraitBanner.classList.remove('hidden');
-                portraitFooter.classList.remove('hidden');
-                exitConsoleFullscreenForPortrait();
+                warning.classList.add('hidden');
+                warning.classList.remove('flex');
             }
         }
 
-        window.addEventListener('resize', handleOrientationChange);
-        window.addEventListener('orientationchange', () => setTimeout(handleOrientationChange, 150));
-        handleOrientationChange();
+        function dismissOrientationWarning() {
+            document.getElementById('orientation-warning').classList.add('hidden');
+            // 嘗試請求全螢幕
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }
 
-        document.getElementById('btn-fullscreen').addEventListener('click', () => {
-            audio.sfxSelect();
-            requestConsoleFullscreen();
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('load', () => {
+            checkOrientation();
+            initGamepadListener();
         });
-        document.getElementById('btn-force-fs-portrait').addEventListener('click', () => {
-            audio.sfxSelect();
-            requestConsoleFullscreen();
-        });
 
-        // ============================================================================
-        // 4. CROSS-PLATFORM GAMEPAD API & INPUT ENGINE (良值 IINE Pro 手把完美對應)
-        // ============================================================================
-        const inputState = {
-            left: false,
-            right: false,
-            up: false,
-            down: false,
-            jump: false,
-            action: false,
-            plus: false,
-            minus: false,
-            // Edge-triggered states (single press detection)
-            justJump: false,
-            justAction: false,
-            justPlus: false,
-            justMinus: false,
-            justUp: false,
-            justDown: false,
-            justLeft: false,
-            justRight: false
-        };
-
-        const prevInput = {
-            jump: false,
-            action: false,
-            plus: false,
-            minus: false,
-            up: false,
-            down: false,
-            left: false,
-            right: false
-        };
-
-        const keysDown = {};
-        const vKeysDown = { up: false, down: false, left: false, right: false, jump: false, action: false };
-        let activeGamepadIndex = null;
-
-        function triggerGamepadRumble(duration = 160, weak = 0.6, strong = 0.9) {
-            if (!appConfig.rumbleEnabled || !navigator.getGamepads) return;
-            try {
-                const pads = navigator.getGamepads();
-                for (let i = 0; i < pads.length; i++) {
-                    const pad = pads[i];
-                    if (pad && pad.vibrationActuator && pad.vibrationActuator.playEffect) {
-                        pad.vibrationActuator.playEffect('dual-rumble', {
-                            startDelay: 0,
-                            duration: duration,
-                            weakMagnitude: weak,
-                            strongMagnitude: strong
-                        }).catch(() => {});
-                    }
+        // --- 畫面切換控制 ---
+        function switchScreen(screenId) {
+            const screens = ['screen-menu', 'screen-intro', 'screen-manual', 'screen-store', 'screen-combat', 'screen-gameover', 'screen-victory'];
+            screens.forEach(s => {
+                const el = document.getElementById(s);
+                if (s === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
                 }
-            } catch (e) {}
+            });
+            gameState.currentScreen = screenId;
         }
 
-        function updateGamepadBadge(pad, lastBtnText = null) {
-            const nameEl = document.getElementById('gamepad-name');
-            const btnEl = document.getElementById('gamepad-last-btn');
-            if (pad) {
-                const shortName = pad.id.length > 24 ? pad.id.substring(0, 24) + '...' : pad.id;
-                nameEl.textContent = `已連線：良值/Pro 手把 (${shortName})`;
-                nameEl.className = 'text-[11px] sm:text-xs font-bold text-emerald-400 tracking-wide';
-                if (lastBtnText) btnEl.textContent = lastBtnText;
+        // --- 1. 從頭開始與片頭動畫邏輯 ---
+        const introSteps = [
+            { art: "💸", text: "卞革浚（李宰旭 飾）因為遭遇全租房詐騙與股票失利，背負了壓得喘不過氣的巨額債務..." },
+            { art: "🌊", text: "在走投無路打算投江之際，手機突然收到一則神祕簡訊——「蜘蛛人力派遣」..." },
+            { art: "🏪", text: "他接下了這份時薪高達 50 倍的深夜超商大夜班工作（值班時間 22:00 至 06:00）。" },
+            { art: "📖", text: "當他踏入荒涼偏僻的超商，櫃台上放著一本沾滿灰塵的《員工守則工作手冊》..." }
+        ];
+        let currentIntroIndex = 0;
+
+        function startGameSequence() {
+            initAudio();
+            playSound('click');
+            currentIntroIndex = 0;
+            switchScreen('screen-intro');
+            renderIntroStep();
+        }
+
+        function renderIntroStep() {
+            if (currentIntroIndex < introSteps.length) {
+                document.getElementById('intro-pixel-art').innerText = introSteps[currentIntroIndex].art;
+                document.getElementById('intro-dialogue').innerText = introSteps[currentIntroIndex].text;
+                currentIntroIndex++;
+            } else {
+                // 片頭結束，進入工作手冊規則怪談
+                openManual();
             }
         }
 
-        window.addEventListener('gamepadconnected', (e) => {
-            activeGamepadIndex = e.gamepad.index;
-            updateGamepadBadge(e.gamepad, 'CONNECTED');
-            audio.sfxAcceptJob();
-            triggerGamepadRumble(180, 0.5, 0.8);
-        });
-
-        window.addEventListener('gamepaddisconnected', () => {
-            const nameEl = document.getElementById('gamepad-name');
-            nameEl.textContent = '手把已中斷 (可隨時按手把任意鍵重連)';
-            nameEl.className = 'text-[11px] sm:text-xs font-bold text-amber-400 tracking-wide';
-        });
-
-        // Keyboard Listeners
-        window.addEventListener('keydown', (e) => {
-            keysDown[e.code] = true;
-            audio.startBGM();
-            if (isLandscapeMode() && ['ArrowUp', 'ArrowDown', 'Space', 'Enter'].includes(e.code)) {
-                e.preventDefault();
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            keysDown[e.code] = false;
-        });
-
-        // Virtual Touch Buttons Listeners
-        document.querySelectorAll('[data-vkey]').forEach((btn) => {
-            const k = btn.getAttribute('data-vkey');
-            const press = (ev) => {
-                ev.preventDefault();
-                vKeysDown[k] = true;
-                btn.classList.add('pressed');
-                audio.startBGM();
-                if (isLandscapeMode()) requestConsoleFullscreen();
-            };
-            const release = (ev) => {
-                ev.preventDefault();
-                vKeysDown[k] = false;
-                btn.classList.remove('pressed');
-            };
-            btn.addEventListener('touchstart', press, { passive: false });
-            btn.addEventListener('touchend', release, { passive: false });
-            btn.addEventListener('touchcancel', release, { passive: false });
-            btn.addEventListener('mousedown', press);
-            btn.addEventListener('mouseup', release);
-            btn.addEventListener('mouseleave', release);
-        });
-
-        function pollAllInputs() {
-            let gpLeft = false, gpRight = false, gpUp = false, gpDown = false;
-            let gpJump = false, gpAction = false, gpPlus = false, gpMinus = false;
-            let pressedNames = [];
-
-            if (navigator.getGamepads) {
-                const pads = navigator.getGamepads();
-                for (let i = 0; i < pads.length; i++) {
-                    const pad = pads[i];
-                    if (!pad || !pad.connected) continue;
-                    updateGamepadBadge(pad);
-
-                    const b = pad.buttons;
-                    const ax = pad.axes || [0, 0];
-
-                    // Left Stick & D-Pad (buttons 12=Up, 13=Down, 14=Left, 15=Right)
-                    if (ax[0] < -0.35 || (b[14] && b[14].pressed)) { gpLeft = true; pressedNames.push('◀ LEFT'); }
-                    if (ax[0] > 0.35  || (b[15] && b[15].pressed)) { gpRight = true; pressedNames.push('▶ RIGHT'); }
-                    if (ax[1] < -0.35 || (b[12] && b[12].pressed)) { gpUp = true; pressedNames.push('▲ UP'); }
-                    if (ax[1] > 0.35  || (b[13] && b[13].pressed)) { gpDown = true; pressedNames.push('▼ DOWN'); }
-
-                    // A / B buttons (buttons[0] and buttons[1]) -> Jump / Confirm
-                    if ((b[0] && b[0].pressed) || (b[1] && b[1].pressed)) {
-                        gpJump = true;
-                        pressedNames.push('A/B (跳躍/確認)');
-                    }
-
-                    // X / Y / R / ZR buttons (buttons[2], [3], [5], [7]) -> Smartphone Flash & Dash
-                    if ((b[2] && b[2].pressed) || (b[3] && b[3].pressed) || (b[5] && b[5].pressed) || (b[7] && b[7].pressed)) {
-                        gpAction = true;
-                        pressedNames.push('X/Y (閃光/衝刺)');
-                    }
-
-                    // [+] Plus / Start Button (buttons[9], or buttons[16]) -> Restart on Death / Pause
-                    if ((b[9] && b[9].pressed) || (b[16] && b[16].pressed)) {
-                        gpPlus = true;
-                        pressedNames.push('[+] PLUS 加號鍵');
-                    }
-
-                    // [-] Minus / Select Button (buttons[8]) -> Settings Menu
-                    if (b[8] && b[8].pressed) {
-                        gpMinus = true;
-                        pressedNames.push('[-] MINUS 減號鍵');
-                    }
-
-                    if (pressedNames.length > 0) {
-                        document.getElementById('gamepad-last-btn').textContent = pressedNames[0];
-                        const liveLog = document.getElementById('insp-live-log');
-                        if (liveLog) {
-                            liveLog.textContent = `即時偵測輸入：${pressedNames.join(' + ')}`;
-                        }
-                        audio.startBGM();
-                        if (isLandscapeMode()) requestConsoleFullscreen();
-                    }
-                }
-            }
-
-            // Combine Gamepad + Keyboard + Mobile Virtual Controls
-            inputState.left = gpLeft || keysDown['ArrowLeft'] || keysDown['KeyA'] || vKeysDown.left;
-            inputState.right = gpRight || keysDown['ArrowRight'] || keysDown['KeyD'] || vKeysDown.right;
-            inputState.up = gpUp || keysDown['ArrowUp'] || keysDown['KeyW'] || vKeysDown.up;
-            inputState.down = gpDown || keysDown['ArrowDown'] || keysDown['KeyS'] || vKeysDown.down;
-            inputState.jump = gpJump || keysDown['Space'] || keysDown['KeyZ'] || keysDown['KeyJ'] || vKeysDown.jump;
-            inputState.action = gpAction || keysDown['KeyX'] || keysDown['KeyK'] || keysDown['ShiftLeft'] || vKeysDown.action;
-            inputState.plus = gpPlus || keysDown['Enter'] || keysDown['Equal'] || keysDown['NumpadAdd'];
-            inputState.minus = gpMinus || keysDown['Escape'] || keysDown['Minus'];
-
-            // Compute single-frame edge triggers
-            inputState.justJump = inputState.jump && !prevInput.jump;
-            inputState.justAction = inputState.action && !prevInput.action;
-            inputState.justPlus = inputState.plus && !prevInput.plus;
-            inputState.justMinus = inputState.minus && !prevInput.minus;
-            inputState.justUp = inputState.up && !prevInput.up;
-            inputState.justDown = inputState.down && !prevInput.down;
-            inputState.justLeft = inputState.left && !prevInput.left;
-            inputState.justRight = inputState.right && !prevInput.right;
-
-            prevInput.jump = inputState.jump;
-            prevInput.action = inputState.action;
-            prevInput.plus = inputState.plus;
-            prevInput.minus = inputState.minus;
-            prevInput.up = inputState.up;
-            prevInput.down = inputState.down;
-            prevInput.left = inputState.left;
-            prevInput.right = inputState.right;
+        function skipIntro() {
+            playSound('click');
+            openManual();
         }
 
-        // ============================================================================
-        // 5. GAME STATE & STAGE DEFINITIONS (還原《末路兼職》韓系像素片頭三大場景)
-        // ============================================================================
-        const canvas = document.getElementById('game-canvas');
-        const ctx = canvas.getContext('2d');
+        // 點擊片頭任意處推進
+        document.getElementById('screen-intro').addEventListener('click', () => {
+            if (gameState.currentScreen === 'intro') {
+                playSound('click');
+                renderIntroStep();
+            }
+        });
 
-        const STAGES = {
+        // --- 2. 規則怪談手冊邏輯 ---
+        function openManual() {
+            switchScreen('screen-manual');
+            playSound('click');
+        }
+
+        function closeManual() {
+            playSound('click');
+            startStoreAdventure();
+        }
+
+        // --- 3. 超商探索與劇情 AVG 模式 ---
+        function startStoreAdventure() {
+            switchScreen('screen-store');
+            gameState.storeStep = 1;
+            renderStoreStep();
+        }
+
+        const storeStepsData = {
             1: {
-                name: 'STAGE 1：深夜詭異超商 (24H MART)',
-                subtitle: '閃避貨架黑影與紅藍訊號異常，收集 8 枚兼職金幣前往出口！',
-                targetCoins: 8,
-                bgTop: '#0d0c1d',
-                bgBottom: '#1b1630',
-                floorColor: '#242038'
+                location: "便利商店 - 櫃台區",
+                art: "🏪",
+                speaker: "卞革浚",
+                dialogue: "「手冊上寫著：大夜班兩人一組，絕對不能擅自離開店鋪。嗯？有人推門進來了...」",
+                hint: "第二兼職生崔熙東抵達了超商。",
+                buttons: [
+                    { label: "▶ 與崔熙東打招呼", action: "nextStoreStep(2)" }
+                ]
             },
             2: {
-                name: 'STAGE 2：黑白圍棋走廊與致命黑霧 (BADUK CORRIDOR)',
-                subtitle: '閃避天降巨型黑白圍棋與後方吞噬黑霧，收集 10 枚金幣逃出生天！',
-                targetCoins: 10,
-                bgTop: '#09090d',
-                bgBottom: '#1c1c24',
-                floorColor: '#2a2a35'
+                location: "便利商店 - 陳列走道",
+                art: "🧑‍🤝‍🧑",
+                speaker: "崔熙東（崔顯旭 飾）",
+                dialogue: "熙東露出詭異的微笑：「前輩，晚安啊。倉庫好像有奇怪的聲音，你不去盤點一下嗎？」",
+                hint: "規則怪談警告：聽到倉庫怪聲絕對不要進去！但劇情推進需要盤點。",
+                buttons: [
+                    { label: "📦 硬著頭皮進入倉庫盤點", action: "nextStoreStep(3)" }
+                ]
             },
             3: {
-                name: 'STAGE 3：生化走廊與廢棄遊樂園 (CARNIVAL LAB)',
-                subtitle: '按 [X] 用手機閃光驅散黃色防護衣追兵與詭異豬頭，收集 12 枚金幣領取尾款！',
-                targetCoins: 12,
-                bgTop: '#160b18',
-                bgBottom: '#28122b',
-                floorColor: '#2c1628'
+                location: "便利商店 - 陰暗倉庫",
+                art: "🕷️",
+                speaker: "卞革浚",
+                dialogue: "（倒吸一口氣）倉庫角落的容器裡...竟然有一名身體變異成蜘蛛模樣的女性工讀生！她虛弱地點頭暗示『十字架是用來對付熙東的陷阱』！",
+                hint: "原來上一任工讀生被熙東騙拿十字架而慘遭毒手！",
+                buttons: [
+                    { label: "🏃 驚恐逃回櫃台區", action: "nextStoreStep(4)" }
+                ]
+            },
+            4: {
+                location: "便利商店 - 櫃台區",
+                art: "🐀",
+                speaker: "崔熙東",
+                dialogue: "熙東冷笑開口：「你竟然知道倉庫裡『那個女人』還活著？」——他竟然自己暴露了非人類身份！",
+                hint: "隨後，熙東身軀劇烈扭曲解體，無數老鼠化為殘暴血腥的巨大鼠怪！",
+                buttons: [
+                    { label: "⚔️ 拔劍/迎戰巨大鼠怪！", action: "startCombatMode()" }
+                ]
             }
         };
 
-        const gameState = {
-            mode: 'TITLE', // 'TITLE', 'CUTSCENE', 'PLAYING', 'PAUSED', 'DEAD', 'VICTORY'
-            menuIndex: 0,
-            stage: 1,
-            tick: 0,
-            coinsCollected: 0,
-            stageCoinsCollected: 0,
-            cameraX: 0,
-            flashCooldown: 0,
-            flashEffectTimer: 0,
-            glitchIntensity: 0,
-            smokeX: -180,
-            bannerTimer: 0
-        };
-
-        const player = {
-            x: 80,
-            y: 240,
-            vx: 0,
-            vy: 0,
-            w: 22,
-            h: 38,
-            facing: 1,
-            onGround: false,
-            hp: 3,
-            maxHp: 3,
-            invulnTimer: 0,
-            dashTimer: 0,
-            animFrame: 0
-        };
-
-        let platforms = [];
-        let coins = [];
-        let enemies = [];
-        let fallingHazards = [];
-        let particles = [];
-        let exitDoorX = 1850;
-
-        // ============================================================================
-        // 6. STAGE BUILDER & PROCEDURAL PIXEL LEVEL GENERATOR
-        // ============================================================================
-        function buildStage(stageNum) {
-            gameState.stage = stageNum;
-            gameState.stageCoinsCollected = 0;
-            gameState.cameraX = 0;
-            gameState.flashCooldown = 0;
-            gameState.flashEffectTimer = 0;
-            gameState.smokeX = -150;
-            gameState.bannerTimer = 150;
-
-            player.x = 70;
-            player.y = 240;
-            player.vx = 0;
-            player.vy = 0;
-            player.facing = 1;
-            player.hp = 3;
-            player.invulnTimer = 40;
-            player.dashTimer = 0;
-
-            platforms = [];
-            coins = [];
-            enemies = [];
-            fallingHazards = [];
-            particles = [];
-
-            const levelLength = 1950;
-            exitDoorX = levelLength - 110;
-
-            // Populate shelves / Baduk steps / carnival platforms
-            for (let x = 220; x < levelLength - 220; x += 155) {
-                const py = (x % 310 === 0) ? 185 : 225;
-                const pw = 85 + (x % 35);
-                platforms.push({ x, y: py, w: pw, h: 12 });
-
-                // Spawn glowing golden job coins above platforms and along floor
-                coins.push({ x: x + pw / 2, y: py - 24, r: 9, collected: false, bobOffset: x });
-                if (x % 2 === 0) {
-                    coins.push({ x: x + 75, y: 265, r: 9, collected: false, bobOffset: x + 50 });
-                }
-            }
-
-            // Guarantee enough coins to clear target + bonus
-            for (let i = 0; i < 6; i++) {
-                coins.push({ x: 300 + i * 250, y: 140, r: 9, collected: false, bobOffset: i * 40 });
-            }
-
-            // Populate stage-specific enemies inspired by the video
-            const enemyCount = stageNum === 1 ? 6 : (stageNum === 2 ? 7 : 9);
-            for (let i = 0; i < enemyCount; i++) {
-                const ex = 340 + i * 210;
-                let type = 'shadow'; // Stage 1 convenience store glitch shadow
-                if (stageNum === 2) type = (i % 2 === 0) ? 'baduk_wraith' : 'shadow';
-                if (stageNum === 3) type = (i % 2 === 0) ? 'hazmat' : 'pig_mascot';
-
-                enemies.push({
-                    x: ex,
-                    y: 262,
-                    vx: (i % 2 === 0 ? -1.1 : 1.1) * (1 + stageNum * 0.15),
-                    minX: ex - 95,
-                    maxX: ex + 95,
-                    w: 24,
-                    h: 38,
-                    type,
-                    stunTimer: 0
-                });
-            }
+        function nextStoreStep(stepNum) {
+            playSound('click');
+            gameState.storeStep = stepNum;
+            renderStoreStep();
         }
 
-        // ============================================================================
-        // 7. HIGH-RES RETRO PIXEL ART SPRITE & SCENE RENDERERS
-        // ============================================================================
+        function renderStoreStep() {
+            const data = storeStepsData[gameState.storeStep];
+            if (!data) return;
+            document.getElementById('location-name').innerText = data.location;
+            document.getElementById('store-scene-art').innerText = data.art;
+            document.getElementById('store-dialogue-speaker').innerText = data.speaker;
+            document.getElementById('store-dialogue-text').innerText = data.dialogue;
+            document.getElementById('store-hint').innerText = data.hint;
 
-        // Draw Protagonist: Tired Korean youth in black/white striped long-sleeve shirt, glasses, blue jeans, red sneakers
-        function drawPixelProtagonist(ctx, x, y, facing, animFrame, isHurt, isDashing) {
-            ctx.save();
-            ctx.translate(Math.floor(x), Math.floor(y));
-            if (facing < 0) {
-                ctx.scale(-1, 1);
-                ctx.translate(-22, 0);
-            }
-
-            if (isHurt && Math.floor(gameState.tick / 3) % 2 === 0) {
-                ctx.globalAlpha = 0.45;
-            }
-
-            // Dash Cyan Afterimage
-            if (isDashing) {
-                ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
-                ctx.fillRect(-8, 2, 22, 36);
-            }
-
-            const bob = Math.sin(animFrame * 0.35) * 1.5;
-            const legOffset = Math.sin(animFrame * 0.45) * 4;
-
-            // Shadow on ground
-            ctx.fillStyle = 'rgba(0,0,0,0.45)';
-            ctx.fillRect(2, 35, 18, 4);
-
-            // Legs (Blue Jeans)
-            ctx.fillStyle = '#254e7a';
-            ctx.fillRect(5 + (legOffset > 0 ? 2 : -1), 24, 5, 11);
-            ctx.fillRect(12 - (legOffset > 0 ? 2 : -1), 24, 5, 11);
-
-            // Red Sneakers with white soles
-            ctx.fillStyle = '#e62e45';
-            ctx.fillRect(4 + (legOffset > 0 ? 2 : -1), 33, 7, 4);
-            ctx.fillRect(11 - (legOffset > 0 ? 2 : -1), 33, 7, 4);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(4 + (legOffset > 0 ? 2 : -1), 36, 7, 1);
-            ctx.fillRect(11 - (legOffset > 0 ? 2 : -1), 36, 7, 1);
-
-            // Torso: Iconic Black & White Striped Long-Sleeve Shirt (from reference video!)
-            const torsoY = Math.floor(12 + bob);
-            for (let row = 0; row < 12; row += 2) {
-                ctx.fillStyle = (row % 4 === 0) ? '#e8ecf2' : '#161622';
-                ctx.fillRect(4, torsoY + row, 14, 2);
-            }
-
-            // Arms (Striped sleeves)
-            ctx.fillStyle = '#161622';
-            ctx.fillRect(2, torsoY + 2, 3, 9);
-            ctx.fillRect(17, torsoY + 2, 3, 8);
-            // Glowing Smartphone in right hand!
-            ctx.fillStyle = '#ffd700';
-            ctx.fillRect(19, torsoY + 5, 4, 6);
-            ctx.fillStyle = '#00f0ff';
-            ctx.fillRect(20, torsoY + 6, 2, 4);
-
-            // Head (Pale tired skin)
-            const headY = Math.floor(1 + bob);
-            ctx.fillStyle = '#f2cbb2';
-            ctx.fillRect(4, headY + 2, 14, 11);
-
-            // Messy Black Hair
-            ctx.fillStyle = '#12111a';
-            ctx.fillRect(3, headY, 16, 5);
-            ctx.fillRect(2, headY + 2, 3, 5);
-            ctx.fillRect(16, headY + 2, 3, 3);
-            ctx.fillRect(7, headY + 4, 3, 2);
-
-            // Glasses & Dark Tired Eye Circles
-            ctx.fillStyle = '#1a1a26';
-            ctx.fillRect(10, headY + 6, 8, 4);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(11, headY + 7, 2, 2);
-            ctx.fillRect(15, headY + 7, 2, 2);
-            // Tired eye bags
-            ctx.fillStyle = '#9c7875';
-            ctx.fillRect(11, headY + 10, 6, 1);
-
-            ctx.restore();
-        }
-
-        // Draw Title Screen Animated Key Visual (Outside "거미인력" Spider Staffing Agency at Night)
-        function drawTitleKeyVisual() {
-            const t = gameState.tick;
-
-            // Night gritty sky gradient
-            const grad = ctx.createLinearGradient(0, 0, 0, 360);
-            grad.addColorStop(0, '#06060c');
-            grad.addColorStop(0.6, '#141026');
-            grad.addColorStop(1, '#1c1528');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 640, 360);
-
-            // Distant Korean City Silhouette
-            ctx.fillStyle = '#0d0b18';
-            const bldgs = [
-                [20, 120, 70, 200], [95, 90, 85, 230], [190, 140, 65, 180],
-                [430, 85, 90, 235], [525, 115, 95, 205]
-            ];
-            bldgs.forEach(([bx, by, bw, bh]) => {
-                ctx.fillRect(bx, by, bw, bh);
-                // Distant lit windows
-                ctx.fillStyle = '#2d2442';
-                for (let wy = by + 12; wy < by + bh - 30; wy += 18) {
-                    for (let wx = bx + 10; wx < bx + bw - 14; wx += 16) {
-                        if ((wx + wy) % 5 === 0) ctx.fillRect(wx, wy, 6, 8);
-                    }
-                }
-                ctx.fillStyle = '#0d0b18';
+            const btnContainer = document.getElementById('action-buttons-list');
+            btnContainer.innerHTML = '';
+            data.buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3 px-4 bg-emerald-800 hover:bg-emerald-700 text-white font-bold rounded-lg shadow border border-emerald-600 pixel-font text-xs flex items-center justify-center transition-all";
+                btn.innerText = b.label;
+                btn.onclick = () => eval(b.action);
+                btnContainer.appendChild(btn);
             });
-
-            // Tangled Overhead Power Lines (Signature detail from the video intro!)
-            ctx.strokeStyle = '#050508';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, 40 + i * 14);
-                ctx.quadraticCurveTo(320, 85 + i * 18, 640, 30 + i * 12);
-                ctx.stroke();
-            }
-
-            // Main Rundown Building ("가구백화점" & "거미인력 蜘蛛人力仲介")
-            ctx.fillStyle = '#242234';
-            ctx.fillRect(210, 68, 220, 232);
-            ctx.strokeStyle = '#110f1a';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(210, 68, 220, 232);
-
-            // Neon Sign 1: 거미인력 (Spider Staffing)
-            const flicker = (Math.sin(t * 0.2) > -0.85) ? 1 : 0.25;
-            ctx.fillStyle = `rgba(255, 42, 85, ${0.85 * flicker})`;
-            ctx.fillRect(230, 95, 180, 34);
-            ctx.strokeStyle = '#ffd700';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(230, 95, 180, 34);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px DotGothic16, monospace';
-            ctx.fillText('거미인력 蜘蛛人力', 246, 118);
-
-            // Sub-sign: 가구백화점 / 高薪日結
-            ctx.fillStyle = '#162836';
-            ctx.fillRect(245, 138, 150, 22);
-            ctx.fillStyle = '#00f0ff';
-            ctx.font = '12px DotGothic16, monospace';
-            ctx.fillText('가구백화점 // 日薪百萬', 255, 154);
-
-            // Dark Stairwell Entrance
-            ctx.fillStyle = '#08070d';
-            ctx.fillRect(285, 200, 70, 100);
-
-            // Street Pavement
-            ctx.fillStyle = '#14121d';
-            ctx.fillRect(0, 300, 640, 60);
-            ctx.fillStyle = '#2e2942';
-            ctx.fillRect(0, 300, 640, 4);
-
-            // Streetlamp casting eerie cone of light
-            ctx.fillStyle = '#2c2c3d';
-            ctx.fillRect(158, 110, 5, 190);
-            ctx.fillRect(158, 110, 26, 5);
-            ctx.fillStyle = '#ffd700';
-            ctx.fillRect(174, 115, 10, 4);
-
-            const coneGrad = ctx.createLinearGradient(178, 118, 178, 300);
-            coneGrad.addColorStop(0, 'rgba(255, 215, 0, 0.28)');
-            coneGrad.addColorStop(1, 'rgba(255, 215, 0, 0.02)');
-            ctx.fillStyle = coneGrad;
-            ctx.beginPath();
-            ctx.moveTo(170, 118);
-            ctx.lineTo(115, 300);
-            ctx.lineTo(245, 300);
-            ctx.closePath();
-            ctx.fill();
-
-            // Draw Protagonist under streetlamp looking at glowing phone
-            drawPixelProtagonist(ctx, 168, 264, 1, t * 0.2, false, false);
-
-            // Floating Coin Notification Hologram above his phone
-            const floatY = Math.sin(t * 0.08) * 4;
-            ctx.fillStyle = 'rgba(16, 20, 38, 0.92)';
-            ctx.strokeStyle = '#ffd700';
-            ctx.lineWidth = 2;
-            ctx.fillRect(195, 222 + floatY, 76, 30);
-            ctx.strokeRect(195, 222 + floatY, 76, 30);
-
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath();
-            ctx.arc(210, 237 + floatY, 8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 10px monospace';
-            ctx.fillText('₩', 206, 241 + floatY);
-
-            ctx.fillStyle = '#00ff66';
-            ctx.font = 'bold 10px DotGothic16, monospace';
-            ctx.fillText('ACCEPT!', 223, 241 + floatY);
-
-            // Creeping Shadow Eyes in dark alley
-            if (Math.sin(t * 0.05) > 0) {
-                ctx.fillStyle = '#ff2a55';
-                ctx.fillRect(308, 242, 4, 3);
-                ctx.fillRect(320, 242, 4, 3);
-            }
         }
 
-        // ============================================================================
-        // 8. CORE GAMEPLAY LOOP & PHYSICS UPDATE
-        // ============================================================================
-        function updateGameplay() {
-            gameState.tick++;
+        // --- 4. 動作對決模式 (Canvas 戰鬥引擎) ---
+        let combatInterval = null;
+        let canvas, ctx;
+        let player = { x: 100, y: 300, width: 40, height: 60, speed: 5, vx: 0, isAttacking: false, isDodge: false };
+        let boss = { x: 800, y: 250, width: 100, height: 100, hp: 100, attackTimer: 0 };
+        let combatTime = 5 * 60 + 45; // 05:45 開始，撐到 06:00 (360 分鐘秒數對應)
 
-            // Handle [-] Minus Button to open Settings anytime
-            if (inputState.justMinus) {
-                audio.sfxSelect();
-                toggleSettingsModal(true);
+        function startCombatMode() {
+            switchScreen('screen-combat');
+            playSound('monster');
+            
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+
+            gameState.playerHp = 100;
+            gameState.bossHp = 100;
+            combatTime = 5 * 60 + 45; // 05:45
+            player.x = 100;
+            player.y = canvas.height - 150;
+            boss.x = canvas.width - 200;
+            boss.y = canvas.height - 180;
+
+            if (combatInterval) clearInterval(combatInterval);
+            combatInterval = setInterval(updateCombat, 1000 / 60);
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        function updateCombat() {
+            if (gameState.currentScreen !== 'combat') return;
+
+            // 時間流逝 (05:45 推進至 06:00 勝利)
+            combatTime += 0.2; // 加速計時
+            let currentMin = Math.floor(combatTime / 60);
+            let currentSec = Math.floor(combatTime % 60);
+            let timeStr = `0${Math.floor(currentMin/60)}:${currentSec < 10 ? '0':''}${Math.floor(currentSec)}`;
+            document.getElementById('combat-clock').innerText = timeStr;
+
+            if (combatTime >= 6 * 60) {
+                // 撐到 06:00 晨光破曉！勝利！
+                clearInterval(combatInterval);
+                switchScreen('screen-victory');
                 return;
             }
 
-            // Handle [+] Plus Button to Pause / Unpause during gameplay
-            if (inputState.justPlus && gameState.mode === 'PLAYING') {
-                audio.sfxSelect();
-                toggleInspectorModal(true);
+            // Boss AI 移動與攻擊
+            if (Math.random() < 0.02) {
+                boss.vx = (player.x > boss.x ? 1 : -1) * 2;
+            }
+            boss.x += boss.vx || 0;
+            boss.x = Math.max(200, Math.min(canvas.width - 150, boss.x));
+
+            // 碰撞與血量計算
+            if (Math.abs(player.x - boss.x) < 60) {
+                if (player.isAttacking) {
+                    boss.hp -= 0.5;
+                    playSound('hit');
+                } else if (!player.isDodge) {
+                    gameState.playerHp -= 0.4;
+                    playSound('hit');
+                }
+            }
+
+            document.getElementById('combat-player-hp-bar').style.width = Math.max(0, gameState.playerHp) + '%';
+            document.getElementById('combat-boss-hp-bar').style.width = Math.max(0, boss.hp) + '%';
+
+            if (gameState.playerHp <= 0) {
+                clearInterval(combatInterval);
+                switchScreen('screen-gameover');
                 return;
             }
 
-            if (gameState.bannerTimer > 0) gameState.bannerTimer--;
-            if (gameState.flashCooldown > 0) gameState.flashCooldown--;
-            if (gameState.flashEffectTimer > 0) gameState.flashEffectTimer--;
-            if (player.invulnTimer > 0) player.invulnTimer--;
-            if (player.dashTimer > 0) player.dashTimer--;
-
-            // Horizontal Movement & Dash
-            const speed = player.dashTimer > 0 ? 6.2 : 3.2;
-            if (inputState.left) {
-                player.vx = -speed;
-                player.facing = -1;
-                player.animFrame++;
-            } else if (inputState.right) {
-                player.vx = speed;
-                player.facing = 1;
-                player.animFrame++;
-            } else {
-                player.vx *= 0.72;
-            }
-
-            // Jump (A / B Button)
-            if (inputState.justJump && player.onGround) {
-                player.vy = -8.6;
-                player.onGround = false;
-                audio.sfxJump();
-            }
-
-            // Action: Smartphone Flash & Dash (X / Y Button)
-            if (inputState.justAction && gameState.flashCooldown <= 0) {
-                player.dashTimer = 14;
-                gameState.flashEffectTimer = 16;
-                gameState.flashCooldown = 48;
-                audio.sfxDash();
-                triggerGamepadRumble(70, 0.3, 0.4);
-
-                // Stun nearby enemies with smartphone flash!
-                enemies.forEach((en) => {
-                    const dist = Math.hypot((en.x - player.x), (en.y - player.y));
-                    if (dist < 135) {
-                        en.stunTimer = 110;
-                        spawnParticles(en.x + 12, en.y + 16, '#00f0ff', 8);
-                    }
-                });
-            }
-
-            // Apply Gravity
-            player.vy += 0.44;
-            player.x += player.vx;
-            player.y += player.vy;
-
-            // Clamp Player X
-            if (player.x < 16) player.x = 16;
-            if (player.x > exitDoorX + 60) player.x = exitDoorX + 60;
-
-            // Ground & Platform Collision
-            player.onGround = false;
-            const groundY = 300;
-            if (player.y + player.h >= groundY) {
-                player.y = groundY - player.h;
-                player.vy = 0;
-                player.onGround = true;
-            }
-
-            platforms.forEach((p) => {
-                if (
-                    player.vy >= 0 &&
-                    player.x + player.w > p.x &&
-                    player.x < p.x + p.w &&
-                    player.y + player.h >= p.y &&
-                    player.y + player.h <= p.y + p.h + 10
-                ) {
-                    player.y = p.y - player.h;
-                    player.vy = 0;
-                    player.onGround = true;
-                }
-            });
-
-            // Smooth Camera Tracking
-            const targetCamX = Math.max(0, Math.min(exitDoorX - 420, player.x - 180));
-            gameState.cameraX += (targetCamX - gameState.cameraX) * 0.14;
-
-            // Stage 2 & 3 Creeping Black Smoke Wall + Falling Giant Baduk Stones
-            if (gameState.stage >= 2) {
-                const smokeSpeed = gameState.stage === 2 ? 1.15 : 1.35;
-                gameState.smokeX += smokeSpeed;
-                // Keep smoke at a tense chase distance if player is way ahead
-                if (player.x - gameState.smokeX > 360) {
-                    gameState.smokeX = player.x - 360;
-                }
-                // Caught by Black Smoke -> Instant Death!
-                if (player.x + 8 < gameState.smokeX) {
-                    triggerPlayerDeath('你被後方翻湧的致命黑霧吞噬了！');
-                    return;
-                }
-
-                // Spawn Giant Black/White Baduk (Go) Stones from ceiling
-                if (gameState.tick % 65 === 0) {
-                    fallingHazards.push({
-                        x: player.x + 90 + (Math.random() * 180 - 60),
-                        y: -25,
-                        vy: 2.5 + Math.random() * 1.5,
-                        r: 15,
-                        isWhite: Math.random() > 0.5
-                    });
-                }
-            }
-
-            // Update Falling Baduk Stones
-            for (let i = fallingHazards.length - 1; i >= 0; i--) {
-                const h = fallingHazards[i];
-                h.y += h.vy;
-                if (Math.hypot((player.x + 11) - h.x, (player.y + 19) - h.y) < h.r + 10) {
-                    damagePlayer('被天降的巨型圍棋砸中了！');
-                    fallingHazards.splice(i, 1);
-                    continue;
-                }
-                if (h.y > 310) {
-                    spawnParticles(h.x, 298, h.isWhite ? '#ffffff' : '#4a4a6a', 5);
-                    fallingHazards.splice(i, 1);
-                }
-            }
-
-            // Collect Golden Part-Time Coins
-            coins.forEach((c) => {
-                if (!c.collected && Math.hypot((player.x + 11) - c.x, (player.y + 19) - c.y) < 22) {
-                    c.collected = true;
-                    gameState.coinsCollected++;
-                    gameState.stageCoinsCollected++;
-                    appConfig.totalCoins++;
-                    if (gameState.coinsCollected > appConfig.highScoreCoins) {
-                        appConfig.highScoreCoins = gameState.coinsCollected;
-                    }
-                    audio.sfxCoin();
-                    spawnParticles(c.x, c.y, '#ffd700', 10);
-                    saveGameData();
-                }
-            });
-
-            // Update Enemies
-            enemies.forEach((en) => {
-                if (en.stunTimer > 0) {
-                    en.stunTimer--;
-                    return;
-                }
-                en.x += en.vx;
-                if (en.x < en.minX || en.x > en.maxX) {
-                    en.vx *= -1;
-                }
-
-                // Check collision with player
-                if (
-                    player.invulnTimer <= 0 &&
-                    player.dashTimer <= 0 &&
-                    Math.abs((player.x + 11) - (en.x + 12)) < 17 &&
-                    Math.abs((player.y + 19) - (en.y + 19)) < 24
-                ) {
-                    const msg = en.type === 'pig_mascot'
-                        ? '被廢棄樂園的詭異豬頭吉祥物襲擊了！'
-                        : (en.type === 'hazmat' ? '遭到生化防護衣人員電擊捕捉！' : '被超商異常黑影侵蝕了心智！');
-                    damagePlayer(msg);
-                }
-            });
-
-            // Update Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const pt = particles[i];
-                pt.x += pt.vx;
-                pt.y += pt.vy;
-                pt.life--;
-                if (pt.life <= 0) particles.splice(i, 1);
-            }
-
-            // Check Exit Door Reach
-            if (Math.abs(player.x - exitDoorX) < 30) {
-                audio.sfxAcceptJob();
-                triggerGamepadRumble(200, 0.5, 0.8);
-                if (gameState.stage < 3) {
-                    appConfig.savedStage = gameState.stage + 1;
-                    saveGameData();
-                    openJobCutscene(gameState.stage + 1);
-                } else {
-                    appConfig.savedStage = 1;
-                    saveGameData();
-                    showVictoryScreen();
-                }
-            }
-        }
-
-        function spawnParticles(x, y, color, count = 8) {
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x,
-                    y,
-                    vx: (Math.random() - 0.5) * 4.5,
-                    vy: (Math.random() - 0.8) * 4.5,
-                    color,
-                    life: 18 + Math.random() * 12
-                });
-            }
-        }
-
-        function damagePlayer(reasonText) {
-            if (player.invulnTimer > 0) return;
-            player.hp--;
-            player.invulnTimer = 55;
-            player.vy = -4.5;
-            player.vx = -player.facing * 4;
-            gameState.glitchIntensity = 18;
-            audio.sfxHurt();
-            triggerGamepadRumble(240, 0.8, 1.0);
-            spawnParticles(player.x + 11, player.y + 18, '#ff2a55', 14);
-
-            if (player.hp <= 0) {
-                triggerPlayerDeath(reasonText);
-            }
-        }
-
-        function triggerPlayerDeath(reasonText) {
-            gameState.mode = 'DEAD';
-            audio.sfxDeath();
-            triggerGamepadRumble(420, 1.0, 1.0);
-            document.getElementById('death-reason').textContent = reasonText;
-            document.getElementById('death-stage').textContent = `STAGE ${gameState.stage}`;
-            document.getElementById('death-coins').textContent = `${gameState.coinsCollected} 枚`;
-            document.getElementById('death-overlay').classList.remove('hidden');
-        }
-
-        function showVictoryScreen() {
-            gameState.mode = 'VICTORY';
-            document.getElementById('victory-coins').textContent = `${gameState.coinsCollected} 枚`;
-            document.getElementById('victory-best').textContent = `${appConfig.highScoreCoins} 枚`;
-            document.getElementById('victory-overlay').classList.remove('hidden');
-        }
-
-        // ============================================================================
-        // 9. RENDER GAMEPLAY SCENE & HUD ON CANVAS
-        // ============================================================================
-        function renderGameplayScene() {
-            const st = STAGES[gameState.stage];
-            const camX = Math.floor(gameState.cameraX);
-
-            // Background Gradient
-            const bgGrad = ctx.createLinearGradient(0, 0, 0, 360);
-            bgGrad.addColorStop(0, st.bgTop);
-            bgGrad.addColorStop(1, st.bgBottom);
-            ctx.fillStyle = bgGrad;
-            ctx.fillRect(0, 0, 640, 360);
-
-            ctx.save();
-            // Screen Glitch Shake on Damage
-            if (gameState.glitchIntensity > 0) {
-                gameState.glitchIntensity--;
-                ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 6);
-            }
-            ctx.translate(-camX, 0);
-
-            // Stage-Specific Background Decor
-            for (let bx = 0; bx < exitDoorX + 300; bx += 180) {
-                if (gameState.stage === 1) {
-                    // Stage 1: Convenience Store Shelves & Flickering Fluorescent Tubes
-                    ctx.fillStyle = '#14192b';
-                    ctx.fillRect(bx + 20, 85, 110, 215);
-                    ctx.strokeStyle = '#293252';
-                    ctx.strokeRect(bx + 20, 85, 110, 215);
-                    // Products on shelves
-                    for (let sy = 115; sy < 275; sy += 42) {
-                        ctx.fillStyle = '#2e385c';
-                        ctx.fillRect(bx + 24, sy, 102, 5);
-                        ctx.fillStyle = (bx + sy) % 3 === 0 ? '#ff2a55' : '#00f0ff';
-                        ctx.fillRect(bx + 34, sy - 12, 14, 12);
-                        ctx.fillStyle = '#ffd700';
-                        ctx.fillRect(bx + 62, sy - 14, 18, 14);
-                    }
-                    // Fluorescent ceiling lamp
-                    ctx.fillStyle = (Math.sin(gameState.tick * 0.3 + bx) > -0.8) ? '#e0f7ff' : '#334155';
-                    ctx.fillRect(bx + 30, 28, 90, 6);
-                } else if (gameState.stage === 2) {
-                    // Stage 2: Giant Monochrome Baduk Grid Corridor
-                    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(bx, 40, 180, 260);
-                    ctx.fillStyle = (bx / 180) % 2 === 0 ? '#111118' : '#22222e';
-                    ctx.fillRect(bx + 35, 95, 90, 90);
-                } else {
-                    // Stage 3: Bio-Hazard Lab & Abandoned Carnival Neon
-                    ctx.fillStyle = '#23112b';
-                    ctx.fillRect(bx + 25, 70, 110, 230);
-                    ctx.strokeStyle = '#ff2a55';
-                    ctx.strokeRect(bx + 25, 70, 110, 230);
-                    ctx.fillStyle = '#ffd700';
-                    ctx.font = 'bold 12px monospace';
-                    ctx.fillText('☣ BIO-CARNIVAL', bx + 32, 95);
-                }
-            }
-
-            // Floor
-            ctx.fillStyle = st.floorColor;
-            ctx.fillRect(0, 300, exitDoorX + 400, 60);
-            ctx.fillStyle = '#00f0ff';
-            ctx.fillRect(0, 300, exitDoorX + 400, 2);
-
-            // Platforms
-            platforms.forEach((p) => {
-                ctx.fillStyle = '#332d4a';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = '#ffd700';
-                ctx.fillRect(p.x, p.y, p.w, 3);
-            });
-
-            // Exit Door ("PAYDAY EXIT // 領薪出口")
-            ctx.fillStyle = '#064e3b';
-            ctx.fillRect(exitDoorX, 215, 52, 85);
-            ctx.strokeStyle = '#00ff66';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(exitDoorX, 215, 52, 85);
-            ctx.fillStyle = '#00ff66';
-            ctx.font = 'bold 11px DotGothic16, monospace';
-            ctx.fillText('EXIT 領薪', exitDoorX - 2, 206);
-
-            // Golden Job Coins
-            coins.forEach((c) => {
-                if (c.collected) return;
-                const cy = c.y + Math.sin(gameState.tick * 0.1 + c.bobOffset) * 3;
-                ctx.fillStyle = '#ffd700';
-                ctx.beginPath();
-                ctx.arc(c.x, cy, c.r, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.fillStyle = '#78350f';
-                ctx.font = 'bold 10px monospace';
-                ctx.fillText('₩', c.x - 4, cy + 3);
-            });
-
-            // Enemies (Shadow Glitch, Hazmat Pursuer, Creepy Pig Mascot)
-            enemies.forEach((en) => {
-                ctx.save();
-                ctx.translate(Math.floor(en.x), Math.floor(en.y));
-                if (en.stunTimer > 0) {
-                    ctx.globalAlpha = 0.6;
-                }
-                if (en.type === 'hazmat') {
-                    // Yellow Bio-Hazard Suit Pursuer (from video!)
-                    ctx.fillStyle = '#eab308';
-                    ctx.fillRect(2, 4, 20, 32);
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(6, 7, 12, 9);
-                    ctx.fillStyle = '#00f0ff';
-                    ctx.fillRect(8, 9, 8, 4);
-                } else if (en.type === 'pig_mascot') {
-                    // Creepy Pink Pig Mascot (from video!)
-                    ctx.fillStyle = '#f472b6';
-                    ctx.fillRect(1, 0, 22, 20);
-                    ctx.fillStyle = '#ec4899';
-                    ctx.fillRect(7, 9, 10, 6);
-                    ctx.fillStyle = '#ff0033';
-                    ctx.fillRect(5, 5, 3, 3);
-                    ctx.fillRect(16, 5, 3, 3);
-                    ctx.fillStyle = '#3b0764';
-                    ctx.fillRect(3, 20, 18, 18);
-                } else {
-                    // Red/Cyan Glitch Shadow Monster
-                    ctx.fillStyle = '#ff2a55';
-                    ctx.fillRect(-2, 2, 24, 34);
-                    ctx.fillStyle = '#00f0ff';
-                    ctx.fillRect(2, 2, 24, 34);
-                    ctx.fillStyle = '#090910';
-                    ctx.fillRect(0, 0, 24, 36);
-                    ctx.fillStyle = '#ff2a55';
-                    ctx.fillRect(5, 10, 4, 4);
-                    ctx.fillRect(15, 10, 4, 4);
-                }
-                if (en.stunTimer > 0) {
-                    ctx.fillStyle = '#00f0ff';
-                    ctx.font = 'bold 10px monospace';
-                    ctx.fillText('⚡STUN', -4, -5);
-                }
-                ctx.restore();
-            });
-
-            // Falling Giant Baduk Stones
-            fallingHazards.forEach((h) => {
-                ctx.fillStyle = h.isWhite ? '#f8fafc' : '#18181b';
-                ctx.beginPath();
-                ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = h.isWhite ? '#94a3b8' : '#ff2a55';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            });
-
-            // Creeping Toxic Black Smoke Wall (Stage 2 & 3)
-            if (gameState.stage >= 2) {
-                const smGrad = ctx.createLinearGradient(gameState.smokeX - 120, 0, gameState.smokeX + 30, 0);
-                smGrad.addColorStop(0, 'rgba(5, 5, 10, 0.98)');
-                smGrad.addColorStop(0.75, 'rgba(25, 10, 35, 0.88)');
-                smGrad.addColorStop(1, 'rgba(255, 42, 85, 0)');
-                ctx.fillStyle = smGrad;
-                ctx.fillRect(gameState.smokeX - 300, 0, 330, 360);
-            }
-
-            // Smartphone Flash Burst Effect
-            if (gameState.flashEffectTimer > 0) {
-                ctx.fillStyle = `rgba(0, 240, 255, ${gameState.flashEffectTimer / 22})`;
-                ctx.beginPath();
-                ctx.arc(player.x + 11, player.y + 18, 125, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Draw Protagonist
-            drawPixelProtagonist(
-                ctx,
-                player.x,
-                player.y,
-                player.facing,
-                player.animFrame,
-                player.invulnTimer > 0,
-                player.dashTimer > 0
-            );
-
-            // Draw Particles
-            particles.forEach((pt) => {
-                ctx.fillStyle = pt.color;
-                ctx.fillRect(pt.x, pt.y, 4, 4);
-            });
-
-            ctx.restore();
-
-            // ========================================================================
-            // ON-CANVAS RETRO PIXEL HUD (HP Hearts, Coin Counter, Progress Bar)
-            // ========================================================================
-            ctx.fillStyle = 'rgba(8, 8, 16, 0.82)';
-            ctx.fillRect(12, 46, 225, 44);
-            ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(12, 46, 225, 44);
-
-            // Hearts (HP)
-            ctx.font = 'bold 14px DotGothic16, monospace';
-            for (let i = 0; i < player.maxHp; i++) {
-                ctx.fillStyle = i < player.hp ? '#ff2a55' : '#334155';
-                ctx.fillText('♥', 22 + i * 20, 65);
-            }
-
-            // Coins
-            ctx.fillStyle = '#ffd700';
-            ctx.fillText(`₩ 金幣: ${gameState.coinsCollected}`, 95, 65);
-
-            // Stage Progress Bar
-            const prog = Math.min(1, Math.max(0, player.x / exitDoorX));
-            ctx.fillStyle = '#1e293b';
-            ctx.fillRect(22, 74, 200, 8);
-            ctx.fillStyle = '#00ff66';
-            ctx.fillRect(22, 74, Math.floor(200 * prog), 8);
-
-            // Stage Intro Banner
-            if (gameState.bannerTimer > 0) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
-                ctx.fillRect(70, 125, 500, 68);
-                ctx.strokeStyle = '#ffd700';
-                ctx.strokeRect(70, 125, 500, 68);
-                ctx.fillStyle = '#ffd700';
-                ctx.font = 'bold 18px DotGothic16, monospace';
-                ctx.fillText(st.name, 95, 152);
-                ctx.fillStyle = '#e2e8f0';
-                ctx.font = '12px DotGothic16, monospace';
-                ctx.fillText(st.subtitle, 95, 176);
-            }
-        }
-
-        // ============================================================================
-        // 10. MENU NAVIGATION, MODALS & [+]-BUTTON DEATH RESTART FLOW
-        // ============================================================================
-        const titleOverlay = document.getElementById('title-overlay');
-        const phoneCutsceneModal = document.getElementById('phone-cutscene-modal');
-        const deathOverlay = document.getElementById('death-overlay');
-        const victoryOverlay = document.getElementById('victory-overlay');
-        const settingsModal = document.getElementById('settings-modal');
-        const inspectorModal = document.getElementById('inspector-modal');
-        const menuButtons = Array.from(document.querySelectorAll('.menu-item'));
-
-        function setMenuSelection(idx) {
-            gameState.menuIndex = (idx + menuButtons.length) % menuButtons.length;
-            menuButtons.forEach((btn, i) => {
-                btn.classList.toggle('selected', i === gameState.menuIndex);
-            });
-            audio.sfxSelect();
-        }
-
-        function openJobCutscene(stageNum) {
-            gameState.mode = 'CUTSCENE';
-            gameState.stage = stageNum;
-            titleOverlay.classList.add('hidden');
-            deathOverlay.classList.add('hidden');
-            victoryOverlay.classList.add('hidden');
-            document.getElementById('cutscene-stage-title').textContent = STAGES[stageNum].name;
-            phoneCutsceneModal.classList.remove('hidden');
-            audio.sfxAcceptJob();
-        }
-
-        function startStageFromCutscene() {
-            phoneCutsceneModal.classList.add('hidden');
-            titleOverlay.classList.add('hidden');
-            deathOverlay.classList.add('hidden');
-            victoryOverlay.classList.add('hidden');
-            buildStage(gameState.stage);
-            gameState.mode = 'PLAYING';
-            audio.sfxAcceptJob();
-            audio.startBGM();
-            triggerGamepadRumble(140, 0.5, 0.7);
-            if (isLandscapeMode()) requestConsoleFullscreen();
-        }
-
-        function restartAfterDeath() {
-            audio.sfxAcceptJob();
-            triggerGamepadRumble(160, 0.6, 0.9);
-            deathOverlay.classList.add('hidden');
-            victoryOverlay.classList.add('hidden');
-            buildStage(gameState.stage);
-            gameState.mode = 'PLAYING';
-            if (isLandscapeMode()) requestConsoleFullscreen();
-        }
-
-        function returnToTitleScreen() {
-            audio.sfxSelect();
-            gameState.mode = 'TITLE';
-            phoneCutsceneModal.classList.add('hidden');
-            deathOverlay.classList.add('hidden');
-            victoryOverlay.classList.add('hidden');
-            settingsModal.classList.add('hidden');
-            inspectorModal.classList.add('hidden');
-            titleOverlay.classList.remove('hidden');
-            syncSettingsUI();
-        }
-
-        function executeMenuOption(idx) {
-            if (idx === 0) {
-                // 從頭開始 (New Game)
-                gameState.coinsCollected = 0;
-                openJobCutscene(1);
-            } else if (idx === 1) {
-                // 讀取紀錄 (Load Saved Stage & Coins)
-                gameState.coinsCollected = appConfig.highScoreCoins;
-                openJobCutscene(appConfig.savedStage || 1);
-            } else if (idx === 2) {
-                // 設定 (Settings)
-                toggleSettingsModal(true);
-            } else if (idx === 3) {
-                // 選單 (Controller Inspector & Stage Selector)
-                toggleInspectorModal(true);
-            }
-        }
-
-        menuButtons.forEach((btn, idx) => {
-            btn.addEventListener('mouseenter', () => setMenuSelection(idx));
-            btn.addEventListener('click', () => {
-                setMenuSelection(idx);
-                executeMenuOption(idx);
-            });
-        });
-
-        document.getElementById('btn-accept-job').addEventListener('click', startStageFromCutscene);
-        document.getElementById('btn-death-restart').addEventListener('click', restartAfterDeath);
-        document.getElementById('btn-death-title').addEventListener('click', returnToTitleScreen);
-        document.getElementById('btn-victory-replay').addEventListener('click', () => {
-            openJobCutscene(1);
-        });
-        document.getElementById('btn-victory-title').addEventListener('click', returnToTitleScreen);
-
-        // Top Bar [+] and [-] Hardware Mirror Buttons
-        document.getElementById('top-btn-plus').addEventListener('click', () => {
-            if (gameState.mode === 'DEAD') {
-                restartAfterDeath();
-            } else if (gameState.mode === 'CUTSCENE') {
-                startStageFromCutscene();
-            } else {
-                toggleInspectorModal(inspectorModal.classList.contains('hidden'));
-            }
-        });
-
-        document.getElementById('top-btn-minus').addEventListener('click', () => {
-            toggleSettingsModal(settingsModal.classList.contains('hidden'));
-        });
-
-        document.getElementById('gamepad-badge').addEventListener('click', () => {
-            toggleInspectorModal(true);
-        });
-
-        // Settings & Inspector Modals
-        function toggleSettingsModal(show) {
-            audio.sfxSelect();
-            if (show) {
-                settingsModal.classList.remove('hidden');
-                inspectorModal.classList.add('hidden');
-            } else {
-                settingsModal.classList.add('hidden');
-            }
-        }
-
-        function toggleInspectorModal(show) {
-            audio.sfxSelect();
-            if (show) {
-                inspectorModal.classList.remove('hidden');
-                settingsModal.classList.add('hidden');
-            } else {
-                inspectorModal.classList.add('hidden');
-            }
-        }
-
-        document.getElementById('btn-close-settings').addEventListener('click', () => toggleSettingsModal(false));
-        document.getElementById('btn-close-inspector').addEventListener('click', () => toggleInspectorModal(false));
-        document.getElementById('btn-return-title-from-settings').addEventListener('click', returnToTitleScreen);
-
-        document.querySelectorAll('.btn-jump-stage').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const st = parseInt(btn.getAttribute('data-jump-stage'), 10);
-                inspectorModal.classList.add('hidden');
-                openJobCutscene(st);
-            });
-        });
-
-        // Settings Controls Binding
-        function syncSettingsUI() {
-            const soundBtn = document.getElementById('toggle-sound');
-            soundBtn.textContent = appConfig.soundEnabled ? '開啟 ON' : '關閉 OFF';
-            soundBtn.className = `px-3 py-1.5 rounded font-bold text-xs border border-white ${appConfig.soundEnabled ? 'bg-emerald-500 text-black' : 'bg-slate-700 text-slate-300'}`;
-
-            const quickMute = document.getElementById('btn-quick-mute');
-            quickMute.textContent = appConfig.soundEnabled ? '🔊 BGM' : '🔇 MUTE';
-
-            const volSlider = document.getElementById('slider-volume');
-            volSlider.value = Math.round(appConfig.volume * 100);
-            document.getElementById('vol-label').textContent = `${Math.round(appConfig.volume * 100)}%`;
-
-            const vpadBtn = document.getElementById('toggle-virtual-pad');
-            vpadBtn.textContent = appConfig.virtualPadEnabled ? '開啟 ON' : '關閉 OFF';
-            vpadBtn.className = `px-3 py-1.5 rounded font-bold text-xs border border-white ${appConfig.virtualPadEnabled ? 'bg-emerald-500 text-black' : 'bg-slate-700 text-slate-300'}`;
-            document.getElementById('virtual-controls').classList.toggle('hidden', !appConfig.virtualPadEnabled);
-
-            const crtBtn = document.getElementById('toggle-crt');
-            crtBtn.textContent = appConfig.crtEnabled ? '開啟 ON' : '關閉 OFF';
-            crtBtn.className = `px-3 py-1.5 rounded font-bold text-xs border border-white ${appConfig.crtEnabled ? 'bg-emerald-500 text-black' : 'bg-slate-700 text-slate-300'}`;
-            document.getElementById('crt-layer').classList.toggle('hidden', !appConfig.crtEnabled);
-
-            const rumbleBtn = document.getElementById('toggle-rumble');
-            rumbleBtn.textContent = appConfig.rumbleEnabled ? '開啟 ON' : '關閉 OFF';
-            rumbleBtn.className = `px-3 py-1.5 rounded font-bold text-xs border border-white ${appConfig.rumbleEnabled ? 'bg-emerald-500 text-black' : 'bg-slate-700 text-slate-300'}`;
-
-            document.getElementById('saved-summary').textContent = `目前紀錄：Stage ${appConfig.savedStage} | 最高金幣：${appConfig.highScoreCoins} 枚`;
-            document.getElementById('load-badge').textContent = `STAGE ${appConfig.savedStage}`;
-        }
-
-        document.getElementById('toggle-sound').addEventListener('click', () => {
-            appConfig.soundEnabled = !appConfig.soundEnabled;
-            saveGameData();
-            if (appConfig.soundEnabled) audio.sfxSelect();
-        });
-
-        document.getElementById('btn-quick-mute').addEventListener('click', () => {
-            appConfig.soundEnabled = !appConfig.soundEnabled;
-            saveGameData();
-            if (appConfig.soundEnabled) audio.sfxSelect();
-        });
-
-        document.getElementById('slider-volume').addEventListener('input', (e) => {
-            appConfig.volume = parseInt(e.target.value, 10) / 100;
-            saveGameData();
-        });
-
-        document.getElementById('toggle-virtual-pad').addEventListener('click', () => {
-            appConfig.virtualPadEnabled = !appConfig.virtualPadEnabled;
-            saveGameData();
-            audio.sfxSelect();
-        });
-
-        document.getElementById('toggle-crt').addEventListener('click', () => {
-            appConfig.crtEnabled = !appConfig.crtEnabled;
-            saveGameData();
-            audio.sfxSelect();
-        });
-
-        document.getElementById('toggle-rumble').addEventListener('click', () => {
-            appConfig.rumbleEnabled = !appConfig.rumbleEnabled;
-            saveGameData();
-            if (appConfig.rumbleEnabled) triggerGamepadRumble(150, 0.6, 0.8);
-        });
-
-        document.getElementById('btn-reset-save').addEventListener('click', () => {
-            appConfig.savedStage = 1;
-            appConfig.highScoreCoins = 0;
-            appConfig.totalCoins = 0;
-            saveGameData();
-            audio.sfxHurt();
-        });
-
-        // ============================================================================
-        // 11. MASTER 60FPS GAME LOOP (Handles Title, Cutscenes, Death [+] Restart & Gameplay)
-        // ============================================================================
-        function masterLoop() {
-            pollAllInputs();
-
-            // Check if Settings or Inspector modal is open
-            const modalOpen = !settingsModal.classList.contains('hidden') || !inspectorModal.classList.contains('hidden');
-            if (modalOpen) {
-                if (inputState.justMinus || inputState.justAction) {
-                    settingsModal.classList.add('hidden');
-                    inspectorModal.classList.add('hidden');
-                    audio.sfxSelect();
-                }
-                requestAnimationFrame(masterLoop);
+            if (boss.hp <= 0) {
+                clearInterval(combatInterval);
+                switchScreen('screen-victory');
                 return;
             }
 
-            if (gameState.mode === 'TITLE') {
-                gameState.tick++;
-                drawTitleKeyVisual();
-
-                if (inputState.justDown) setMenuSelection(gameState.menuIndex + 1);
-                if (inputState.justUp) setMenuSelection(gameState.menuIndex - 1);
-                if (inputState.justJump || inputState.justPlus) {
-                    executeMenuOption(gameState.menuIndex);
-                }
-                if (inputState.justMinus) {
-                    toggleSettingsModal(true);
-                }
-                if (inputState.justAction) {
-                    toggleInspectorModal(true);
-                }
-            } else if (gameState.mode === 'CUTSCENE') {
-                gameState.tick++;
-                drawTitleKeyVisual();
-                if (inputState.justJump || inputState.justPlus || inputState.justAction) {
-                    startStageFromCutscene();
-                }
-            } else if (gameState.mode === 'PLAYING') {
-                updateGameplay();
-                renderGameplayScene();
-            } else if (gameState.mode === 'DEAD') {
-                // MANDATORY REQUIREMENT: Pressing [+] Plus button on Gamepad immediately restarts the game!
-                renderGameplayScene();
-                if (inputState.justPlus) {
-                    restartAfterDeath();
-                } else if (inputState.justMinus) {
-                    returnToTitleScreen();
-                }
-            } else if (gameState.mode === 'VICTORY') {
-                renderGameplayScene();
-                if (inputState.justPlus || inputState.justJump) {
-                    openJobCutscene(1);
-                } else if (inputState.justMinus) {
-                    returnToTitleScreen();
-                }
-            }
-
-            requestAnimationFrame(masterLoop);
+            // 繪製畫面
+            renderCombatCanvas();
         }
 
-        window.onload = function () {
-            loadSaveData();
-            handleOrientationChange();
-            requestAnimationFrame(masterLoop);
-        };
+        function renderCombatCanvas() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 繪製超商地板與背景氣氛
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+
+            // 繪製玩家 (卞革浚 - 像素風藍色精靈)
+            ctx.fillStyle = player.isDodge ? '#3b82f6' : '#60a5fa';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#facc15'; // 頭髮
+            ctx.fillRect(player.x + 5, player.y - 10, 30, 15);
+
+            // 繪製巨大鼠怪 (無數老鼠組合的巨獸 - 紫紅色)
+            ctx.fillStyle = '#9333ea';
+            ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+            ctx.fillStyle = '#ef4444'; // 兇惡紅眼
+            ctx.fillRect(boss.x + 15, boss.y + 20, 15, 10);
+            ctx.fillRect(boss.x + 65, boss.y + 20, 15, 10);
+
+            // 晨光特效 (接近 06:00 時左側透出曙光)
+            if (combatTime > 5.8 * 60) {
+                ctx.fillStyle = 'rgba(252, 211, 77, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // --- 鍵盤與虛擬控制事件 ---
+        window.addEventListener('keydown', (e) => {
+            if (gameState.currentScreen === 'combat') {
+                if (e.key === 'ArrowLeft' || e.key === 'a') player.x -= 15;
+                if (e.key === 'ArrowRight' || e.key === 'd') player.x += 15;
+                if (e.key === 'x' || e.key === ' ') {
+                    player.isAttacking = true;
+                    setTimeout(() => player.isAttacking = false, 200);
+                }
+                if (e.key === 'z' || e.key === 'Shift') {
+                    player.isDodge = true;
+                    setTimeout(() => player.isDodge = false, 300);
+                }
+            } else if (e.key === 'Escape') {
+                openSettingsModal();
+            }
+        });
+
+        // --- 5. Gamepad API 良值遊戲手把實時連動引擎 ---
+        function initGamepadListener() {
+            setInterval(() => {
+                const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+                let gp = null;
+                for (let i = 0; i < gamepads.length; i++) {
+                    if (gamepads[i]) {
+                        gp = gamepads[i];
+                        break;
+                    }
+                }
+
+                if (gp) {
+                    document.getElementById('gamepad-status-text').innerText = `手把已連動: ${gp.id.substring(0, 25)}...`;
+                    
+                    // 按鈕對應 (良值手把標準配置)
+                    // 0: A 鍵 (確認/閃避), 2: X 鍵 (攻擊), 9: + 鍵 (Start - 重新遊戲/跳過)
+                    const btnA = gp.buttons[0] && gp.buttons[0].pressed;
+                    const btnX = gp.buttons[2] && gp.buttons[2].pressed;
+                    const btnStart = gp.buttons[9] && gp.buttons[9].pressed;
+
+                    // 類比搖桿移動
+                    const axisX = gp.axes[0]; // 左搖桿水平
+
+                    if (gameState.currentScreen === 'combat') {
+                        if (axisX < -0.3 || (gp.buttons[14] && gp.buttons[14].pressed)) player.x -= 8;
+                        if (axisX > 0.3 || (gp.buttons[15] && gp.buttons[15].pressed)) player.x += 8;
+                        if (btnX && !gameState.lastGamepadState.btnX) {
+                            player.isAttacking = true;
+                            setTimeout(() => player.isAttacking = false, 200);
+                        }
+                        if (btnA && !gameState.lastGamepadState.btnA) {
+                            player.isDodge = true;
+                            setTimeout(() => player.isDodge = false, 300);
+                        }
+                    } else if (gameState.currentScreen === 'gameover') {
+                        if (btnStart && !gameState.lastGamepadState.btnStart) {
+                            restartGame();
+                        }
+                    }
+
+                    // 記錄上一次按鈕狀態避免連發
+                    gameState.lastGamepadState = { btnA, btnX, btnStart };
+                } else {
+                    document.getElementById('gamepad-status-text').innerText = "手把狀態：未偵測到 (請按任意手把按鈕)";
+                }
+            }, 100);
+        }
+
+        // --- 6. 設定選單與重啟邏輯 ---
+        function openSettingsModal() {
+            document.getElementById('modal-settings').classList.remove('hidden');
+        }
+        function closeSettingsModal() {
+            document.getElementById('modal-settings').classList.add('hidden');
+        }
+        function openLoadModal() {
+            document.getElementById('modal-load').classList.remove('hidden');
+        }
+        function closeLoadModal() {
+            document.getElementById('modal-load').classList.add('hidden');
+        }
+
+        function updateSettings() {
+            gameState.soundEnabled = document.getElementById('setting-sound').checked;
+            gameState.virtualControl = document.getElementById('setting-virtual-ctrl').checked;
+            
+            const vCtrl = document.getElementById('virtual-controls');
+            if (gameState.virtualControl) {
+                vCtrl.classList.remove('hidden');
+                vCtrl.classList.add('flex');
+            } else {
+                vCtrl.classList.add('hidden');
+                vCtrl.classList.remove('flex');
+            }
+        }
+
+        function restartGame() {
+            playSound('click');
+            startCombatMode();
+        }
+
+        function returnToMenu() {
+            playSound('click');
+            switchScreen('screen-menu');
+        }
+
+        // 手機虛擬按鈕綁定
+        document.getElementById('v-btn-left').addEventListener('touchstart', () => player.x -= 30);
+        document.getElementById('v-btn-right').addEventListener('touchstart', () => player.x += 30);
+        document.getElementById('v-btn-attack').addEventListener('touchstart', () => {
+            player.isAttacking = true;
+            setTimeout(() => player.isAttacking = false, 200);
+        });
+        document.getElementById('v-btn-dodge').addEventListener('touchstart', () => {
+            player.isDodge = true;
+            setTimeout(() => player.isDodge = false, 300);
+        });
     </script>
 </body>
 </html>
+```
