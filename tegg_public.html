@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -343,15 +342,15 @@
         <span class="badge badge-green">主動代操團隊 / 經理人：陳釧瑤</span>
         <span class="badge badge-amber" id="dividend-countdown-badge">📅 除息倒數計算中...</span>
       </div>
-      <p class="header-sub">基準指數：臺灣高股息優選指數 | 系統模式：公眾開放體驗版 v3.1 (統一投信官網 ezmoney 即時爬蟲、跨月自動推進與大漲大跌剖析)</p>
+      <p class="header-sub">基準指數：臺灣高股息優選指數 | 系統模式：公眾開放體驗版 v3.1 (統一投信官網 ezmoney.com.tw 即時直連 + 多源容錯引擎)</p>
     </div>
 
     <div class="header-controls">
       <div class="status-pill">
         <span class="status-dot" id="sync-dot"></span>
-        <span id="sync-status-text">正在同步統一投信官網最新淨值...</span>
+        <span id="sync-status-text">正在連線統一投信官網同步最新淨值...</span>
       </div>
-      <button class="btn-action btn-primary" onclick="fetchLatestFundData(true)">🔄 立即連線官網更新淨值</button>
+      <button class="btn-action btn-primary" onclick="fetchLatestFundData(true)">🔄 立即抓官網最新淨值</button>
       <button class="btn-action" onclick="manualUpdateDateAndNav()">✏️ 手動更新日期/淨值</button>
       <button class="btn-action" onclick="clearUserInputs()">🧹 清空重填</button>
     </div>
@@ -445,40 +444,3 @@
         <div class="calc-res-label">
           <span>預估含息總資產 (加計1年配息)</span>
           <span id="res-total-pct-badge" class="color-muted">--%</span>
-        </div>
-        <div class="calc-res-val color-muted" id="res-total-value">待輸入試算</div>
-        <div class="calc-res-sub" id="res-total-pnl">評估領取 12 個月配息後之真實含息總回報</div>
-      </div>
-
-      <div class="calc-res-item">
-        <div class="calc-res-label">
-          <span>年化配息率 & 配息來源拆解</span>
-          <span style="color:#34d399;">雙率評估</span>
-        </div>
-        <div class="calc-res-val" id="res-yield-info" style="color: #34d399; font-size: 1.2rem;">現價息率 11.80%</div>
-        <div class="calc-res-sub" id="res-tax-sub">輸入本金後將為您拆解單月 54C 股利與免稅資本利得金額</div>
-      </div>
-    </div>
-
-    <!-- 稅務、二代健保與複利再投資提示 -->
-    <div class="note-box" style="margin-top: 14px; background-color: #020617; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
-      <div>
-        <strong>💡 稅務與二代健保門檻提示：</strong>
-        <span id="tax-tip">單筆配息中屬於「54C 境內股利所得」達 NT$ 20,000 時，方需扣繳 2.11% 二代健保補充保費；「76 資本利得」與「收益平準金」則完全免稅且不計入健保門檻。</span>
-      </div>
-      <div style="color: #38bdf8;" id="compound-tip">
-        🌱 輸入本金後將自動模擬 3 年股息再投資複利累積效果。
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================= -->
-  <!-- 區塊 2：KPI 摘要指標框 (所有日期與漲跌幅完全動態連動) -->
-  <!-- ========================================================= -->
-  <div class="kpi-grid">
-    <div class="card">
-      <div class="kpi-header">
-        <div class="kpi-title">最新原始淨值 (NAV)</div>
-        <div class="tooltip-icon">ⓘ
-          <span class="tooltip-text">扣除每月配息與經理費 (1.6%)、保管費 (0.15%) 後的實際每單位現值。每次開啟網頁自動連線統一投信官網更新最新結算日與淨值。</span>
-        </div>
