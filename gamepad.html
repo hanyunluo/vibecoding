@@ -1,290 +1,96 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>良值手把網頁控制器 | VibeCoding</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <title>IINE 手把虛擬游標｜iPad Chrome</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --accent: #00e5ff;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --border: #334155;
-      --success: #10b981;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 24px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 150vh;
-    }
-    .container { max-width: 800px; margin: 0 auto; }
-    header {
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    h1 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }
-    .badge {
-      font-size: 13px;
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: #f59e0b;
-      color: #000;
-      font-weight: 700;
-    }
-    .badge.online { background: var(--success); color: #fff; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .card h2 { margin-top: 0; font-size: 18px; color: var(--accent); }
-    .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
-    button, .link-btn {
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: 2px solid var(--accent);
-      background: rgba(0, 229, 255, 0.1);
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: all 0.15s;
-    }
-    button:hover, .link-btn:hover, button.gp-hover, .link-btn.gp-hover {
-      background: var(--accent);
-      color: #000;
-      transform: translateY(-2px);
-    }
-    .log-area {
-      margin-top: 14px;
-      padding: 12px;
-      background: #090d16;
-      border-radius: 8px;
-      font-family: monospace;
-      color: #38bdf8;
-      font-size: 14px;
-    }
-
-    /* 虛擬滑鼠游標 */
-    #vibe-gp-cursor {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: rgba(0, 229, 255, 0.88);
-      border: 2.5px solid #fff;
-      box-shadow: 0 0 12px rgba(0, 229, 255, 0.9), 0 2px 6px rgba(0,0,0,0.6);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 2147483647;
-      display: none;
-      transition: transform 0.08s, background 0.08s;
-    }
-
-    /* B 鍵右鍵選單 */
-    #vibe-gp-ctx {
-      position: fixed;
-      background: #1e293b;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 10px;
-      padding: 6px 0;
-      min-width: 165px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-      z-index: 2147483646;
-      display: none;
-      font-size: 14px;
-    }
-    .ctx-item {
-      padding: 10px 16px;
-      cursor: pointer;
-    }
-    .ctx-item:hover, .ctx-item.gp-hover {
-      background: var(--accent);
-      color: #000;
-    }
+    :root{color-scheme:dark;--bg:#07111f;--panel:#101e30;--line:#294158;--muted:#a9bdcf;--cyan:#68efff;--pink:#ff6f9e}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at 80% -20%,#183a55 0,transparent 48%),var(--bg);color:#f4f8fc;font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{width:min(920px,100%);margin:0 auto;padding:32px 20px 70px}
+    .eyebrow{color:var(--cyan);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+    h1{font-size:clamp(2rem,7vw,3.25rem);line-height:1.05;margin:.55rem 0 1rem;letter-spacing:-.04em}
+    h2{font-size:1.25rem;margin:0 0 12px}
+    p{margin:.45rem 0;color:var(--muted)}
+    .lead{max-width:720px;font-size:1.08rem}
+    .card{margin-top:20px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,rgba(16,30,48,.96),rgba(10,22,36,.96));box-shadow:0 14px 38px rgba(0,0,0,.18)}
+    .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+    button,.button{min-height:46px;border:1px solid #4a7189;border-radius:12px;padding:10px 15px;background:#17344a;color:white;font:700 .95rem/1.1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-decoration:none;cursor:pointer}
+    button.primary,.button.primary{background:var(--cyan);color:#03131c;border-color:var(--cyan)}
+    button:hover,.button:hover{filter:brightness(1.12)}
+    button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+    #apiStatus{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-weight:700}
+    #apiDot{width:10px;height:10px;border-radius:50%;background:#7a8791}
+    #apiDot.good{background:#66efa5;box-shadow:0 0 12px #66efa5}
+    .testgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:17px}
+    .readout{border:1px solid #243c53;border-radius:13px;padding:14px;background:rgba(3,11,20,.36);min-width:0}
+    .readout h3{font-size:.9rem;margin:0 0 9px;color:#d9e8f3}
+    #padInfo{overflow-wrap:anywhere;font-size:.84rem;color:var(--muted);min-height:42px}
+    .axis{display:grid;grid-template-columns:34px 1fr 50px;align-items:center;gap:8px;margin:7px 0;font: .82rem ui-monospace,SFMono-Regular,monospace;color:#c0d2df}
+    .meter{height:10px;position:relative;border-radius:9px;background:#21364a;overflow:hidden}
+    .meter:after{content:"";position:absolute;left:50%;top:0;height:100%;width:1px;background:#8ba4b8}
+    .fill{position:absolute;top:0;height:100%;background:var(--cyan);border-radius:9px}
+    #buttonGrid{display:flex;flex-wrap:wrap;gap:6px}
+    .key{min-width:55px;padding:5px 7px;border:1px solid #40586e;border-radius:9px;color:#b8c9d6;text-align:center;font: .75rem ui-monospace,SFMono-Regular,monospace}
+    .key.pressed{border-color:var(--pink);background:rgba(255,111,158,.2);color:#fff;box-shadow:0 0 12px rgba(255,111,158,.25)}
+    .stage{height:150px;position:relative;overflow:hidden;border:1px solid #29465d;border-radius:12px;background:linear-gradient(0deg,transparent 49.5%,#29465d 50%,transparent 50.5%),linear-gradient(90deg,transparent 49.5%,#29465d 50%,transparent 50.5%),radial-gradient(circle at center,#142c40,#081522)}
+    #dot{width:20px;height:20px;position:absolute;left:50%;top:50%;border:3px solid white;border-radius:50%;background:var(--cyan);box-shadow:0 0 15px var(--cyan);transform:translate(-50%,-50%)}
+    .small{font-size:.88rem}
+    .callout{padding:13px 15px;border-left:3px solid #ffbe5c;background:rgba(255,190,92,.08);border-radius:0 10px 10px 0;color:#f2ddba}
+    textarea{display:block;width:100%;min-height:90px;margin-top:12px;padding:11px;border:1px solid #40586e;border-radius:11px;background:#06101a;color:#d8ecf8;font: .75rem/1.45 ui-monospace,SFMono-Regular,monospace;resize:vertical}
+    ol{padding-left:1.35rem;color:var(--muted)}
+    li{margin:.45rem 0;padding-left:.2rem}
+    .map{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+    .map span{padding:6px 9px;border-radius:8px;background:#172c40;color:#d9e9f4;font-size:.84rem}
+    code{color:#91eff8}
+    a{color:var(--cyan)}
+    footer{margin-top:24px;font-size:.8rem;color:#849bad}
+    @media(max-width:640px){main{padding:25px 14px 55px}.card{padding:17px}.testgrid{grid-template-columns:1fr}.row>*{flex:1 1 100%;text-align:center}}
   </style>
 </head>
 <body>
+  <main>
+    <div class="eyebrow">iPadOS · Chrome · WebKit</div>
+    <h1>用 IINE 手把控制網頁游標</h1>
+    <p class="lead">先在這裡確認 iPad Chrome 看得到手把與按鍵索引，再建立書籤小工具。進入 ahaboard 後執行該書籤，即可用虛擬游標操作一般網頁 DOM。</p>
 
-<div class="container">
-  <header>
-    <h1>🎮 良值手把網頁控制器</h1>
-    <span id="conn-badge" class="badge">等待按鍵喚醒...</span>
-  </header>
+    <section class="card" aria-labelledby="testTitle">
+      <h2 id="testTitle">① 手把連線測試</h2>
+      <div class="row">
+        <button class="primary" id="listenButton" type="button">開始 / 重新偵測</button>
+        <span id="apiStatus"><span id="apiDot"></span><span id="apiText">正在檢查 Gamepad API…</span></span>
+      </div>
+      <div class="testgrid">
+        <div class="readout">
+          <h3>手把與類比軸</h3>
+          <div id="padInfo">按「開始 / 重新偵測」，再按手把任一鍵。</div>
+          <div id="axes"></div>
+          <div class="stage" aria-label="搖桿方向測試區"><div id="dot"></div></div>
+        </div>
+        <div class="readout">
+          <h3>按鍵索引（按下會亮起）</h3>
+          <div id="buttonGrid"><span class="small">尚未偵測到按鍵。</span></div>
+          <p class="small">請分別按實體 A、B、X，記下亮起的索引。書籤控制器的預設值為 A=1、B=0、X=3；若不同，請改 <code>gamepad-mouse.js</code> 頂端的設定。</p>
+        </div>
+      </div>
+      <p class="small">若顯示 API 可用但一直沒有手把，先確認藍牙已連線、在頁面按過手把按鈕，再重新偵測。不同 iPadOS / Chrome 版本可能有不同支援情況。</p>
+    </section>
 
-  <!-- 快速導航區 -->
-  <div class="card">
-    <h2>🌐 快速傳送門</h2>
-    <p style="font-size: 14px; color: var(--muted); margin-top: 0;">
-      你可以用手把將游標移到下方按鈕，按 <strong>A 鍵</strong> 直接跳轉到目標網站：
-    </p>
-    <div class="btn-group">
-      <a href="https://ahaboard.ai/" class="link-btn">🚀 前往 AhaBoard (ahaboard.ai)</a>
-      <a href="https://www.google.com" class="link-btn">🔍 前往 Google 搜尋</a>
-    </div>
-  </div>
+    <section class="card" aria-labelledby="bookmarkTitle">
+      <h2 id="bookmarkTitle">② 建立書籤小工具</h2>
+      <p>推薦使用外部載入書籤：它會在目前頁面建立 script，程式碼仍由你的 GitHub Pages 提供，並在目前頁面的 DOM 環境中執行。</p>
+      <div class="row" style="margin-top:13px">
+        <button class="primary" id="copyLoader" type="button">複製外部載入書籤</button>
+        <button id="copyStandalone" type="button">複製單檔備用書籤</button>
+        <a class="button" href="https://ahaboard.ai/">前往 ahaboard.ai</a>
+      </div>
+      <label class="small" for="bookmarkCode">書籤網址（若剪貼簿受限，可長按全選複製）</label>
+      <textarea id="bookmarkCode" readonly spellcheck="false" aria-label="Bookmarklet 程式碼"></textarea>
+      <p id="copyStatus" class="small" aria-live="polite">按上方按鈕載入書籤程式碼。</p>
+    </section>
 
-  <!-- 操作說明區 -->
-  <div class="card">
-    <h2>🕹️ 手把操作對照</h2>
-    <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted);">
-      <li><strong>左蘑菇頭 / 十字鍵</strong>：移動藍色鼠標</li>
-      <li><strong>右蘑菇頭</strong>：上下滾動網頁</li>
-      <li><strong>A 鍵 (右方按鍵)</strong>：模擬滑鼠左鍵（點擊連結或按鈕）</li>
-      <li><strong>B 鍵 (下方按鍵)</strong>：模擬滑鼠右鍵（開啟快捷選單）</li>
-    </ul>
-  </div>
-
-  <!-- 測試互動區 -->
-  <div class="card">
-    <h2>🧪 本頁互動測試</h2>
-    <div class="btn-group">
-      <button onclick="logMsg('🎯 成功點擊測試按鈕 A')">測試按鈕 A</button>
-      <button onclick="logMsg('🎯 成功點擊測試按鈕 B')">測試按鈕 B</button>
-    </div>
-    <div id="test-log" class="log-area">等待手把操作中...（請按一下手把任意鍵喚醒鼠標）</div>
-  </div>
-</div>
-
-<!-- 虛擬游標與右鍵選單 DOM -->
-<div id="vibe-gp-cursor"></div>
-<div id="vibe-gp-ctx">
-  <div class="ctx-item" onclick="history.back(); hideCtx();">⬅️ 返回上一頁</div>
-  <div class="ctx-item" onclick="location.reload(); hideCtx();">🔄 重新整理</div>
-  <div class="ctx-item" onclick="window.scrollTo({top:0, behavior:'smooth'}); hideCtx();">⬆️ 回到頂部</div>
-</div>
-
-<script>
-  const cursor = document.getElementById('vibe-gp-cursor');
-  const badge = document.getElementById('conn-badge');
-  const logEl = document.getElementById('test-log');
-  const ctxMenu = document.getElementById('vibe-gp-ctx');
-
-  let curX = window.innerWidth / 2;
-  let curY = window.innerHeight / 2;
-  const speed = 12;
-  const deadzone = 0.16;
-  let prevLeft = false;
-  let prevRight = false;
-  let lastHovered = null;
-
-  function logMsg(msg) {
-    logEl.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  }
-
-  function hideCtx() {
-    ctxMenu.style.display = 'none';
-  }
-
-  function applyDz(v) {
-    return Math.abs(v) < deadzone ? 0 : v;
-  }
-
-  window.addEventListener('gamepadconnected', (e) => {
-    badge.textContent = '手把已連線';
-    badge.classList.add('online');
-    cursor.style.display = 'block';
-    logMsg('🎮 手把已連線：' + e.gamepad.id);
-  });
-
-  window.addEventListener('gamepaddisconnected', () => {
-    badge.textContent = '已斷線';
-    badge.classList.remove('online');
-    cursor.style.display = 'none';
-  });
-
-  function loop() {
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    const gp = pads[0] || pads[1] || pads[2] || pads[3];
-
-    if (gp) {
-      if (cursor.style.display !== 'block') {
-        cursor.style.display = 'block';
-        badge.textContent = '手把已連線';
-        badge.classList.add('online');
-      }
-
-      // 1. 移動游標
-      let dx = applyDz(gp.axes[0] || 0);
-      let dy = applyDz(gp.axes[1] || 0);
-      if (gp.buttons[12]?.pressed) dy = -0.7;
-      if (gp.buttons[13]?.pressed) dy = 0.7;
-      if (gp.buttons[14]?.pressed) dx = -0.7;
-      if (gp.buttons[15]?.pressed) dx = 0.7;
-
-      curX = Math.max(0, Math.min(window.innerWidth, curX + dx * speed));
-      curY = Math.max(0, Math.min(window.innerHeight, curY + dy * speed));
-      cursor.style.left = `${curX}px`;
-      cursor.style.top = `${curY}px`;
-
-      // 2. 滾動頁面
-      const sx = applyDz(gp.axes[2] || 0);
-      const sy = applyDz(gp.axes[3] || 0);
-      if (sx !== 0 || sy !== 0) window.scrollBy(sx * 14, sy * 14);
-
-      // 3. Hover 效果
-      const target = document.elementFromPoint(curX, curY);
-      const clickable = target?.closest('a, button, input, .ctx-item');
-      if (lastHovered && lastHovered !== clickable) {
-        lastHovered.classList.remove('gp-hover');
-      }
-      if (clickable) {
-        clickable.classList.add('gp-hover');
-        lastHovered = clickable;
-      }
-
-      // 4. A 鍵點擊 / B 鍵右鍵
-      const isLeft = gp.buttons[1]?.pressed || false;  // A 鍵
-      const isRight = gp.buttons[0]?.pressed || false; // B 鍵
-
-      if (isLeft && !prevLeft) {
-        cursor.style.background = '#ff4081';
-        if (target) {
-          target.click();
-          logMsg(`🎯 點擊了元素: ${target.tagName}`);
-        }
-        hideCtx();
-      } else if (!isLeft && prevLeft) {
-        cursor.style.background = 'rgba(0,229,255,0.88)';
-      }
-
-      if (isRight && !prevRight) {
-        cursor.style.background = '#ffeb3b';
-        ctxMenu.style.left = `${Math.min(curX, window.innerWidth - 180)}px`;
-        ctxMenu.style.top = `${Math.min(curY, window.innerHeight - 160)}px`;
-        ctxMenu.style.display = ctxMenu.style.display === 'block' ? 'none' : 'block';
-      } else if (!isRight && prevRight) {
-        cursor.style.background = 'rgba(0,229,255,0.88)';
-      }
-
-      prevLeft = isLeft;
-      prevRight = isRight;
-    }
-    requestAnimationFrame(loop);
-  }
-
-  requestAnimationFrame(loop);
-</script>
-
-</body>
-</html>
+    <section class="card" aria-labelledby="stepsTitle">
+      <h2 id="stepsTitle">③ iPad Chrome 操作步驟</h2>
+      <ol>
