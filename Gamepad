@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gamepad 虛擬滑鼠控制器</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #121212;
+      color: #eaeaea;
+      min-height: 150vh; /* 預留高度測試右搖桿滾動 */
+    }
+
+    /* 狀態列 */
+    .status-bar {
+      padding: 12px 16px;
+      background: #1e1e1e;
+      border-left: 4px solid #ff9800;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-bar.connected {
+      border-left-color: #4caf50;
+    }
+
+    /* 測試互動區塊 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .card-btn {
+      padding: 24px;
+      background: #252525;
+      border: 2px solid #383838;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.12s, background 0.12s;
+      text-align: center;
+    }
+    /* 當虛擬游標移入時的模擬 Hover 樣式 */
+    .card-btn.gp-hover {
+      border-color: #00e5ff;
+      background: #2c3e50;
+      transform: scale(1.03);
+    }
+    .card-btn:active, .card-btn.gp-active {
+      background: #00e5ff;
+      color: #000;
+    }
+
+    #log-box {
+      margin-top: 24px;
+      padding: 16px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      font-family: monospace;
+      color: #80cbc4;
+    }
+
+    /* 虛擬滑鼠游標 (固定在最上層，且 pointer-events: none 避免擋住下方元素偵測) */
+    #virtual-cursor {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0, 229, 255, 0.75);
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.9);
+      transform: translate(-50%, -50%);
+      pointer-events: none; /* 關鍵：讓 document.elementFromPoint 可以穿透游標抓到底下的按鈕 */
+      z-index: 999999;
+      display: none;
+      transition: width 0.1s, height 0.1s, background 0.1s;
+    }
+    #virtual-cursor.clicking {
+      width: 16px;
+      height: 16px;
+      background: #ff4081;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="status" class="status-bar">
+    <span>🎮 請先將手把連上 iPad 藍牙，接著<strong>按一下手把上任一按鍵</strong>喚醒游標</span>
+    <label style="font-size: 14px;">
+      <input type="checkbox" id="swap-ab" checked> Switch 模式 (右鍵 A 確認)
+    </label>
+  </div>
+
+  <div class="grid">
+    <button class="card-btn" onclick="logAction('點擊了【開始任務】')">🚀 開始任務</button>
+    <button class="card-btn" onclick="logAction('點擊了【開啟背包】')">🎒 開啟背包</button>
+    <button class="card-btn" onclick="logAction('點擊了【系統設定】')">⚙️ 系統設定</button>
+    <button class="card-btn" onclick="logAction('點擊了【切換場景】')">🗺️ 切換場景</button>
+  </div>
+
+  <div id="log-box">等待手把輸入中...（左搖桿/十字鍵：移動游標 ｜ 右搖桿：滾動網頁 ｜ A/B鍵：點擊）</div>
+
+  <!-- 虛擬游標 DOM -->
+  <div id="virtual-cursor"></div>
+
+  <script>
+    const cursor = document.getElementById('virtual-cursor');
+    const statusEl = document.getElementById('status');
+    const logBox = document.getElementById('log-box');
+    const swapAbCheckbox = document.getElementById('swap-ab');
+
+    let cursorX = window.innerWidth / 2;
+    let cursorY = window.innerHeight / 2;
+    const CURSOR_SPEED = 10;   // 游標移動速度
+    const SCROLL_SPEED = 14;   // 頁面滾動速度
+    const DEADZONE = 0.18;     // 搖桿死區（防止良值手把輕微飄移）
+
+    let prevClickPressed = false;
+    let currentHoveredEl = null;
+
+    function logAction(msg) {
+      logBox.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    }
+
+    // 死區過濾函式
+    function applyDeadzone(value) {
+      return Math.abs(value) < DEADZONE ? 0 : value;
+    }
+
+    // 監聽手把連線
+    window.addEventListener('gamepadconnected', (e) => {
+      statusEl.classList.add('connected');
+      statusEl.querySelector('span').innerHTML = `✅ 已連接：<strong>${e.gamepad.id}</strong>`;
+      cursor.style.display = 'block';
+    });
+
+    window.addEventListener('gamepaddisconnected', () => {
+      statusEl.classList.remove('connected');
+      statusEl.querySelector('span').innerHTML = `⚠️ 手把已斷線，請重新按下按鍵連接`;
+      cursor.style.display = 'none';
+    });
+
+    // 主迴圈：每幀讀取手把狀態
+    function updateGamepad() {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gp = gamepads[0] || gamepads[1] || gamepads[2] || gamepads[3];
+
+      if (gp) {
+        cursor.style.display = 'block';
+
+        // 1. 讀取左搖桿 (Axes 0: 左右, Axes 1: 上下)
+        let moveX = applyDeadzone(gp.axes[0] || 0);
+        let moveY = applyDeadzone(gp.axes[1] || 0);
+
+        // 支援十字鍵 (D-Pad: buttons 12~15) 輔助移動游標
+        if (gp.buttons[12]?.pressed) moveY = -0.7; // 上
+        if (gp.buttons[13]?.pressed) moveY = 0.7;  // 下
+        if (gp.buttons[14]?.pressed) moveX = -0.7; // 左
+        if (gp.buttons[15]?.pressed) moveX = 0.7;  // 右
+
+        // 更新游標座標並限制在視窗範圍內
+        cursorX = Math.max(0, Math.min(window.innerWidth, cursorX + moveX * CURSOR_SPEED));
+        cursorY = Math.max(0, Math.min(window.innerHeight, cursorY + moveY * CURSOR_SPEED));
+
+        cursor.style.left = `${cursorX}px`;
+        cursor.style.top = `${cursorY}px`;
+
+        // 2. 讀取右搖桿 (Axes 2, Axes 3) 用來上下滾動網頁
+        const scrollY = applyDeadzone(gp.axes[3] || 0);
+        if (scrollY !== 0) {
+          window.scrollBy(0, scrollY * SCROLL_SPEED);
+        }
+
+        // 3. 偵測游標下方的 DOM 元素並模擬 Hover 效果
+        const targetEl = document.elementFromPoint(cursorX, cursorY);
+        const interactiveEl = targetEl?.closest('button, a, input, label, [onclick]');
+
+        if (currentHoveredEl && currentHoveredEl !== interactiveEl) {
+          currentHoveredEl.classList.remove('gp-hover');
+        }
+        if (interactiveEl) {
+          interactiveEl.classList.add('gp-hover');
+          currentHoveredEl = interactiveEl;
+        }
+
+        // 4. 處理按鍵點擊 (Switch 實體 A 鍵通常為 buttons[1]，B 鍵為 buttons[0])
+        const confirmBtnIndex = swapAbCheckbox.checked ? 1 : 0;
+        const isClickPressed = gp.buttons[confirmBtnIndex]?.pressed || false;
+
+        // 剛按下的瞬間 (Just Pressed)
+        if (isClickPressed && !prevClickPressed) {
+          cursor.classList.add('clicking');
+          if (targetEl) {
+            // 派發完整指標與點擊事件，確保一般 HTML 按鈕與 Canvas 都能收到
+            const eventInit = { bubbles: true, cancelable: true, clientX: cursorX, clientY: cursorY };
+            targetEl.dispatchEvent(new PointerEvent('pointerdown', eventInit));
+            targetEl.dispatchEvent(new MouseEvent('mousedown', eventInit));
+            targetEl.dispatchEvent(new PointerEvent('pointerup', eventInit));
+            targetEl.dispatchEvent(new MouseEvent('mouseup', eventInit));
+            targetEl.click();
+          }
+        } else if (!isClickPressed && prevClickPressed) {
+          cursor.classList.remove('clicking');
+        }
+
+        prevClickPressed = isClickPressed;
+      }
+
+      requestAnimationFrame(updateGamepad);
+    }
+
+    requestAnimationFrame(updateGamepad);
+  </script>
+</body>
+</html>
