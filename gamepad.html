@@ -84,9 +84,9 @@
       <div class="row" style="margin-top:13px">
         <button class="primary" id="copyLoader" type="button">複製外部載入書籤</button>
         <button id="copyStandalone" type="button">複製單檔備用書籤</button>
-        <a class="button" href="https://ahaboard.ai/" target="_blank" rel="noopener noreferrer">在新分頁開啟 ahaboard.ai</a>
+        <a class="button" href="https://ahaboard.ai/">前往 ahaboard.ai</a>
       </div>
-      <p class="callout" style="margin-top:14px">複製書籤只會複製程式碼，不會自動啟動手把。開啟 ahaboard 分頁後，請在該分頁從 Chrome「⋯ → 書籤」點選你儲存的「手把游標」書籤。必須在 ahaboard 頁面執行；先在本頁執行再跳轉，控制程式會隨頁面離開而停止。</p>
+      <p class="callout" style="margin-top:14px">複製書籤只會複製程式碼，不會自動啟動手把。請先在 Chrome 儲存「手把游標」書籤，再用此連結在同一分頁前往 ahaboard；頁面載入後，從 Chrome「⋯ → 書籤」點選「手把游標」啟動。瀏覽器不會讓本頁的執行中腳本跨網域導航後繼續運作。</p>
       <label class="small" for="bookmarkCode">書籤網址（若剪貼簿受限，可長按全選複製）</label>
       <textarea id="bookmarkCode" readonly spellcheck="false" aria-label="Bookmarklet 程式碼"></textarea>
       <p id="copyStatus" class="small" aria-live="polite">按上方按鈕載入書籤程式碼。</p>
@@ -97,7 +97,7 @@
       <ol>
         <li>在 iPad「設定 → 藍牙」配對 IINE 手把；回到本頁按手把測試，確認 Gamepad API 顯示連線且實體按鍵有亮起索引。</li>
         <li>按「複製外部載入書籤」，在 Chrome 將目前頁面加入書籤；到「⋯ → 書籤 → 編輯」，把書籤網址替換成剛複製的 <code>javascript:…</code>，名稱可設「手把游標」。</li>
-        <li>開啟 <a href="https://ahaboard.ai/" target="_blank" rel="noopener noreferrer">ahaboard.ai</a>；切到 ahaboard 分頁後，從 Chrome 書籤執行「手把游標」。看到左上角的虛擬游標狀態框後，左搖桿移動、A 點擊、B 或 X 叫出頁面自訂右鍵選單、右搖桿上下或十字鍵上下捲動。按 Esc 或再次執行書籤停止。</li>
+        <li>用本頁連結在同一分頁開啟 <a href="https://ahaboard.ai/">ahaboard.ai</a>，等待頁面載入後，從 Chrome 書籤執行「手把游標」。看到左上角的虛擬游標狀態框後，左搖桿移動、A 點擊、B 或 X 叫出頁面自訂右鍵選單、右搖桿上下或十字鍵上下捲動。按 Esc 或再次執行書籤停止。</li>
       </ol>
       <div class="map"><span>左搖桿：移動</span><span>A：左鍵</span><span>B / X：右鍵</span><span>右搖桿 Y / 十字鍵：捲動</span></div>
     </section>
