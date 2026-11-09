@@ -94,3 +94,180 @@
     <section class="card" aria-labelledby="stepsTitle">
       <h2 id="stepsTitle">③ iPad Chrome 操作步驟</h2>
       <ol>
+        <li>在 iPad「設定 → 藍牙」配對 IINE 手把；回到本頁按手把測試，確認 Gamepad API 顯示連線且實體按鍵有亮起索引。</li>
+        <li>按「複製外部載入書籤」，在 Chrome 將目前頁面加入書籤；到「⋯ → 書籤 → 編輯」，把書籤網址替換成剛複製的 <code>javascript:…</code>，名稱可設「手把游標」。</li>
+        <li>開啟 <a href="https://ahaboard.ai/">ahaboard.ai</a>，從 Chrome 書籤執行「手把游標」。左搖桿移動、A 點擊、B 或 X 叫出頁面自訂右鍵選單、右搖桿上下或十字鍵上下捲動；按 Esc 或再次執行書籤停止。</li>
+      </ol>
+      <div class="map"><span>左搖桿：移動</span><span>A：左鍵</span><span>B / X：右鍵</span><span>右搖桿 Y / 十字鍵：捲動</span></div>
+    </section>
+
+    <section class="card">
+      <h2>限制與備用方案</h2>
+      <p class="callout">這是頁面內的合成 DOM 事件，不是真正的系統滑鼠。網站若只接受可信任實體事件、需要拖曳/觸控，或瀏覽器把手把 API 對 Chrome 隱藏，網頁腳本無法解除這些限制。</p>
+      <p>如果目標站 CSP 只是不允許從 GitHub 載入外部 script，可試「單檔備用書籤」。若 CSP 連書籤的 JavaScript 執行也封鎖，兩種 bookmarklet 都不能繞過；需由網站管理方調整 CSP 或改用原生輔助輸入設備。</p>
+      <p class="small">GitHub Pages 部署：把本資料夾的檔案放到 repository 根目錄，在 GitHub repository 的 <strong>Settings → Pages</strong> 選擇部署來源。開啟發布後以 HTTPS 網址使用此頁。</p>
+    </section>
+    <footer>手把輸入只在目前分頁讀取；書籤腳本不會把手把狀態傳送至其他伺服器。</footer>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      var apiAvailable = typeof navigator.getGamepads === 'function';
+      var apiDot = document.getElementById('apiDot');
+      var apiText = document.getElementById('apiText');
+      var padInfo = document.getElementById('padInfo');
+      var axesNode = document.getElementById('axes');
+      var buttonsNode = document.getElementById('buttonGrid');
+      var dot = document.getElementById('dot');
+      var textarea = document.getElementById('bookmarkCode');
+      var copyStatus = document.getElementById('copyStatus');
+      var started = false;
+      var raf = 0;
+      var buttonElements = [];
+      var axisElements = [];
+
+      function showApiStatus(text, good) {
+        apiText.textContent = text;
+        apiDot.classList.toggle('good', !!good);
+      }
+
+      showApiStatus(apiAvailable ? 'Gamepad API 可用，等待控制器' : '此瀏覽器未提供 Gamepad API', apiAvailable);
+
+      function firstPad() {
+        if (!apiAvailable) return null;
+        try {
+          var pads = navigator.getGamepads();
+          for (var i = 0; i < pads.length; i += 1) if (pads[i] && pads[i].connected) return pads[i];
+        } catch (_) { /* 部分版本在未啟用權限前會丟出例外 */ }
+        return null;
+      }
+
+      function createRows(pad) {
+        axesNode.textContent = '';
+        buttonsNode.textContent = '';
+        axisElements = [];
+        buttonElements = [];
+        for (var i = 0; i < pad.axes.length; i += 1) {
+          var row = document.createElement('div');
+          row.className = 'axis';
+          var label = document.createElement('span');
+          label.textContent = '軸 ' + i;
+          var meter = document.createElement('span');
+          meter.className = 'meter';
+          var fill = document.createElement('span');
+          fill.className = 'fill';
+          meter.appendChild(fill);
+          var value = document.createElement('span');
+          value.textContent = '0.00';
+          row.append(label, meter, value);
+          axesNode.appendChild(row);
+          axisElements.push({ fill: fill, value: value });
+        }
+        for (var b = 0; b < pad.buttons.length; b += 1) {
+          var key = document.createElement('span');
+          key.className = 'key';
+          key.textContent = String(b);
+          key.title = 'Gamepad button index ' + b;
+          buttonsNode.appendChild(key);
+          buttonElements.push(key);
+        }
+      }
+
+      function paint(pad) {
+        for (var i = 0; i < pad.axes.length; i += 1) {
+          var v = Math.max(-1, Math.min(1, Number(pad.axes[i]) || 0));
+          var width = Math.abs(v) * 50;
+          axisElements[i].fill.style.width = width + '%';
+          axisElements[i].fill.style.left = (v < 0 ? 50 - width : 50) + '%';
+          axisElements[i].value.textContent = v.toFixed(2);
+        }
+        for (var b = 0; b < pad.buttons.length; b += 1) {
+          var button = pad.buttons[b];
+          var pressed = button && (button.pressed || button.value > 0.5);
+          buttonElements[b].classList.toggle('pressed', !!pressed);
+          buttonElements[b].textContent = String(b) + (pressed ? ' ●' : '');
+          buttonElements[b].title = '索引 ' + b + '：' + (button ? Number(button.value).toFixed(2) : '0.00');
+        }
+        var x = Number(pad.axes[0]) || 0;
+        var y = Number(pad.axes[1]) || 0;
+        dot.style.left = (50 + x * 45) + '%';
+        dot.style.top = (50 + y * 42) + '%';
+      }
+
+      function poll() {
+        if (!started) return;
+        var pad = firstPad();
+        if (!pad) {
+          showApiStatus(apiAvailable ? 'API 可用，等待手把；請按手把任一鍵' : '此瀏覽器未提供 Gamepad API', apiAvailable);
+          padInfo.textContent = '沒有已連線的控制器。';
+        } else {
+          showApiStatus('已偵測到手把', true);
+          padInfo.textContent = (pad.id || '未命名手把') + ' · index ' + pad.index + ' · mapping: ' + (pad.mapping || '非標準') + ' · ' + pad.buttons.length + ' buttons / ' + pad.axes.length + ' axes';
+          if (buttonElements.length !== pad.buttons.length || axisElements.length !== pad.axes.length) createRows(pad);
+          paint(pad);
+        }
+        raf = window.requestAnimationFrame(poll);
+      }
+
+      document.getElementById('listenButton').addEventListener('click', function () {
+        if (!apiAvailable) return;
+        started = true;
+        if (raf) window.cancelAnimationFrame(raf);
+        poll();
+      });
+
+      window.addEventListener('gamepadconnected', function (event) {
+        showApiStatus('手把已連線，讀取按鍵中', true);
+        padInfo.textContent = (event.gamepad.id || '遊戲手把') + ' · index ' + event.gamepad.index;
+      });
+      window.addEventListener('gamepaddisconnected', function () {
+        showApiStatus('手把已中斷，等待重新連線', apiAvailable);
+      });
+
+      function loaderBookmarklet() {
+        var scriptUrl = new URL('./gamepad-mouse.js', document.baseURI).href;
+        var encodedUrl = JSON.stringify(scriptUrl);
+        return 'javascript:(function(){try{if(window.__iineGamepadMouseV1){window.__iineGamepadMouseV1.stop();return;}var s=document.createElement("script");s.src=' + encodedUrl + ';s.onload=function(){s.remove();};s.onerror=function(){alert("無法載入手把腳本：請確認網路，並檢查 ahaboard 的 CSP 是否允許此 GitHub Pages 網域。");s.remove();};(document.head||document.documentElement).appendChild(s);}catch(e){alert("手把游標啟動失敗："+e.message);}})();';
+      }
+
+      async function copyBookmarklet(value, label) {
+        textarea.value = value;
+        textarea.focus();
+        textarea.select();
+        var copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(value);
+            copied = true;
+          }
+        } catch (_) { /* 使用下方手動複製欄位 */ }
+        if (!copied) {
+          try { copied = document.execCommand('copy'); } catch (_) { copied = false; }
+        }
+        copyStatus.textContent = copied
+          ? label + '已複製。新增 Chrome 書籤後，將書籤網址替換成這段程式碼。'
+          : '自動複製未成功；程式碼已放在欄位中，請長按欄位全選並複製。';
+      }
+
+      document.getElementById('copyLoader').addEventListener('click', function () {
+        copyBookmarklet(loaderBookmarklet(), '外部載入書籤');
+      });
+      document.getElementById('copyStandalone').addEventListener('click', async function () {
+        copyStatus.textContent = '正在載入單檔書籤…';
+        try {
+          var response = await fetch(new URL('./standalone-bookmarklet.txt', document.baseURI));
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          var value = (await response.text()).trim();
+          if (value.indexOf('javascript:') !== 0) throw new Error('書籤檔格式不正確');
+          await copyBookmarklet(value, '單檔備用書籤');
+        } catch (error) {
+          copyStatus.textContent = '讀取失敗：' + error.message + '。請先執行 scripts/build-bookmarklet.mjs 產生檔案並重新部署。';
+        }
+      });
+
+      textarea.addEventListener('click', function () { textarea.select(); });
+    }());
+  </script>
+</body>
+</html>
