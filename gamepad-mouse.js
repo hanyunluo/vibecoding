@@ -1,0 +1,392 @@
+/*
+ * iPadOS / WebKit 遊戲手把虛擬游標
+ *
+ * 用法：在目標頁面執行此檔，或透過 bookmarklet 載入。
+ * 本程式只在目前頁面的 DOM 內派發合成事件，不會建立真正的作業系統滑鼠。
+ * 派發的事件 isTrusted 永遠是 false；網站或瀏覽器若要求可信任的實體輸入，
+ * 該操作無法由網頁 JavaScript 代替。
+ */
+(function () {
+  'use strict';
+
+  var INSTANCE_KEY = '__iineGamepadMouseV1';
+  var oldInstance = window[INSTANCE_KEY];
+
+  /* 再次執行書籤時，以切換開關方式停止目前版本。 */
+  if (oldInstance && typeof oldInstance.stop === 'function') {
+    oldInstance.stop();
+    return;
+  }
+
+  /*
+   * 標準 Gamepad mapping 以按鈕位置（底部、右側、左側、頂部）回報，
+   * 常見 Switch Pro 配列因此為實體 A=1、B=0、X=3、Y=2。
+   * 若測試器顯示不同索引，請依測試結果調整這裡。
+   */
+  var CONFIG = {
+    deadzone: 0.15,
+    maxSpeed: 1050,             // 游標最大速度，CSS 像素 / 秒
+    curvePower: 1.65,           // 非線性加速曲線
+    primaryButton: 1,           // Switch 配列實體 A 鍵
+    rightClickButtons: [0, 3],  // Switch 配列實體 B 或 X 鍵
+    scrollAxis: 3,              // 標準配置右類比 Y 軸
+    dpadUpButton: 12,
+    dpadDownButton: 13,
+    scrollSpeed: 760,           // 捲動速度，CSS 像素 / 秒
+    cursorDiameter: 34
+  };
+
+  var state = {
+    x: Math.max(0, window.innerWidth / 2),
+    y: Math.max(0, window.innerHeight / 2),
+    raf: 0,
+    lastTime: 0,
+    lastPadIndex: -1,
+    previousPrimary: false,
+    previousRight: false,
+    stopped: false,
+    host: null,
+    cursor: null,
+    status: null,
+    hint: null
+  };
+
+  /*
+   * 用 Shadow DOM 隔離目標網站的 CSS，避免網站樣式改寫游標外觀。
+   * host、虛擬游標與狀態區都不參與頁面命中測試；因此實際目標仍可由
+   * document.elementFromPoint() 找到。
+   */
+  function createOverlay() {
+    var host = document.createElement('div');
+    host.id = 'iine-gamepad-mouse-overlay';
+    host.setAttribute('aria-hidden', 'true');
+    host.style.cssText = [
+      'all:initial',
+      'position:fixed',
+      'inset:0',
+      'z-index:2147483647',
+      'pointer-events:none',
+      'contain:strict'
+    ].join(';');
+
+    var shadow = host.attachShadow({ mode: 'closed' });
+    var style = document.createElement('style');
+    style.textContent = [
+      ':host{all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none}',
+      '.cursor{position:fixed;left:0;top:0;width:' + CONFIG.cursorDiameter + 'px;height:' + CONFIG.cursorDiameter + 'px;',
+      'box-sizing:border-box;border:3px solid #fff;border-radius:50%;',
+      'background:rgba(0,229,255,.48);box-shadow:0 0 0 3px #07111f,0 0 18px 7px rgba(0,229,255,.85);',
+      'transform:translate3d(-50%,-50%,0);pointer-events:none;will-change:transform;transition:background 80ms ease}',
+      '.cursor:before{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#07111f;transform:translate(-50%,-50%)}',
+      '.cursor.down{background:rgba(255,75,125,.9);box-shadow:0 0 0 7px rgba(255,75,125,.3),0 0 22px 9px rgba(255,75,125,.95)}',
+      '.panel{position:fixed;left:12px;top:12px;max-width:min(310px,calc(100vw - 24px));padding:9px 12px;',
+      'border:1px solid rgba(0,229,255,.7);border-radius:11px;background:rgba(5,14,28,.9);color:#f4fbff;',
+      'font:600 12px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.01em;',
+      'box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:none;backdrop-filter:blur(8px)}',
+      '.title{color:#69f3ff;font-size:13px;font-weight:800}',
+      '.status{margin-top:3px;color:#fff}',
+      '.hint{margin-top:3px;color:#bad0df;font-weight:500}',
+      '.pulse{animation:pulse 180ms ease-out}',
+      '@keyframes pulse{50%{transform:translate3d(-50%,-50%,0) scale(1.3)}}',
+      '@media(prefers-reduced-motion:reduce){.cursor{transition:none}.pulse{animation:none}}'
+    ].join('');
+
+    var panel = document.createElement('div');
+    panel.className = 'panel';
+    var title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = 'IINE 虛擬游標已啟動';
+    var status = document.createElement('div');
+    status.className = 'status';
+    status.textContent = '等待手把…';
+    var hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = '左搖桿移動・A 點擊・B/X 右鍵・右搖桿或十字鍵捲動・Esc 停止';
+
+    var cursor = document.createElement('div');
+    cursor.className = 'cursor';
+    cursor.setAttribute('part', 'cursor');
+    panel.append(title, status, hint);
+    shadow.append(style, panel, cursor);
+    (document.documentElement || document.body).appendChild(host);
+
+    state.host = host;
+    state.cursor = cursor;
+    state.status = status;
+    state.hint = hint;
+    state.shadow = shadow;
+    state.style = style;
+    state.panel = panel;
+  }
+
+  function buttonPressed(pad, index) {
+    var button = pad && pad.buttons && pad.buttons[index];
+    return !!(button && (button.pressed || button.value > 0.5));
+  }
+
+  /* Deadzone 後重新映射至 0..1，再套用曲線，以免小幅飄移並保留細控。 */
+  function shapeAxis(raw) {
+    var value = Number(raw) || 0;
+    var magnitude = Math.abs(value);
+    if (magnitude <= CONFIG.deadzone) return 0;
+    var normalized = Math.min(1, (magnitude - CONFIG.deadzone) / (1 - CONFIG.deadzone));
+    return Math.sign(value) * Math.pow(normalized, CONFIG.curvePower);
+  }
+
+  function setCursorPosition() {
+    state.x = Math.max(0, Math.min(window.innerWidth, state.x));
+    state.y = Math.max(0, Math.min(window.innerHeight, state.y));
+    state.cursor.style.transform = 'translate3d(' + state.x + 'px,' + state.y + 'px,0) translate(-50%,-50%)';
+  }
+
+  function pulseCursor() {
+    state.cursor.classList.remove('pulse');
+    state.cursor.classList.add('down');
+    /* 強制重排以便連續快速按鍵仍會重播回饋動畫。 */
+    void state.cursor.offsetWidth;
+    state.cursor.classList.add('pulse');
+    window.setTimeout(function () {
+      if (!state.stopped) state.cursor.classList.remove('down', 'pulse');
+    }, 190);
+  }
+
+  function makeMouseEvent(type, button, buttons, detail) {
+    return new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      detail: detail || 0,
+      screenX: Math.round(window.screenX + state.x),
+      screenY: Math.round(window.screenY + state.y),
+      clientX: state.x,
+      clientY: state.y,
+      button: button,
+      buttons: buttons,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false
+    });
+  }
+
+  function makePointerEvent(type, button, buttons) {
+    var options = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      pointerId: 1,
+      pointerType: 'mouse',
+      isPrimary: true,
+      button: button,
+      buttons: buttons,
+      width: 1,
+      height: 1,
+      pressure: buttons ? 0.5 : 0,
+      tangentialPressure: 0,
+      tiltX: 0,
+      tiltY: 0,
+      twist: 0,
+      clientX: state.x,
+      clientY: state.y,
+      screenX: Math.round(window.screenX + state.x),
+      screenY: Math.round(window.screenY + state.y),
+      view: window
+    };
+    try {
+      return new PointerEvent(type, options);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function dispatchPointer(target, type, button, buttons) {
+    var event = makePointerEvent(type, button, buttons);
+    if (event) target.dispatchEvent(event);
+  }
+
+  function findTargetAtCursor() {
+    var target = document.elementFromPoint(state.x, state.y);
+    if (target && target.nodeType === 1) return target;
+    return document.body || document.documentElement;
+  }
+
+  function focusIfEditable(target) {
+    var focusTarget = target;
+    if (target && typeof target.closest === 'function') {
+      focusTarget = target.closest('input,textarea,select,[contenteditable="true"],[contenteditable=""],[tabindex]') || target;
+    }
+    if (focusTarget && typeof focusTarget.focus === 'function') {
+      try {
+        focusTarget.focus({ preventScroll: true });
+      } catch (_) {
+        try { focusTarget.focus(); } catch (_) { /* 某些網站會封鎖 focus */ }
+      }
+    }
+  }
+
+  /*
+   * 依序派發 DOM 層級的左鍵事件。最後的 click 可執行一般連結、按鈕、
+   * checkbox 等元素的合成啟用行為，但仍不是可信任的實體點擊。
+   */
+  function leftClick() {
+    var target = findTargetAtCursor();
+    if (!target) return;
+    dispatchPointer(target, 'pointerdown', 0, 1);
+    target.dispatchEvent(makeMouseEvent('mousedown', 0, 1, 1));
+    focusIfEditable(target);
+    dispatchPointer(target, 'pointerup', 0, 0);
+    target.dispatchEvent(makeMouseEvent('mouseup', 0, 0, 1));
+    target.dispatchEvent(makeMouseEvent('click', 0, 0, 1));
+    pulseCursor();
+    state.status.textContent = '左鍵點擊：' + (target.tagName || '元素').toLowerCase();
+  }
+
+  /* 右鍵事件供網站的自訂 context menu 使用；系統原生選單不一定會出現。 */
+  function rightClick() {
+    var target = findTargetAtCursor();
+    if (!target) return;
+    dispatchPointer(target, 'pointerdown', 2, 2);
+    target.dispatchEvent(makeMouseEvent('mousedown', 2, 2, 1));
+    target.dispatchEvent(makeMouseEvent('contextmenu', 2, 0, 1));
+    dispatchPointer(target, 'pointerup', 2, 0);
+    target.dispatchEvent(makeMouseEvent('mouseup', 2, 0, 1));
+    pulseCursor();
+    state.status.textContent = '右鍵 / 選單：' + (target.tagName || '元素').toLowerCase();
+  }
+
+  function getScrollableAncestor(target, direction) {
+    var node = target;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (node.nodeType === 1) {
+        var style = window.getComputedStyle(node);
+        var overflow = style.overflowY;
+        var canScroll = (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') &&
+          node.scrollHeight > node.clientHeight + 2;
+        if (canScroll) {
+          var maxScroll = node.scrollHeight - node.clientHeight;
+          if ((direction > 0 && node.scrollTop < maxScroll - 1) || (direction < 0 && node.scrollTop > 1)) {
+            return node;
+          }
+        }
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  /*
+   * 每影格以小步長直接更新最近可捲動容器；若目前位置沒有可捲動容器，
+   * 就捲動 window。直接更新 scrollTop / scrollBy 比派發不可信任的
+   * WheelEvent 更可靠，並保留平滑連續的類比捲動感。
+   */
+  function scrollAtCursor(delta) {
+    if (!delta) return;
+    var target = findTargetAtCursor();
+    var direction = Math.sign(delta);
+    var container = getScrollableAncestor(target, direction);
+    if (container) {
+      var maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+      container.scrollTop = Math.max(0, Math.min(maxScroll, container.scrollTop + delta));
+    } else {
+      window.scrollBy(0, delta);
+    }
+  }
+
+  function chooseGamepad() {
+    if (typeof navigator.getGamepads !== 'function') return null;
+    var pads;
+    try { pads = navigator.getGamepads(); } catch (_) { return null; }
+    for (var i = 0; i < pads.length; i += 1) {
+      if (pads[i] && pads[i].connected) return pads[i];
+    }
+    return null;
+  }
+
+  function stop() {
+    if (state.stopped) return;
+    state.stopped = true;
+    if (state.raf) window.cancelAnimationFrame(state.raf);
+    window.removeEventListener('keydown', onKeyDown, true);
+    window.removeEventListener('resize', onResize, false);
+    window.removeEventListener('gamepadconnected', onGamepadConnected, false);
+    window.removeEventListener('gamepaddisconnected', onGamepadDisconnected, false);
+    if (state.host && state.host.parentNode) state.host.parentNode.removeChild(state.host);
+    try { delete window[INSTANCE_KEY]; } catch (_) { window[INSTANCE_KEY] = null; }
+  }
+
+  function onKeyDown(event) {
+    if (event.key === 'Escape') stop();
+  }
+
+  function onResize() {
+    setCursorPosition();
+  }
+
+  function onGamepadConnected(event) {
+    var pad = event.gamepad;
+    state.status.textContent = '已連線：' + (pad.id || '遊戲手把');
+  }
+
+  function onGamepadDisconnected() {
+    state.lastPadIndex = -1;
+    state.previousPrimary = false;
+    state.previousRight = false;
+    state.status.textContent = '手把已中斷，等待重新連線…';
+  }
+
+  function frame(now) {
+    if (state.stopped) return;
+    var elapsed = state.lastTime ? Math.min(0.05, (now - state.lastTime) / 1000) : 1 / 60;
+    state.lastTime = now;
+
+    var pad = chooseGamepad();
+    if (!pad) {
+      state.status.textContent = typeof navigator.getGamepads === 'function'
+        ? '等待手把…請按一下手把任意鍵'
+        : '此瀏覽器未提供 Gamepad API';
+      state.lastPadIndex = -1;
+      state.previousPrimary = false;
+      state.previousRight = false;
+      state.raf = window.requestAnimationFrame(frame);
+      return;
+    }
+
+    if (pad.index !== state.lastPadIndex) {
+      state.lastPadIndex = pad.index;
+      state.previousPrimary = false;
+      state.previousRight = false;
+      state.status.textContent = '已連線：' + (pad.id || '遊戲手把') + '（按鍵 ' + pad.buttons.length + ' / 軸 ' + pad.axes.length + '）';
+    }
+
+    var dx = shapeAxis(pad.axes[0]) * CONFIG.maxSpeed * elapsed;
+    var dy = shapeAxis(pad.axes[1]) * CONFIG.maxSpeed * elapsed;
+    state.x += dx;
+    state.y += dy;
+    setCursorPosition();
+
+    var primary = buttonPressed(pad, CONFIG.primaryButton);
+    var right = CONFIG.rightClickButtons.some(function (index) { return buttonPressed(pad, index); });
+    if (primary && !state.previousPrimary) leftClick();
+    if (right && !state.previousRight) rightClick();
+    state.previousPrimary = primary;
+    state.previousRight = right;
+
+    var scrollInput = shapeAxis(pad.axes[CONFIG.scrollAxis]);
+    if (buttonPressed(pad, CONFIG.dpadUpButton)) scrollInput -= 1;
+    if (buttonPressed(pad, CONFIG.dpadDownButton)) scrollInput += 1;
+    scrollInput = Math.max(-1, Math.min(1, scrollInput));
+    if (scrollInput) scrollAtCursor(scrollInput * CONFIG.scrollSpeed * elapsed);
+
+    state.raf = window.requestAnimationFrame(frame);
+  }
+
+  createOverlay();
+  setCursorPosition();
+  window.addEventListener('keydown', onKeyDown, true);
+  window.addEventListener('resize', onResize, false);
+  window.addEventListener('gamepadconnected', onGamepadConnected, false);
+  window.addEventListener('gamepaddisconnected', onGamepadDisconnected, false);
+  window[INSTANCE_KEY] = { stop: stop, config: CONFIG };
+  state.raf = window.requestAnimationFrame(frame);
+}());
