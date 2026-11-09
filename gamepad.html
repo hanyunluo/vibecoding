@@ -1,1 +1,419 @@
-javascript:(function(){if(document.getElementById('gp-cur'))return;const c=document.createElement('div');c.id='gp-cur';c.style.cssText='position:fixed;top:50%;left:50%;width:20px;height:20px;border-radius:50%;background:rgba(0,229,255,0.8);border:2px solid #fff;box-shadow:0 0 8px #000;transform:translate(-50%,-50%);pointer-events:none;z-index:2147483647;';document.body.appendChild(c);let x=innerWidth/2,y=innerHeight/2,pA=false,pB=false;function loop(){const gp=(navigator.getGamepads?navigator.getGamepads():[])[0];if(gp){const dx=Math.abs(gp.axes[0])>0.15?gp.axes[0]:0,dy=Math.abs(gp.axes[1])>0.15?gp.axes[1]:0;x=Math.max(0,Math.min(innerWidth,x+dx*12));y=Math.max(0,Math.min(innerHeight,y+dy*12));c.style.left=x+'px';c.style.top=y+'px';const sy=Math.abs(gp.axes[3])>0.15?gp.axes[3]:0;if(sy)window.scrollBy(0,sy*15);const bA=gp.buttons[1]?.pressed,bB=gp.buttons[0]?.pressed;const el=document.elementFromPoint(x,y);if(bA&&!pA&&el){c.style.background='#ff4081';el.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,clientX:x,clientY:y}));el.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,clientX:x,clientY:y}));el.click();}else if(!bA&&pA){c.style.background='rgba(0,229,255,0.8)';}if(bB&&!pB&&el){el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:x,clientY:y,button:2}));}pA=bA;pB=bB;}requestAnimationFrame(loop);}requestAnimationFrame(loop);})();
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>良值手把滑鼠啟動中心 | VibeCoding</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #00e5ff;
+      --accent-hover: #00b8d4;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 160vh; /* 預留高度方便測試右蘑菇頭上下滾動 */
+    }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f59e0b;
+      color: #000;
+      font-weight: 700;
+    }
+    .badge.online {
+      background: #10b981;
+      color: #fff;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .key-item {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .key-item strong {
+      display: block;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    button, .btn {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 2px solid var(--accent);
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover, button.gp-hover {
+      background: var(--accent);
+      color: #000;
+      transform: translateY(-2px);
+    }
+    .primary-btn {
+      background: var(--accent);
+      color: #000;
+    }
+    .log-area {
+      margin-top: 16px;
+      padding: 12px;
+      background: #090d16;
+      border-radius: 8px;
+      font-family: monospace;
+      color: #38bdf8;
+      font-size: 14px;
+    }
+    code {
+      background: #090d16;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #f472b6;
+      font-size: 13px;
+    }
+
+    /* 虛擬滑鼠游標樣式 */
+    #vibe-gp-cursor {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0, 229, 255, 0.85);
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.9), 0 2px 6px rgba(0,0,0,0.6);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2147483647;
+      display: none;
+      transition: transform 0.08s, background 0.08s;
+    }
+    #vibe-gp-cursor.left-click {
+      background: #ff4081;
+      transform: translate(-50%, -50%) scale(0.75);
+    }
+    #vibe-gp-cursor.right-click {
+      background: #ffeb3b;
+      transform: translate(-50%, -50%) scale(1.25);
+    }
+
+    /* 模擬右鍵選單 (當在頁面上按 B 鍵時彈出) */
+    #vibe-context-menu {
+      position: fixed;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 6px 0;
+      min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 2147483646;
+      display: none;
+    }
+    .ctx-item {
+      padding: 10px 16px;
+      font-size: 14px;
+      color: #f8fafc;
+      cursor: pointer;
+    }
+    .ctx-item:hover, .ctx-item.gp-hover {
+      background: var(--accent);
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>
+      🎮 良值手把滑鼠中心
+      <span id="conn-badge" class="badge">等待按鍵喚醒...</span>
+    </h1>
+    <p style="margin: 4px 0 0 0; color: var(--muted); font-size: 14px;">
+      網址：<code>https://hanyunluo.github.io/vibecoding/gamepad.html</code>
+    </p>
+  </header>
+
+  <!-- 區塊 1：手把狀態與按鍵說明 -->
+  <div class="card">
+    <h2>1. 按鍵對應與即時狀態</h2>
+    <p id="gp-name" style="margin: 0 0 12px 0; font-size: 14px; color: var(--muted);">
+      請確認 iPad 已連上良值手把藍牙，接著<strong>按一下手把上任一按鍵</strong>即可顯示鼠標。
+    </p>
+    <div class="key-grid">
+      <div class="key-item">
+        <strong>🕹️ 左蘑菇頭 / 十字鍵</strong>
+        移動滑鼠游標
+      </div>
+      <div class="key-item">
+        <strong>🕹️ 右蘑菇頭</strong>
+        網頁上下滾輪
+      </div>
+      <div class="key-item">
+        <strong>🅰️ A 鍵 (右方按鍵)</strong>
+        滑鼠左鍵 (點擊/連結)
+      </div>
+      <div class="key-item">
+        <strong>🅱️ B 鍵 (下方按鍵)</strong>
+        滑鼠右鍵 (呼叫快捷選單)
+      </div>
+    </div>
+
+    <div style="margin-top: 16px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+      <label style="font-size: 14px; cursor: pointer;">
+        <input type="checkbox" id="swap-ab" checked>
+        <strong>Switch 良值配置</strong>（勾選：右鍵 A 為左鍵點擊 ／ 取消：下鍵 B 為左鍵點擊）
+      </label>
+      <label style="font-size: 14px;">
+        游標速度：<input type="range" id="speed-range" min="5" max="25" value="12" style="vertical-align: middle;">
+      </label>
+    </div>
+  </div>
+
+  <!-- 區塊 2：跨分頁使用設定 -->
+  <div class="card">
+    <h2>2. 如何在「其他 Safari 分頁」也使用手把滑鼠？</h2>
+    <p style="font-size: 14px; color: var(--muted); margin-top: 0;">
+      由於 iPad Safari 安全限制，單一網頁無法直接跨分頁控制其他網站。請點擊下方按鈕複製「跨分頁啟動碼」，加到 Safari 書籤或 Userscripts 擴充套件中，即可在任何分頁一鍵啟用！
+    </p>
+    <div class="btn-group">
+      <button class="primary-btn" onclick="copyBookmarklet()">📋 一鍵複製「跨分頁書籤啟動碼」</button>
+    </div>
+    <p id="copy-msg" style="font-size: 13px; color: #10b981; margin: 8px 0 0 0; display: none;">
+      ✅ 已複製到剪貼簿！請新增一個 Safari 書籤，將網址改為剛剛複製的內容即可。
+    </p>
+  </div>
+
+  <!-- 區塊 3：互動測試區 -->
+  <div class="card">
+    <h2>3. 左鍵 / 右鍵 / 滾輪測試區</h2>
+    <p style="font-size: 14px; color: var(--muted); margin-top: 0;">
+      現在就推動左蘑菇頭把游標移到下方按鈕，按 <strong>A 鍵（左鍵）</strong> 或 <strong>B 鍵（右鍵）</strong> 試試看：
+    </p>
+    <div class="btn-group">
+      <button onclick="setLog('🎯 成功觸發【左鍵點擊】按鈕 1')">測試按鈕 1 (按 A 點擊)</button>
+      <button onclick="setLog('🚀 成功觸發【左鍵點擊】按鈕 2')">測試按鈕 2 (按 A 點擊)</button>
+      <button oncontextmenu="event.preventDefault(); setLog('💡 成功在按鈕上觸發【B 鍵右鍵事件】！');">
+        在此按 B 鍵測試右鍵
+      </button>
+    </div>
+    <div id="test-log" class="log-area">等待手把操作中...</div>
+  </div>
+</div>
+
+<!-- 虛擬滑鼠游標 -->
+<div id="vibe-gp-cursor"></div>
+
+<!-- B 鍵快捷右鍵選單 -->
+<div id="vibe-context-menu">
+  <div class="ctx-item" onclick="history.back(); hideCtxMenu();">⬅️ 返回上一頁</div>
+  <div class="ctx-item" onclick="history.forward(); hideCtxMenu();">➡️ 前往下一頁</div>
+  <div class="ctx-item" onclick="window.scrollTo({top:0, behavior:'smooth'}); hideCtxMenu();">⬆️ 回到頁面頂部</div>
+  <div class="ctx-item" onclick="location.reload(); hideCtxMenu();">🔄 重新整理分頁</div>
+</div>
+
+<script>
+  const cursor = document.getElementById('vibe-gp-cursor');
+  const badge = document.getElementById('conn-badge');
+  const gpNameEl = document.getElementById('gp-name');
+  const testLog = document.getElementById('test-log');
+  const swapAbEl = document.getElementById('swap-ab');
+  const speedRange = document.getElementById('speed-range');
+  const ctxMenu = document.getElementById('vibe-context-menu');
+
+  let curX = window.innerWidth / 2;
+  let curY = window.innerHeight / 2;
+  const DEADZONE = 0.16;
+  let prevLeft = false;
+  let prevRight = false;
+  let lastHovered = null;
+
+  function setLog(text) {
+    testLog.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  }
+
+  function hideCtxMenu() {
+    ctxMenu.style.display = 'none';
+  }
+
+  function applyDeadzone(v) {
+    return Math.abs(v) < DEADZONE ? 0 : v;
+  }
+
+  window.addEventListener('gamepadconnected', (e) => {
+    badge.textContent = '已連線';
+    badge.classList.add('online');
+    gpNameEl.innerHTML = `已連接控制器：<strong>${e.gamepad.id}</strong>`;
+    cursor.style.display = 'block';
+    setLog('🎮 手把已喚醒！左蘑菇頭移動鼠標、A左鍵、B右鍵');
+  });
+
+  window.addEventListener('gamepaddisconnected', () => {
+    badge.textContent = '已斷線';
+    badge.classList.remove('online');
+    cursor.style.display = 'none';
+  });
+
+  function updateLoop() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = pads[0] || pads[1] || pads[2] || pads[3];
+
+    if (gp) {
+      if (cursor.style.display !== 'block') {
+        cursor.style.display = 'block';
+        badge.textContent = '已連線';
+        badge.classList.add('online');
+      }
+
+      const speed = Number(speedRange.value) || 12;
+
+      // 1. 左蘑菇頭 (Axes 0, 1) 與十字鍵控制鼠標
+      let dx = applyDeadzone(gp.axes[0] || 0);
+      let dy = applyDeadzone(gp.axes[1] || 0);
+      if (gp.buttons[12]?.pressed) dy = -0.7;
+      if (gp.buttons[13]?.pressed) dy = 0.7;
+      if (gp.buttons[14]?.pressed) dx = -0.7;
+      if (gp.buttons[15]?.pressed) dx = 0.7;
+
+      curX = Math.max(0, Math.min(window.innerWidth, curX + dx * speed));
+      curY = Math.max(0, Math.min(window.innerHeight, curY + dy * speed));
+      cursor.style.left = `${curX}px`;
+      cursor.style.top = `${curY}px`;
+
+      // 2. 右蘑菇頭 (Axes 2, 3) 控制滾輪
+      const sx = applyDeadzone(gp.axes[2] || 0);
+      const sy = applyDeadzone(gp.axes[3] || 0);
+      if ( sx !== 0 || sy !== 0 ) {
+        window.scrollBy(sx * 14, sy * 14);
+      }
+
+      // 3. 偵測鼠標下方元素並加上模擬 Hover
+      const target = document.elementFromPoint(curX, curY);
+      const hoverable = target?.closest('button, a, .ctx-item, input, label');
+      if (lastHovered && lastHovered !== hoverable) {
+        lastHovered.classList.remove('gp-hover');
+      }
+      if (hoverable) {
+        hoverable.classList.add('gp-hover');
+        lastHovered = hoverable;
+      }
+
+      // 4. A鍵 (左鍵) 與 B鍵 (右鍵) 判斷
+      // Switch Pro 在標準映射下：buttons[1] 是實體右鍵(A)，buttons[0] 是實體下鍵(B)
+      const leftIdx = swapAbEl.checked ? 1 : 0;
+      const rightIdx = swapAbEl.checked ? 0 : 1;
+
+      const isLeft = gp.buttons[leftIdx]?.pressed || false;
+      const isRight = gp.buttons[rightIdx]?.pressed || false;
+
+      // 左鍵按下 (A鍵)
+      if (isLeft && !prevLeft) {
+        cursor.classList.add('left-click');
+        if (target) {
+          const evInit = { bubbles: true, cancelable: true, clientX: curX, clientY: curY, button: 0 };
+          target.dispatchEvent(new PointerEvent('pointerdown', evInit));
+          target.dispatchEvent(new MouseEvent('mousedown', evInit));
+          target.dispatchEvent(new PointerEvent('pointerup', evInit));
+          target.dispatchEvent(new MouseEvent('mouseup', evInit));
+          target.click();
+          if (target.matches('input, textarea, select')) target.focus();
+        }
+        if (!target?.closest('#vibe-context-menu')) hideCtxMenu();
+      } else if (!isLeft && prevLeft) {
+        cursor.classList.remove('left-click');
+      }
+
+      // 右鍵按下 (B鍵)
+      if (isRight && !prevRight) {
+        cursor.classList.add('right-click');
+        if (target) {
+          const evInit = { bubbles: true, cancelable: true, clientX: curX, clientY: curY, button: 2 };
+          const notCancelled = target.dispatchEvent(new MouseEvent('contextmenu', evInit));
+          // 若目標元素沒有自訂右鍵事件，則彈出實用快捷選單（上一頁/下一頁/回頂部）
+          if (notCancelled) {
+            ctxMenu.style.left = `${Math.min(curX, window.innerWidth - 180)}px`;
+            ctxMenu.style.top = `${Math.min(curY, window.innerHeight - 160)}px`;
+            ctxMenu.style.display = 'block';
+            setLog('🅱️ 按下 B 鍵（右鍵）：開啟快捷控制選單');
+          }
+        }
+      } else if (!isRight && prevRight) {
+        cursor.classList.remove('right-click');
+      }
+
+      prevLeft = isLeft;
+      prevRight = isRight;
+    }
+
+    requestAnimationFrame(updateLoop);
+  }
+
+  requestAnimationFrame(updateLoop);
+
+  // 複製跨分頁 Bookmarklet 啟動碼
+  function copyBookmarklet() {
+    const bmCode = `javascript:(function(){if(document.getElementById('vibe-gp-cur'))return;const c=document.createElement('div');c.id='vibe-gp-cur';c.style.cssText='position:fixed;top:50%;left:50%;width:20px;height:20px;border-radius:50%;background:rgba(0,229,255,0.85);border:2px solid #fff;box-shadow:0 0 8px #000;transform:translate(-50%,-50%);pointer-events:none;z-index:2147483647;';document.body.appendChild(c);let x=innerWidth/2,y=innerHeight/2,pA=false,pB=false;function loop(){const gp=(navigator.getGamepads?navigator.getGamepads():[])[0];if(gp){const dx=Math.abs(gp.axes[0])>0.16?gp.axes[0]:0,dy=Math.abs(gp.axes[1])>0.16?gp.axes[1]:0;x=Math.max(0,Math.min(innerWidth,x+dx*12));y=Math.max(0,Math.min(innerHeight,y+dy*12));c.style.left=x+'px';c.style.top=y+'px';const sy=Math.abs(gp.axes[3])>0.16?gp.axes[3]:0;if(sy)window.scrollBy(0,sy*14);const bA=gp.buttons[1]?.pressed,bB=gp.buttons[0]?.pressed;const el=document.elementFromPoint(x,y);if(bA&&!pA&&el){c.style.background='#ff4081';el.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,clientX:x,clientY:y}));el.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,clientX:x,clientY:y}));el.click();}else if(!bA&&pA){c.style.background='rgba(0,229,255,0.85)';}if(bB&&!pB&&el){const ok=el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:x,clientY:y,button:2}));if(ok)history.back();}pA=bA;pB=bB;}requestAnimationFrame(loop);}requestAnimationFrame(loop);})();`;
+    navigator.clipboard.writeText(bmCode).then(() => {
+      const msg = document.getElementById('copy-msg');
+      msg.style.display = 'block';
+      setLog('📋 已成功複製「跨分頁書籤啟動碼」到剪貼簿！');
+    });
+  }
+</script>
+
+</body>
+</html>
